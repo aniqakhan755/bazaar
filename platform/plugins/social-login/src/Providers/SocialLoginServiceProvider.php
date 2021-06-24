@@ -5,10 +5,10 @@ namespace Botble\SocialLogin\Providers;
 use Botble\Setting\Supports\SettingStore;
 use Botble\SocialLogin\Facades\SocialServiceFacade;
 use Illuminate\Foundation\AliasLoader;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Botble\Base\Supports\Helper;
 use Illuminate\Routing\Events\RouteMatched;
+use Event;
 use Botble\Base\Traits\LoadAndPublishDataTrait;
 
 class SocialLoginServiceProvider extends ServiceProvider

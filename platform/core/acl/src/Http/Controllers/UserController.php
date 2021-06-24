@@ -197,7 +197,7 @@ class UserController extends BaseController
 
         $user = $this->userRepository->findOrFail($id);
 
-        page_title()->setTitle(trans(':name', ['name' => $user->name]));
+        page_title()->setTitle(trans(':name', ['name' => $user->getFullName()]));
 
         $form = $formBuilder
             ->create(ProfileForm::class, ['model' => $user])
@@ -302,7 +302,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @param int $id
+     * @param $id
      * @param AvatarRequest $request
      * @param ThumbnailService $thumbnailService
      * @param BaseHttpResponse $response

@@ -10,7 +10,7 @@ use Botble\Blog\Models\Post;
 use Botble\Blog\Repositories\Caches\PostCacheDecorator;
 use Botble\Blog\Repositories\Eloquent\PostRepository;
 use Botble\Blog\Repositories\Interfaces\PostInterface;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Illuminate\Support\ServiceProvider;
 use Botble\Blog\Models\Category;
 use Botble\Blog\Repositories\Caches\CategoryCacheDecorator;

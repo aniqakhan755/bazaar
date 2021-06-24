@@ -61,7 +61,7 @@ class ThemeRemoveCommand extends Command
             return 1;
         }
 
-        $result = $this->themeService->remove($this->getTheme());
+        $result = $this->themeService->remove($this->argument('name'));
 
         if ($result['error']) {
             $this->error($result['message']);

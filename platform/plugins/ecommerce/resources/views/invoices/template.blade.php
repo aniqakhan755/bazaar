@@ -6,7 +6,7 @@
     <title>{{ trans('plugins/ecommerce::order.invoice_for_order') }} {{ get_order_code($order->id) }}</title>
     <link rel="stylesheet" href="{{ asset('vendor/core/plugins/ecommerce/css/invoice.css') }}">
 </head>
-<body @if (BaseHelper::siteLanguageDirection() == 'rtl') dir="rtl" @endif>
+<body>
     <div class="invoice-box">
         <table cellpadding="0" cellspacing="0">
             <tr class="top">
@@ -101,8 +101,16 @@
                     <tr class="item">
                         <td>{{ $product->name }}</td>
                         <td>
-                            <small>{{ $product->variation_attributes }}</small>
-
+                            @php $attributes = get_product_attributes($product->id); @endphp
+                            @if (!empty($attributes))
+                                @foreach ($attributes as $attribute)
+                                    @if (!$loop->last)
+                                        {{ $attribute->attribute_set_title }}: {{ $attribute->title }} <br>
+                                    @else
+                                        {{ $attribute->attribute_set_title }}: {{ $attribute->title }}
+                                    @endif
+                                @endforeach
+                            @endif
                             @if (!empty($orderProduct->options) && is_array($orderProduct->options))
                                 @foreach($orderProduct->options as $option)
                                     @if (!empty($option['key']) && !empty($option['value']))

@@ -15,11 +15,12 @@
                                     <label for="locale_id" class="control-label">{{ trans('plugins/translation::translation.choose_language') }}</label>
                                     <select id="locale_id" name="locale" class="form-control select-search-full">
                                         <option>{{ trans('plugins/translation::translation.select_language') }}</option>
-                                        @foreach ($locales as $key => $name)
-                                            <option value="{{ $key }}"> {{ $name }} - {{ $key }}</option>
+                                        @foreach ($languages as $key => $language)
+                                            <option value="{{ $key }}" data-language="{{ json_encode($language) }}"> {{ $language[2] }} - {{ $language[1] }}</option>
                                         @endforeach
                                     </select>
                                 </div>
+
                                 <p class="submit">
                                     <button class="btn btn-primary" type="submit">{{ trans('plugins/translation::translation.add_new_language') }}</button>
                                 </p>
@@ -39,7 +40,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                                @foreach ($existingLocales as $item)
+                                @foreach ($locales as $item)
                                     @include('plugins/translation::partials.locale-item', compact('item'))
                                 @endforeach
                             </tbody>

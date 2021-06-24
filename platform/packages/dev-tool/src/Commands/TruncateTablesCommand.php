@@ -2,7 +2,7 @@
 
 namespace Botble\DevTool\Commands;
 
-use Illuminate\Support\Facades\DB;
+use DB;
 use Illuminate\Console\Command;
 use Schema;
 

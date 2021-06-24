@@ -3,6 +3,7 @@
 namespace Botble\Ecommerce\Forms;
 
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Base\Enums\BaseStatusEnumVendor;
 use Botble\Base\Forms\Fields\MultiCheckListField;
 use Botble\Base\Forms\Fields\TagField;
 use Botble\Base\Forms\FormAbstract;
@@ -14,12 +15,11 @@ use Botble\Ecommerce\Repositories\Interfaces\ProductAttributeInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductAttributeSetInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductCollectionInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductInterface;
-use Botble\Ecommerce\Repositories\Interfaces\ProductLabelInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductVariationInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductVariationItemInterface;
 use Botble\Ecommerce\Repositories\Interfaces\TaxInterface;
 use EcommerceHelper;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class ProductForm extends FormAbstract
 {
@@ -46,24 +46,24 @@ class ProductForm extends FormAbstract
                 ->all();
         }
 
-        $productLabels = app(ProductLabelInterface::class)->pluck('name', 'id');
-
-        $selectedProductLabels = [];
-        if ($this->getModel()) {
-            $selectedProductLabels = $this->getModel()->productLabels()->pluck('product_label_id')
-                ->all();
-        }
-
         $productId = $this->getModel() ? $this->getModel()->id : null;
 
         $productAttributeSets = app(ProductAttributeSetInterface::class)->getAllWithSelected($productId);
+        $productAttributes = app(ProductAttributeInterface::class)->getAllWithSelected($productId);
 
         $productVariations = [];
+        $productVariationsInfo = [];
+        $productsRelatedToVariation = [];
 
         if ($this->getModel()) {
             $productVariations = app(ProductVariationInterface::class)->allBy([
                 'configurable_product_id' => $this->getModel()->id,
             ]);
+
+            $productVariationsInfo = app(ProductVariationItemInterface::class)
+                ->getVariationsInfo($productVariations->pluck('id')->toArray());
+
+            $productsRelatedToVariation = app(ProductInterface::class)->getProductVariations($productId);
         }
 
         $tags = null;
@@ -105,25 +105,20 @@ class ProductForm extends FormAbstract
                     'with-short-code' => true,
                 ],
             ])
-            ->add('images[]', 'mediaImages', [
-                'label'      => trans('plugins/ecommerce::products.form.image'),
-                'label_attr' => ['class' => 'control-label'],
-                'values'     => $productId ? $this->getModel()->images : [],
-            ])
             ->addMetaBoxes([
                 'with_related' => [
                     'title'    => null,
                     'content'  => '<div class="wrap-relation-product" data-target="' . route('products.get-relations-boxes',
-                            $productId ?: 0) . '"></div>',
+                            $productId ? $productId : 0) . '"></div>',
                     'wrap'     => false,
                     'priority' => 9999,
                 ],
             ])
-            ->add('status', 'customSelect', [
+           /* ->add('status', 'customSelect', [
                 'label'      => trans('core/base::tables.status'),
                 'label_attr' => ['class' => 'control-label required'],
                 'choices'    => BaseStatusEnum::labels(),
-            ])
+            ])*/ 
             ->add('is_featured', 'onOff', [
                 'label'         => trans('core/base::forms.is_featured'),
                 'label_attr'    => ['class' => 'control-label'],
@@ -141,18 +136,39 @@ class ProductForm extends FormAbstract
                 'choices'    => $brands,
             ])
             ->add('product_collections[]', 'multiCheckList', [
-                'label'      => trans('plugins/ecommerce::products.form.collections'),
+                'label'      => trans('plugins/ecommerce::products.form.label'),
                 'label_attr' => ['class' => 'control-label'],
                 'choices'    => $productCollections,
                 'value'      => old('product_collections', $selectedProductCollections),
-            ])
-            ->add('product_labels[]', 'multiCheckList', [
-                'label'      => trans('plugins/ecommerce::products.form.labels'),
-                'label_attr' => ['class' => 'control-label'],
-                'choices'    => $productLabels,
-                'value'      => old('product_labels', $selectedProductLabels),
             ]);
-
+            $user = Auth::user();
+            $role_name ="";
+            if(count($user->roles) > 0)
+            {
+                $role_name = $user->roles[0]->slug;
+                if($role_name  == 'vendor')
+                {
+                    $this ->add('status', 'customSelect', [
+                        'label'      => trans('core/base::tables.status'),
+                        'label_attr' => ['class' => 'control-label required'],
+                        'choices'    => BaseStatusEnumVendor::labels(),
+                         ]);
+                }
+                else{
+                    $this ->add('status', 'customSelect', [
+                        'label'      => trans('core/base::tables.status'),
+                        'label_attr' => ['class' => 'control-label required'],
+                        'choices'    => BaseStatusEnum::labels(),
+                         ]);
+                }
+            }else{
+                $this ->add('status', 'customSelect', [
+                    'label'      => trans('core/base::tables.status'),
+                    'label_attr' => ['class' => 'control-label required'],
+                    'choices'    => BaseStatusEnum::labels(),
+                     ]);
+            }
+           
         if (EcommerceHelper::isTaxEnabled()) {
             $taxes = app(TaxInterface::class)->pluck('title', 'id');
 
@@ -178,9 +194,13 @@ class ProductForm extends FormAbstract
             ->setBreakFieldPoint('status');
 
         if (empty($productVariations) || $productVariations->isEmpty()) {
-            $attributeSetId = $productAttributeSets->first() ? $productAttributeSets->first()->id : 0;
             $this
                 ->removeMetaBox('variations')
+                ->addAfter('content', 'images[]', 'mediaImages', [
+                    'label'      => trans('plugins/ecommerce::products.form.image'),
+                    'label_attr' => ['class' => 'control-label'],
+                    'values'     => $productId ? $this->getModel()->images : [],
+                ])
                 ->addMetaBoxes([
                     'general'    => [
                         'title'          => trans('plugins/ecommerce::products.overview'),
@@ -193,24 +213,14 @@ class ProductForm extends FormAbstract
                         'title'         => trans('plugins/ecommerce::products.attributes'),
                         'content'       => view('plugins/ecommerce::products.partials.add-product-attributes', [
                             'productAttributeSets' => $productAttributeSets,
-                            'productAttributes'    => $this->getProductAttributes($attributeSetId),
-                            'attributeSetId'       => $attributeSetId,
-                            'product'              => $this->getModel(),
+                            'productAttributes'    => $productAttributes,
+                            'product'              => $productId,
                         ])->render(),
                         'after_wrapper' => '</div>',
                         'priority'      => 3,
                     ],
                 ]);
         } elseif ($productId) {
-            $productVariationsInfo = [];
-            $productsRelatedToVariation = [];
-
-            if ($this->getModel()) {
-                $productVariationsInfo = app(ProductVariationItemInterface::class)
-                    ->getVariationsInfo($productVariations->pluck('id')->toArray());
-
-                $productsRelatedToVariation = app(ProductInterface::class)->getProductVariations($productId);
-            }
             $this
                 ->removeMetaBox('general')
                 ->removeMetaBox('attributes')
@@ -219,6 +229,7 @@ class ProductForm extends FormAbstract
                         'title'          => trans('plugins/ecommerce::products.product_has_variations'),
                         'content'        => view('plugins/ecommerce::products.partials.configurable', [
                             'productAttributeSets'       => $productAttributeSets,
+                            'productAttributes'          => $productAttributes,
                             'productVariations'          => $productVariations,
                             'productVariationsInfo'      => $productVariationsInfo,
                             'productsRelatedToVariation' => $productsRelatedToVariation,
@@ -230,21 +241,5 @@ class ProductForm extends FormAbstract
                     ],
                 ]);
         }
-    }
-
-    /**
-     * @return Collection
-     */
-    public function getProductAttributes($attributeSetId)
-    {
-        $params = ['order_by' => ['ec_product_attributes.order' => 'ASC']];
-
-        if ($attributeSetId) {
-            $params['condition'] = [
-                ['attribute_set_id', '=', $attributeSetId],
-            ];
-        }
-
-        return app(ProductAttributeInterface::class)->advancedGet($params);
     }
 }

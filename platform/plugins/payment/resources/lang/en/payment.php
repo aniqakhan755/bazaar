@@ -61,7 +61,12 @@ return [
     'name'                                  => 'Payments',
     'create'                                => 'New payment',
     'go_back'                               => 'Go back',
-    'information'                           => 'Information',
+    'information'                           => 'Payment Information',
+    'customer_information'                  => 'Customer Information',
+    'customer_name'                         => 'Name',
+    'customer_contact'                      => 'Contact No',
+    'customer_email'                        => 'Email',
+
     'methods'                               => [
         'paypal'        => 'PayPal',
         'stripe'        => 'Stripe',

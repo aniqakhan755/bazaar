@@ -12,7 +12,7 @@
                 @foreach ($pages as $page)
                     <tr>
                         <td>{{ $loop->index + 1 }}</td>
-                        <td class="text-left"><a href="{{ $page['url'] }}" target="_blank">{{ Str::limit($page['pageTitle']) }}</a></td>
+                        <td class="text-left"><a href="{{ $page['url'] }}" target="_blank">{{ Str::limit($page['pageTitle'], 100) }}</a></td>
                         <td>{{ $page['pageViews'] }} ({{ ucfirst(trans('plugins/analytics::analytics.views')) }})</td>
                     </tr>
                 @endforeach

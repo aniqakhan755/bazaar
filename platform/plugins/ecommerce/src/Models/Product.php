@@ -6,7 +6,6 @@ use Botble\ACL\Models\User;
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Models\BaseModel;
 use Botble\Base\Traits\EnumCastable;
-use Botble\Ecommerce\Enums\StockStatusEnum;
 use Botble\Ecommerce\Services\Products\UpdateDefaultProductService;
 use EcommerceHelper;
 use Exception;
@@ -66,7 +65,7 @@ class Product extends BaseModel
         'tax_id',
         'status',
         'views',
-        'stock_status',
+        'user_id'
     ];
 
     /**
@@ -81,8 +80,7 @@ class Product extends BaseModel
      * @var array
      */
     protected $casts = [
-        'status'       => BaseStatusEnum::class,
-        'stock_status' => StockStatusEnum::class,
+        'status' => BaseStatusEnum::class,
     ];
 
     protected static function boot()
@@ -201,19 +199,6 @@ class Product extends BaseModel
     }
 
     /**
-     * @return BelongsToMany
-     */
-    public function productLabels()
-    {
-        return $this->belongsToMany(
-            ProductLabel::class,
-            'ec_product_label_products',
-            'product_id',
-            'product_label_id'
-        );
-    }
-
-    /**
      * @return BelongsTo
      */
     public function user()
@@ -242,6 +227,14 @@ class Product extends BaseModel
         return $this->belongsTo(Brand::class)->withDefault();
     }
 
+      /**
+     * @return BelongsTo
+     */
+    public function productUser()
+    {
+        return $this->belongsTo(User::class,'user_id')->withDefault();
+    }
+
     /**
      * @return BelongsToMany
      */
@@ -261,42 +254,18 @@ class Product extends BaseModel
     }
 
     /**
-     * @return BelongsToMany
-     */
-    public function parentProduct()
-    {
-        return $this->belongsToMany(Product::class, 'ec_product_variations', 'product_id', 'configurable_product_id');
-    }
-
-    /**
-     * @return HasMany
-     */
-    public function pVariations()
-    {
-        return $this->hasMany(ProductVariation::class, 'product_id');
-    }
-
-    /**
      * @return HasMany
      */
     public function variationAttributeSwatchesForProductList()
     {
-        return $this
-            ->hasMany(ProductVariation::class, 'configurable_product_id')
+        return $this->hasMany(ProductVariation::class, 'configurable_product_id')
             ->join('ec_product_variation_items', 'ec_product_variation_items.variation_id', '=',
                 'ec_product_variations.id')
             ->join('ec_product_attributes', 'ec_product_attributes.id', '=', 'ec_product_variation_items.attribute_id')
             ->join('ec_product_attribute_sets', 'ec_product_attribute_sets.id', '=',
                 'ec_product_attributes.attribute_set_id')
             ->where('ec_product_attribute_sets.status', BaseStatusEnum::PUBLISHED)
-            ->where('ec_product_attribute_sets.is_use_in_product_listing', 1)
-            ->select([
-                'ec_product_attributes.*',
-                'ec_product_variations.*',
-                'ec_product_variation_items.*',
-                'ec_product_attribute_sets.*',
-                'ec_product_attributes.title as attribute_title',
-            ]);
+            ->where('ec_product_attribute_sets.is_use_in_product_listing', 1);
     }
 
     /**
@@ -424,7 +393,7 @@ class Product extends BaseModel
             return $this->getComparePrice($price, $this->sale_price);
         }
 
-        $flashSale = $this->latestFlashSales->first();
+        $flashSale = $this->original_product->flashSales()->latest()->first();
 
         if ($flashSale && $flashSale->pivot->quantity > $flashSale->pivot->sold) {
             return $this->getComparePrice($flashSale->pivot->price, $this->sale_price);
@@ -486,41 +455,15 @@ class Product extends BaseModel
     }
 
     /**
-     * @return string|null
-     */
-    public function getStockStatusLabelAttribute()
-    {
-        if ($this->with_storehouse_management) {
-            return $this->isOutOfStock() ? StockStatusEnum::OUT_OF_STOCK()->label() : StockStatusEnum::IN_STOCK()
-                ->label();
-        }
-
-        return $this->stock_status->label();
-    }
-
-    /**
      * @return bool
      */
     public function isOutOfStock()
     {
         if (!$this->with_storehouse_management) {
-            return $this->stock_status == StockStatusEnum::OUT_OF_STOCK;
+            return false;
         }
 
         return $this->quantity <= 0 && !$this->allow_checkout_when_out_of_stock;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getStockStatusHtmlAttribute()
-    {
-        if ($this->with_storehouse_management) {
-            return $this->isOutOfStock() ? StockStatusEnum::OUT_OF_STOCK()->toHtml() : StockStatusEnum::IN_STOCK()
-                ->toHtml();
-        }
-
-        return $this->stock_status->toHtml();
     }
 
     /**
@@ -566,8 +509,7 @@ class Product extends BaseModel
                             ->where('ec_discount_products.product_id', $this->id);
                     })
                     ->orWhere(function ($sub) {
-                        $collections = $this->productCollections->pluck('id')->all();
-
+                        $collections = $this->productCollections->pluck('ec_product_collections.id')->all();
                         /**
                          * @var Builder $sub
                          */
@@ -576,7 +518,7 @@ class Product extends BaseModel
                             ->whereIn('ec_discount_product_collections.product_collection_id', $collections);
                     })
                     ->orWhere(function ($sub) {
-                        $customerId = auth('customer')->check() ? auth('customer')->id() : -1;
+                        $customerId = auth('customer')->check() ? auth('customer')->user()->id : -1;
 
                         /**
                          * @var Builder $sub
@@ -606,15 +548,17 @@ class Product extends BaseModel
             return $this;
         }
 
-        return $this->variationInfo->id ? $this->variationInfo->configurableProduct : $this;
+        $parent = get_parent_product($this->id);
+
+        return $parent ? $parent : $this;
     }
 
     /**
      * @return BelongsTo
      */
-    public function tax(): BelongsTo
+    public function tax()
     {
-        return $this->original_product->belongsTo(Tax::class, 'tax_id')->withDefault();
+        return $this->belongsTo(Tax::class, 'tax_id')->withDefault();
     }
 
     /**
@@ -622,20 +566,18 @@ class Product extends BaseModel
      */
     public function reviews()
     {
-        return $this->hasMany(Review::class, 'product_id')->where('status', BaseStatusEnum::PUBLISHED);
+        return $this->hasMany(Review::class, 'product_id');
     }
 
     /**
-     * @return $this
+     * @return BelongsToMany
      */
-    public function latestFlashSales()
+    public function flashSales(): BelongsToMany
     {
-        return $this->original_product
-            ->belongsToMany(FlashSale::class, 'ec_flash_sale_products', 'product_id', 'flash_sale_id')
+        return $this->belongsToMany(FlashSale::class, 'ec_flash_sale_products', 'product_id', 'flash_sale_id')
             ->withPivot(['price', 'quantity', 'sold'])
             ->where('status', BaseStatusEnum::PUBLISHED)
-            ->notExpired()
-            ->latest();
+            ->notExpired();
     }
 
     /**
@@ -662,41 +604,5 @@ class Product extends BaseModel
         }
 
         return $this->price + $this->price * ($this->tax->percentage / 100);
-    }
-
-    /**
-     * @return HasMany
-     */
-    public function variationProductAttributes()
-    {
-        return $this
-            ->hasMany(ProductVariation::class, 'product_id')
-            ->join('ec_product_variation_items', 'ec_product_variation_items.variation_id', '=',
-                'ec_product_variations.id')
-            ->join('ec_product_attributes', 'ec_product_attributes.id', '=', 'ec_product_variation_items.attribute_id')
-            ->join('ec_product_attribute_sets', 'ec_product_attribute_sets.id', '=',
-                'ec_product_attributes.attribute_set_id')
-            ->distinct()
-            ->select([
-                'ec_product_variations.product_id',
-                'ec_product_variations.configurable_product_id',
-                'ec_product_attributes.*',
-                'ec_product_attribute_sets.title as attribute_set_title',
-                'ec_product_attribute_sets.slug as attribute_set_slug',
-            ]);
-    }
-
-    /**
-     * @return string
-     */
-    public function getVariationAttributesAttribute()
-    {
-        if (!$this->variationProductAttributes->count()) {
-            return '';
-        }
-
-        $attributes = $this->variationProductAttributes->pluck('title', 'attribute_set_title')->toArray();
-
-        return '(' . mapped_implode(', ', $attributes, ': ') . ')';
     }
 }

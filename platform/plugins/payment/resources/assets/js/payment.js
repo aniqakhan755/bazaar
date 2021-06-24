@@ -28,9 +28,7 @@ BPayment.init = function () {
         $('.payment_collapse_wrap').removeClass('collapse').removeClass('show').removeClass('active');
     });
 
-    $(document).off('click', '.payment-checkout-btn').on('click', '.payment-checkout-btn', function (event) {
-        event.preventDefault();
-
+    $(document).on('click', '.payment-checkout-btn', function () {
         var _self = $(this);
         var form = _self.closest('form');
         _self.attr('disabled', 'disabled');

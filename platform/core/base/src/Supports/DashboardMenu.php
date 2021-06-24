@@ -137,7 +137,7 @@ class DashboardMenu
         $routePrefix = '/' . $prefix;
 
         if (setting('cache_admin_menu_enable', true) && Auth::check()) {
-            $cacheKey = md5('cache-dashboard-menu-' . Auth::id());
+            $cacheKey = md5('cache-dashboard-menu-' . Auth::user()->getKey());
             if (!cache()->has($cacheKey)) {
                 $links = $this->links;
                 cache()->forever($cacheKey, $links);
@@ -148,23 +148,13 @@ class DashboardMenu
             $links = $this->links;
         }
 
-        if (request()->isSecure()) {
-            $protocol = 'https://';
-        } else {
-            $protocol = 'http://';
-        }
-        $protocol .= BaseHelper::getAdminPrefix();
-
         foreach ($links as $key => &$link) {
             if ($link['permissions'] && !Auth::user()->hasAnyPermission($link['permissions'])) {
                 Arr::forget($links, $key);
                 continue;
             }
 
-            $link['active'] = $currentUrl == $link['url'] ||
-                            (Str::contains($link['url'], $routePrefix) &&
-                                !in_array($routePrefix, ['//', '/' . BaseHelper::getAdminPrefix()]) &&
-                                !Str::startsWith($link['url'], $protocol));
+            $link['active'] = $currentUrl == $link['url'] || (Str::contains($link['url'], $routePrefix) && !in_array($routePrefix, ['//', '/' . BaseHelper::getAdminPrefix()]));
             if (!count($link['children'])) {
                 continue;
             }

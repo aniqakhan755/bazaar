@@ -5,7 +5,7 @@ namespace Botble\Base\Supports;
 use Artisan;
 use Cache;
 use Eloquent;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Exception;
 use File;
 use Illuminate\Database\Eloquent\Model;
@@ -61,7 +61,7 @@ class Helper
     public static function formatLog($input, $line = '', $function = '', $class = ''): array
     {
         return array_merge($input, [
-            'user_id'   => Auth::check() ? Auth::id() : 'System',
+            'user_id'   => Auth::check() ? Auth::user()->getKey() : 'System',
             'ip'        => Request::ip(),
             'line'      => $line,
             'function'  => $function,
@@ -162,7 +162,7 @@ class Helper
      */
     public static function isActivatedLicense(): bool
     {
-        if (!File::exists(storage_path('.license'))) {
+        /*if (!File::exists(storage_path('.license'))) {
             return false;
         }
 
@@ -172,7 +172,7 @@ class Helper
 
         if (!$result['status']) {
             return false;
-        }
+        }*/
 
         return true;
     }
@@ -197,6 +197,10 @@ class Helper
     {
         return config('core.base.general.countries', []);
     }
+    public static function cities(): array
+    {
+        return config('core.base.general.cities', []);
+    }
 
     /**
      * @return bool|string
@@ -212,56 +216,6 @@ class Helper
         $response = curl_exec($curl);
         curl_close($curl);
 
-        return $response ? $response : Request::ip();
-    }
-
-    /**
-     * @param string $setting
-     * @return bool
-     */
-    public static function isIniValueChangeable(string $setting): bool
-    {
-        static $iniAll;
-
-        if (!isset($iniAll)) {
-            $iniAll = false;
-            // Sometimes `ini_get_all()` is disabled via the `disable_functions` option for "security purposes".
-            if (function_exists('ini_get_all')) {
-                $iniAll = ini_get_all();
-            }
-        }
-
-        // Bit operator to workaround https://bugs.php.net/bug.php?id=44936 which changes access level to 63 in PHP 5.2.6 - 5.2.17.
-        if (isset($iniAll[$setting]['access']) && (INI_ALL === ($iniAll[$setting]['access'] & 7) || INI_USER === ($iniAll[$setting]['access'] & 7))) {
-            return true;
-        }
-
-        // If we were unable to retrieve the details, fail gracefully to assume it's changeable.
-        if (!is_array($iniAll)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * @param int $value
-     * @return int
-     */
-    public static function convertHrToBytes($value)
-    {
-        $value = strtolower(trim($value));
-        $bytes = (int)$value;
-
-        if (false !== strpos($value, 'g')) {
-            $bytes *= 1024 * 1024 * 1024;
-        } elseif (false !== strpos($value, 'm')) {
-            $bytes *= 1024 * 1024;
-        } elseif (false !== strpos($value, 'k')) {
-            $bytes *= 1024;
-        }
-
-        // Deal with large (float) values which run into the maximum integer size.
-        return min($bytes, PHP_INT_MAX);
+        return $response;
     }
 }

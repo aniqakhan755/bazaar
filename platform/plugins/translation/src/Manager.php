@@ -2,9 +2,9 @@
 
 namespace Botble\Translation;
 
-use Botble\Base\Supports\MountManager;
 use Botble\Translation\Models\Translation;
 use Exception;
+use Illuminate\Events\Dispatcher;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Arr;
@@ -12,6 +12,7 @@ use Illuminate\Support\ServiceProvider;
 use Lang;
 use League\Flysystem\Adapter\Local as LocalAdapter;
 use League\Flysystem\Filesystem as Flysystem;
+use League\Flysystem\MountManager;
 use Symfony\Component\VarExporter\VarExporter;
 
 class Manager
@@ -29,6 +30,11 @@ class Manager
     protected $files;
 
     /**
+     * @var \Illuminate\Events\Dispatcher
+     */
+    protected $events;
+
+    /**
      * @var array|\ArrayAccess
      */
     protected $config;
@@ -37,11 +43,13 @@ class Manager
      * Manager constructor.
      * @param Application $app
      * @param Filesystem $files
+     * @param Dispatcher $events
      */
-    public function __construct(Application $app, Filesystem $files)
+    public function __construct(Application $app, Filesystem $files, Dispatcher $events)
     {
         $this->app = $app;
         $this->files = $files;
+        $this->events = $events;
         $this->config = $app['config']['plugins.translation.general'];
     }
 
@@ -107,9 +115,8 @@ class Manager
             }
             $locale = basename($jsonTranslationFile, '.json');
             $group = self::JSON_GROUP;
-
-            // Retrieves JSON entries of the given locale only
-            $translations = Lang::getLoader()->load($locale, '*', '*');
+            $translations = Lang::getLoader()->load($locale, '*',
+                '*'); // Retrieves JSON entries of the given locale only
             if ($translations && is_array($translations)) {
                 foreach ($translations as $key => $value) {
                     $importedTranslation = $this->importTranslation($key, $value, $locale, $group, $replace);
@@ -119,31 +126,6 @@ class Manager
         }
 
         return $counter;
-    }
-
-    public function publishLocales()
-    {
-        $paths = ServiceProvider::pathsToPublish(null, 'cms-lang');
-
-        foreach ($paths as $from => $to) {
-            if ($this->files->isFile($from)) {
-                if (!$this->files->isDirectory(dirname($to))) {
-                    $this->files->makeDirectory(dirname($to), 0755, true);
-                }
-                $this->files->copy($from, $to);
-            } elseif ($this->files->isDirectory($from)) {
-                $manager = new MountManager([
-                    'from' => new Flysystem(new LocalAdapter($from)),
-                    'to'   => new Flysystem(new LocalAdapter($to)),
-                ]);
-
-                foreach ($manager->listContents('from://', true) as $file) {
-                    if ($file['type'] === 'file') {
-                        $manager->put('to://' . $file['path'], $manager->read('from://' . $file['path']));
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -181,6 +163,31 @@ class Manager
         $translation->save();
 
         return true;
+    }
+
+    public function publishLocales()
+    {
+        $paths = ServiceProvider::pathsToPublish(null, 'cms-lang');
+
+        foreach ($paths as $from => $to) {
+            if ($this->files->isFile($from)) {
+                if (!$this->files->isDirectory(dirname($to))) {
+                    $this->files->makeDirectory(dirname($to), 0755, true);
+                }
+                $this->files->copy($from, $to);
+            } elseif ($this->files->isDirectory($from)) {
+                $manager = new MountManager([
+                    'from' => new Flysystem(new LocalAdapter($from)),
+                    'to'   => new Flysystem(new LocalAdapter($to)),
+                ]);
+
+                foreach ($manager->listContents('from://', true) as $file) {
+                    if ($file['type'] === 'file') {
+                        $manager->put('to://' . $file['path'], $manager->read('from://' . $file['path']));
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -225,9 +232,8 @@ class Manager
         }
 
         if ($json) {
-            $tree = $this->makeTree(Translation::ofTranslatedGroup(self::JSON_GROUP)
-                ->orderByGroupKeys(Arr::get($this->config,
-                    'sort_keys', false))->get(), true);
+            $tree = $this->makeTree(Translation::ofTranslatedGroup(self::JSON_GROUP)->orderByGroupKeys(Arr::get($this->config,
+                'sort_keys', false))->get(), true);
 
             foreach ($tree as $locale => $groups) {
                 if (isset($groups[self::JSON_GROUP])) {
@@ -257,7 +263,6 @@ class Manager
                 $this->exportTranslations($group->group);
             }
         }
-
         return true;
     }
 

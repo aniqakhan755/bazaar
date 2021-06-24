@@ -87,6 +87,63 @@ Route::group(['namespace' => 'Botble\ACL\Http\Controllers', 'middleware' => ['we
                 ]);
             });
 
+            Route::group(['prefix' => 'vendors', 'as' => 'vendors.'], function () {
+
+                Route::resource('', 'VendorController')->except(['edit', 'update'])->parameters(['' => 'users']);
+
+                Route::delete('items/destroy', [
+                    'as'         => 'deletes',
+                    'uses'       => 'VendorController@deletes',
+                    'permission' => 'users.destroy',
+                    'middleware' => 'preventDemo',
+                ]);
+
+                Route::post('update-profile/{id}', [
+                    'as'         => 'update-profile',
+                    'uses'       => 'VendorController@postUpdateProfile',
+                    'permission' => false,
+                    'middleware' => 'preventDemo',
+                ]);
+                Route::post('update-company/{id}', [
+                    'as'         => 'update-company',
+                    'uses'       => 'VendorController@postUpdateCompany',
+                    'permission' => false,
+                    'middleware' => 'preventDemo',
+                ]);
+
+                Route::post('modify-profile-image/{id}', [
+                    'as'         => 'profile.image',
+                    'uses'       => 'VendorController@postAvatar',
+                    'permission' => false,
+                ]);
+
+                Route::post('change-password/{id}', [
+                    'as'         => 'change-password',
+                    'uses'       => 'VendorController@postChangePassword',
+                    'permission' => false,
+                    'middleware' => 'preventDemo',
+                ]);
+
+                Route::get('profile/{id}', [
+                    'as'         => 'profile.view',
+                    'uses'       => 'VendorController@getUserProfile',
+                    'permission' => false,
+                ]);
+
+                Route::get('make-super/{id}', [
+                    'as'         => 'make-super',
+                    'uses'       => 'VendorController@makeSuper',
+                    'permission' => ACL_ROLE_SUPER_USER,
+                ]);
+
+                Route::get('remove-super/{id}', [
+                    'as'         => 'remove-super',
+                    'uses'       => 'VendorController@removeSuper',
+                    'permission' => ACL_ROLE_SUPER_USER,
+                    'middleware' => 'preventDemo',
+                ]);
+            });
+
             Route::group(['prefix' => 'roles', 'as' => 'roles.'], function () {
                 Route::resource('', 'RoleController')->parameters(['' => 'roles']);
 
@@ -120,3 +177,16 @@ Route::group(['namespace' => 'Botble\ACL\Http\Controllers', 'middleware' => ['we
 
     Route::get('admin-theme/{theme}', [UserController::class, 'getTheme'])->name('admin.theme');
 });
+Route::group(['namespace' => 'Botble\ACL\Http\Controllers\Vendor','middleware' => ['web', 'core']], function() {
+    Route::group(['prefix' => BaseHelper::getVendorPrefix(), 'as' => 'vendor.'], function () {
+        Route::group(['middleware' => 'guest'], function () {
+            Route::get('/login', 'Auth\LoginController@showLoginForm')->name('login');
+            Route::post('login', 'Auth\LoginController@login')->name('login.post');
+            Route::get('/register', 'Auth\RegisterController@showRegistrationForm')->name('register');
+            Route::post('register', 'Auth\RegisterController@register')->name('register.post');
+            Route::get('/register-success', 'Auth\RegisterController@registerSuccess')->name('register-success');
+
+        });
+    });
+});
+

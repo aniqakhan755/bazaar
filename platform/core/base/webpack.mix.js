@@ -15,8 +15,6 @@ mix
     .sass(source + '/resources/assets/sass/core.scss', dist + '/css')
     .sass(source + '/resources/assets/sass/custom/system-info.scss', dist + '/css')
     .sass(source + '/resources/assets/sass/custom/email.scss', dist + '/css')
-    .sass(source + '/resources/assets/sass/custom/error-pages.scss', dist + '/css')
-    .sass(source + '/resources/assets/sass/rtl.scss', dist + '/css')
 
     .js(source + '/resources/assets/js/app.js', dist + '/js')
     .js(source + '/resources/assets/js/core.js', dist + '/js')
@@ -24,7 +22,6 @@ mix
     .js(source + '/resources/assets/js/cache.js', dist + '/js')
     .js(source + '/resources/assets/js/tags.js', dist + '/js')
     .js(source + '/resources/assets/js/system-info.js', dist + '/js')
-    .js(source + '/resources/assets/js/repeater-field.js', dist + '/js')
 
     .copyDirectory(dist + '/css', source + '/public/css')
     .copyDirectory(dist + '/js', source + '/public/js');

@@ -144,6 +144,22 @@ class ProductCacheDecorator extends CacheAbstractDecorator implements ProductInt
     /**
      * {@inheritDoc}
      */
+    public function getCrossSaleProducts($model)
+    {
+        return $this->getDataIfExistCache(__FUNCTION__, func_get_args());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getCrossSaleProductIds($model)
+    {
+        return $this->getDataIfExistCache(__FUNCTION__, func_get_args());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function syncUpSaleProducts($model, $products = null)
     {
         $result = call_user_func_array([$this->repository, __FUNCTION__], func_get_args());
@@ -158,6 +174,22 @@ class ProductCacheDecorator extends CacheAbstractDecorator implements ProductInt
             $productRepository->getCacheInstance()->flushCache();
         }
         return $result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getUpSaleProducts($model)
+    {
+        return $this->getDataIfExistCache(__FUNCTION__, func_get_args());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getUpSaleProductIds($model)
+    {
+        return $this->getDataIfExistCache(__FUNCTION__, func_get_args());
     }
 
     /**

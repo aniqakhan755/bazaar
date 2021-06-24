@@ -29,16 +29,10 @@ class GetProductService
      * @param null $category
      * @param null $brand
      * @param array $with
-     * @param array $withCount
      * @return LengthAwarePaginator|\Illuminate\Database\Eloquent\Collection|Collection|mixed
      */
-    public function getProduct(
-        Request $request,
-        $category = null,
-        $brand = null,
-        array $with = [],
-        array $withCount = []
-    ) {
+    public function getProduct(Request $request, $category = null, $brand = null, array $with = [])
+    {
         $queryVar = [
             'keyword'     => $request->input('q'),
             'brands'      => (array)$request->input('brands', []),
@@ -100,30 +94,6 @@ class GetProductService
                     'ec_products.name' => 'desc',
                 ];
                 break;
-            case 'rating_asc':
-                $withCount = array_merge($withCount, [
-                    'reviews',
-                    'reviews as reviews_avg' => function ($query) {
-                        $query->select(DB::raw('avg(star)'));
-                    },
-                ]);
-
-                $orderBy = [
-                    'reviews_avg' => 'asc',
-                ];
-                break;
-            case 'rating_desc':
-                $withCount = array_merge($withCount, [
-                    'reviews',
-                    'reviews as reviews_avg' => function ($query) {
-                        $query->select(DB::raw('avg(star)'));
-                    },
-                ]);
-
-                $orderBy = [
-                    'reviews_avg' => 'desc',
-                ];
-                break;
             default:
                 $orderBy = [
                     'ec_products.order'      => 'ASC',
@@ -146,12 +116,11 @@ class GetProductService
                 'order_by'               => $orderBy,
             ],
             [
-                'paginate'  => [
+                'paginate' => [
                     'per_page'      => $queryVar['num'],
                     'current_paged' => (int)$request->query('page', 1),
                 ],
-                'with'      => $with,
-                'withCount' => $withCount,
+                'with'     => $with,
             ]
         );
 

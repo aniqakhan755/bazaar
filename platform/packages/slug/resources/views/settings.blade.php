@@ -26,24 +26,6 @@
                                 </span>
                             </div>
                         @endforeach
-
-                        <hr>
-
-                        <div class="form-group">
-                            <label class="text-title-field"
-                                   for="slug_turn_off_automatic_url_translation_into_latin">{{ trans('packages/slug::slug.settings.turn_off_automatic_url_translation_into_latin') }}
-                            </label>
-                            <label class="hrv-label">
-                                <input type="radio" name="slug_turn_off_automatic_url_translation_into_latin" class="hrv-radio"
-                                       value="1"
-                                       @if (setting('slug_turn_off_automatic_url_translation_into_latin', 0) == 1) checked @endif>{{ trans('core/setting::setting.general.yes') }}
-                            </label>
-                            <label class="hrv-label">
-                                <input type="radio" name="slug_turn_off_automatic_url_translation_into_latin" class="hrv-radio"
-                                       value="0"
-                                       @if (setting('slug_turn_off_automatic_url_translation_into_latin', 0) == 0) checked @endif>{{ trans('core/setting::setting.general.no') }}
-                            </label>
-                        </div>
                     </div>
                 </div>
 

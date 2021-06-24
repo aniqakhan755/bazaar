@@ -2,6 +2,7 @@
 
 namespace Botble\DevTool\Providers;
 
+use Botble\DevTool\Commands\InstallCommand;
 use Botble\DevTool\Commands\LocaleCreateCommand;
 use Botble\DevTool\Commands\LocaleRemoveCommand;
 use Botble\DevTool\Commands\Make\ControllerMakeCommand;
@@ -35,6 +36,7 @@ class CommandServiceProvider extends ServiceProvider
                 PackageCreateCommand::class,
                 PackageMakeCrudCommand::class,
                 PackageRemoveCommand::class,
+                InstallCommand::class,
                 TestSendMailCommand::class,
                 TruncateTablesCommand::class,
                 RebuildPermissionsCommand::class,

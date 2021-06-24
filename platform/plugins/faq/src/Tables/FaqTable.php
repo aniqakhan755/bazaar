@@ -32,9 +32,9 @@ class FaqTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, FaqInterface $faqRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $faqRepository;
+        $this->setOption('id', 'table-plugins-faq');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['faq.edit', 'faq.destroy'])) {
             $this->hasOperations = false;
@@ -67,12 +67,14 @@ class FaqTable extends TableAbstract
             })
             ->editColumn('status', function ($item) {
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('faq.edit', 'faq.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('faq.edit', 'faq.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -134,7 +136,9 @@ class FaqTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('faq.create'), 'faq.create');
+        $buttons = $this->addCreateButton(route('faq.create'), 'faq.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, Faq::class);
     }
 
     /**

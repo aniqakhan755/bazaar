@@ -45,7 +45,7 @@
                                     {!! Theme::partial('product-categories-dropdown', compact('categories')) !!}
                                 </ul>
                             </div>
-                        </div><a class="ps-logo" href="{{ route('public.index') }}"><img src="{{ RvMedia::getImageUrl(theme_option('logo')) }}" alt="{{ theme_option('site_title') }}" height="40"></a>
+                        </div><a class="ps-logo" href="{{ url('/') }}"><img src="{{ RvMedia::getImageUrl(theme_option('logo')) }}" alt="{{ theme_option('site_title') }}" height="40"></a>
                     </div>
                     @if (is_plugin_active('ecommerce'))
                         <div class="header__center">
@@ -65,7 +65,7 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <input class="form-control" name="q" type="text" placeholder="{{ __("I'm shopping for...") }}" id="input-search" autocomplete="off">
+                                <input class="form-control" name="q" type="text" placeholder="{{ __("I'm shopping for...") }}" id="input-search">
                                 <div class="spinner-icon">
                                     <i class="fa fa-spin fa-spinner"></i>
                                 </div>
@@ -96,6 +96,13 @@
                                         @endif
                                     </div>
                                 </div>
+                                <div class="ps-block--user-header">
+                                    <div class="ps-block__left"><i class="icon-store"></i></div>
+                                    <div class="ps-block__right">
+                                        <a class="seller-register-action"  href="{{ route('vendor.register') }}">Become A Seller</a>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     @endif

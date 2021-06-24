@@ -2,14 +2,14 @@
 
 namespace Botble\JsValidation\Remote;
 
-use Botble\JsValidation\Support\AccessProtectedTrait;
-use Botble\JsValidation\Support\RuleListTrait;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\ValidationRuleParser;
 use Illuminate\Validation\Validator as BaseValidator;
+use Botble\JsValidation\Support\AccessProtectedTrait;
+use Botble\JsValidation\Support\RuleListTrait;
 
 class Validator
 {
@@ -22,7 +22,7 @@ class Validator
     const EXTENSION_NAME = 'js_validation';
 
     /**
-     * @var BaseValidator
+     * @var \Illuminate\Validation\Validator
      */
     protected $validator;
 
@@ -36,7 +36,7 @@ class Validator
     /**
      * RemoteValidator constructor.
      *
-     * @param BaseValidator $validator
+     * @param \Illuminate\Validation\Validator $validator
      * @param bool $escape
      */
     public function __construct(BaseValidator $validator, $escape = false)
@@ -52,7 +52,7 @@ class Validator
      * @param $parameters
      * @return void
      *
-     * @throws ValidationException
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function validate($field, $parameters = [])
     {
@@ -66,8 +66,8 @@ class Validator
     /**
      *  Parse Validation input request data.
      *
-     * @param string $data
-     * @return array|int|string
+     * @param $data
+     * @return array
      */
     protected function parseAttributeName($data)
     {
@@ -81,7 +81,7 @@ class Validator
     /**
      *  Parse Validation parameters.
      *
-     * @param array $parameters
+     * @param $parameters
      * @return array
      */
     protected function parseParameters($parameters)
@@ -97,7 +97,7 @@ class Validator
     /**
      * Validate remote Javascript Validations.
      *
-     * @param string $attribute
+     * @param $attribute
      * @param array $parameters
      * @return array|bool
      */
@@ -124,7 +124,7 @@ class Validator
     /**
      * Sets data for validate remote rules.
      *
-     * @param string $attribute
+     * @param $attribute
      * @param bool $validateAll
      * @return void
      */
@@ -133,24 +133,21 @@ class Validator
         $validator = $this->validator;
         $rules = $validator->getRules();
         $rules = isset($rules[$attribute]) ? $rules[$attribute] : [];
-
         if (in_array('no_js_validation', $rules)) {
             $validator->setRules([$attribute => []]);
 
             return;
         }
-
         if (!$validateAll) {
             $rules = $this->purgeNonRemoteRules($rules, $validator);
         }
-
         $validator->setRules([$attribute => $rules]);
     }
 
     /**
      * Remove rules that should not be validated remotely.
      *
-     * @param array $rules
+     * @param $rules
      * @param BaseValidator $validator
      * @return mixed
      */
@@ -171,11 +168,11 @@ class Validator
     /**
      * Throw the failed validation exception.
      *
-     * @param bool $result
-     * @param BaseValidator $validator
+     * @param mixed $result
+     * @param \Illuminate\Validation\Validator $validator
      * @return void
      *
-     * @throws ValidationException|HttpResponseException
+     * @throws \Illuminate\Validation\ValidationException|\Illuminate\Http\Exceptions\HttpResponseException
      */
     protected function throwValidationException($result, $validator)
     {

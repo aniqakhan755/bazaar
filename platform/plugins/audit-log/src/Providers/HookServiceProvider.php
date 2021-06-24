@@ -41,7 +41,7 @@ class HookServiceProvider extends ServiceProvider
             'to the system',
             'logged in',
             $data->id,
-            $data->name,
+            $data->getFullName(),
             'info'
         ));
     }
@@ -57,7 +57,7 @@ class HookServiceProvider extends ServiceProvider
             'of the system',
             'logged out',
             $data->id,
-            $data->name,
+            $data->getFullName(),
             'info'
         ));
     }

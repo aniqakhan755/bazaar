@@ -66,9 +66,8 @@ return [
     ],
 
     [
-        'name'        => 'Product tags',
-        'flag'        => 'product-tag.index',
-        'parent_flag' => 'plugins.ecommerce',
+        'name' => 'Product tags',
+        'flag' => 'product-tag.index',
     ],
     [
         'name'        => 'Create',
@@ -302,27 +301,5 @@ return [
         'flag'        => 'flash-sale.destroy',
         'parent_flag' => 'flash-sale.index',
     ],
-
-    [
-        'name'        => 'Product labels',
-        'flag'        => 'product-label.index',
-        'parent_flag' => 'plugins.ecommerce',
-    ],
-    [
-        'name'        => 'Create',
-        'flag'        => 'product-label.create',
-        'parent_flag' => 'product-label.index',
-    ],
-    [
-        'name'        => 'Edit',
-        'flag'        => 'product-label.edit',
-        'parent_flag' => 'product-label.index',
-    ],
-    [
-        'name'        => 'Delete',
-        'flag'        => 'product-label.destroy',
-        'parent_flag' => 'product-label.index',
-    ],
-
 
 ];

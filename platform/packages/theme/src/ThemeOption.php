@@ -360,7 +360,6 @@ class ThemeOption
     public function getField(string $id = '')
     {
         $this->checkOptName();
-
         if (!empty($this->optName) && !empty($id)) {
             return isset($this->fields[$this->optName][$id]) ? $this->fields[$this->optName][$id] : false;
         }
@@ -424,11 +423,9 @@ class ThemeOption
     public function getArgs(): array
     {
         $this->checkOptName();
-
         if (!empty($this->optName) && !empty($this->args[$this->optName])) {
             return $this->args[$this->optName];
         }
-
         return [];
     }
 
@@ -439,14 +436,12 @@ class ThemeOption
     public function setArgs(array $args = []): self
     {
         $this->checkOptName();
-
         if (!empty($this->optName) && !empty($args) && is_array($args)) {
             if (isset($this->args[$this->optName]) && isset($this->args[$this->optName]['clearArgs'])) {
                 $this->args[$this->optName] = [];
             }
             $this->args[$this->optName] = parse_args($args, $this->args[$this->optName]);
         }
-
         return $this;
     }
 
@@ -457,7 +452,6 @@ class ThemeOption
     public function getArg(string $key = ''): ?string
     {
         $this->checkOptName();
-
         if (!empty($this->optName) && !empty($key) && !empty($this->args[$this->optName])) {
             return Arr::get($this->args[$this->optName], $key);
         }
@@ -549,7 +543,7 @@ class ThemeOption
 
         $value = setting($this->getOptionKey($key, $this->getCurrentLocaleCode()), $default);
 
-        $value = $value ?: $default;
+        $value = $value ? $value : $default;
 
         if (is_array($value)) {
             $value = json_encode($value);
@@ -558,9 +552,6 @@ class ThemeOption
         return $value;
     }
 
-    /**
-     * @return bool|void
-     */
     public function saveOptions()
     {
         return setting()->save();

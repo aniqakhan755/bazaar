@@ -1,3 +1,22 @@
+@php
+    $originalProduct = $product;
+    $selectedAttrs = [];
+    $productImages = $product->images;
+    if ($product->is_variation) {
+        $product = get_parent_product($product->id);
+        $selectedAttrs = app(\Botble\Ecommerce\Repositories\Interfaces\ProductVariationInterface::class)
+            ->getAttributeIdsOfChildrenProduct($originalProduct->id);
+        if (count($productImages) == 0) {
+            $productImages = $product->images;
+        }
+    } else {
+        $selectedAttrs = $product->defaultVariation->productAttributes->pluck('id')->all();
+    }
+
+    Theme::asset()->remove('app-js');
+
+@endphp
+
 <div class="ps-product__header">
     <div class="ps-product__thumbnail" data-vertical="false">
         <div class="ps-product__images" data-arrow="true">
@@ -40,7 +59,7 @@
         <form class="add-to-cart-form" method="POST" action="{{ route('public.cart.add-to-cart') }}">
             @csrf
             <div class="ps-product__shopping">
-                <input type="hidden" name="id" class="hidden-product-id" value="{{ ($product->is_variation || !$product->defaultVariation->product_id) ? $product->id : $product->defaultVariation->product_id }}"/>
+                <input type="hidden" name="id" class="hidden-product-id" value="{{ ($originalProduct->is_variation || !$originalProduct->defaultVariation->product_id) ? $originalProduct->id : $originalProduct->defaultVariation->product_id }}"/>
                 <input type="hidden" name="qty" value="1">
                 @if (EcommerceHelper::isCartEnabled())
                     <button class="ps-btn ps-btn--black" type="submit">{{ __('Add to cart') }}</button>

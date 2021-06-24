@@ -10,7 +10,6 @@
             <input type="hidden" name="currency" value="{{ $currency }}">
             <input type="hidden" name="return_url" value="{{ $returnUrl }}">
             <input type="hidden" name="callback_url" value="{{ $callbackUrl }}">
-            {!! apply_filters(PAYMENT_FILTER_PAYMENT_PARAMETERS, null) !!}
             <ul class="list-group list_payment_method">
                 @if (setting('payment_stripe_status') == 1)
                     <li class="list-group-item">

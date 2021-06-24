@@ -25,9 +25,8 @@ return [
     'missing_json_file'             => 'Missing file plugin.json!',
     'plugin_invalid'                => 'Plugin is valid!',
     'published_assets_success'      => 'Publish assets for plugin :name successfully!',
-    'plugin_removed'                => 'Plugin has been removed!',
+    'plugin_removed'                => 'Plugin is removed!',
     'deactivated_success'           => 'Deactivate plugin successfully!',
     'deactivated_already'           => 'This plugin is deactivated already!',
-    'folder_is_not_writeable'       => 'Cannot write files! Folder :name is not writable. Please chmod to make it writable!',
-    'plugin_is_not_ready'           => 'Plugin :name is not ready to use',
+
 ];

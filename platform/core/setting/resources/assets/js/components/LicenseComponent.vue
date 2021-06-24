@@ -39,9 +39,8 @@
                             <label class="text-title-field" for="buyer">Your username on Envato</label>
                             <input type="text" class="next-input" v-model="buyer" id="buyer" placeholder="Your Envato's username">
                             <div>
-                                <small>Example: If your profile page is <a href="https://codecanyon.net/user/john-smith" rel="nofollow">https://codecanyon.net/user/john-smith</a>, then your username on Envato is <strong>john-smith</strong>.</small>
+                                <small>Ex: If your profile page is <a href="https://codecanyon.net/user/john-smith" rel="nofollow">https://codecanyon.net/user/john-smith</a>, then your username on Envato is <strong>john-smith</strong>.</small>
                             </div>
-                            <p><small class="text-danger">Note: Your site IP will be added to blacklist after 5 failed attempts.</small></p>
                         </div>
                         <div class="form-group">
                             <button :class="activating ? 'btn btn-info button-loading' : 'btn btn-info'" type="button" @click="activateLicense()">Activate license</button>

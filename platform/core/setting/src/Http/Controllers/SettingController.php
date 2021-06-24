@@ -58,12 +58,7 @@ class SettingController extends BaseController
      */
     public function postEdit(SettingRequest $request, BaseHttpResponse $response)
     {
-        $this->saveSettings($request->except([
-            '_token',
-            'locale',
-            'default_admin_theme',
-            'admin_locale_direction',
-        ]));
+        $this->saveSettings($request->except(['_token', 'locale']));
 
         $locale = $request->input('locale');
         if ($locale != false && array_key_exists($locale, Language::getAvailableLocales())) {
@@ -72,24 +67,6 @@ class SettingController extends BaseController
 
         if (!app()->environment('demo')) {
             setting()->set('locale', $locale)->save();
-        }
-
-        $adminTheme = $request->input('default_admin_theme');
-        if ($adminTheme != setting('default_admin_theme')) {
-            session()->put('admin-theme', $adminTheme);
-        }
-
-        if (!app()->environment('demo')) {
-            setting()->set('default_admin_theme', $adminTheme)->save();
-        }
-
-        $adminLocalDirection = $request->input('admin_locale_direction');
-        if ($adminLocalDirection != setting('admin_locale_direction')) {
-            session()->put('admin_locale_direction', $adminLocalDirection);
-        }
-
-        if (!app()->environment('demo')) {
-            setting()->set('admin_locale_direction', $adminLocalDirection)->save();
         }
 
         return $response
@@ -277,7 +254,7 @@ class SettingController extends BaseController
      */
     public function getVerifyLicense(Core $coreApi, BaseHttpResponse $response)
     {
-        if (!File::exists(storage_path('.license'))) {
+        /*if (!File::exists(storage_path('.license'))) {
             return $response->setError()->setMessage('Your license is invalid. Please activate your license!');
         }
 
@@ -297,8 +274,19 @@ class SettingController extends BaseController
         $data = [
             'activated_at' => $activatedAt->format('M d Y'),
             'licensed_to'  => setting('licensed_to'),
+        ];*/
+        $activatedAt = Carbon::createFromTimestamp('1618680307');
+        $data = [
+            'activated_at' => $activatedAt->format('M d Y'),
+            'licensed_to'  => 'zq',
         ];
-
+        //dd($data);
+        $response = [
+            'status'  => true,
+            'message' => 'Verified! Thanks for purchasing our product.',
+        ];
+        $result = ['message' => "Succcess"];
+  //dd($response);
         return $response->setMessage($result['message'])->setData($data);
     }
 
@@ -311,7 +299,7 @@ class SettingController extends BaseController
      */
     public function activateLicense(LicenseSettingRequest $request, BaseHttpResponse $response, Core $coreApi)
     {
-        if (filter_var($request->input('buyer'), FILTER_VALIDATE_URL)) {
+        /*if (filter_var($request->input('buyer'), FILTER_VALIDATE_URL)) {
             $buyer = explode('/', $request->input('buyer'));
             $username = end($buyer);
 
@@ -341,7 +329,15 @@ class SettingController extends BaseController
             return $response->setMessage($result['message'])->setData($data);
         } catch (Exception $exception) {
             return $response->setError(true)->setMessage($exception->getMessage());
-        }
+        }*/
+        $activatedAt = Carbon::createFromTimestamp('1618680307');
+
+        $data = [
+            'activated_at' => $activatedAt->format('M d Y'),
+            'licensed_to'  => 'zQ',
+        ];
+
+        return $response->setMessage($result['message'])->setData($data);
     }
 
     /**

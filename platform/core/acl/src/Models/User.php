@@ -41,6 +41,9 @@ class User extends Authenticatable
         'password',
         'avatar_id',
         'permissions',
+        'cnic',
+        'phone',
+        'cnic_verified'
     ];
 
     /**
@@ -92,17 +95,8 @@ class User extends Authenticatable
 
     /**
      * @return string
-     * @deprecated since v5.15
      */
     public function getFullName()
-    {
-        return $this->name;
-    }
-
-    /**
-     * @return string
-     */
-    public function getNameAttribute()
     {
         return ucfirst($this->first_name) . ' ' . ucfirst($this->last_name);
     }
@@ -120,15 +114,7 @@ class User extends Authenticatable
      */
     public function getAvatarUrlAttribute()
     {
-        if ($this->avatar->url) {
-            return RvMedia::url($this->avatar->url);
-        }
-
-        try {
-            return (new Avatar)->create($this->name)->toBase64();
-        } catch (Exception $exception) {
-            return RvMedia::getDefaultImage();
-        }
+        return $this->avatar->url ? RvMedia::url($this->avatar->url) : (new Avatar)->create($this->getFullName())->toBase64();
     }
 
     /**
@@ -203,7 +189,7 @@ class User extends Authenticatable
     public function authorAttributes()
     {
         return [
-            'name'   => $this->name,
+            'name'   => $this->getFullName(),
             'email'  => $this->email,
             'avatar' => $this->avatar_url,
         ];
@@ -267,5 +253,9 @@ class User extends Authenticatable
         }
 
         return parent::delete();
+    }
+    public function company()
+    {
+        return $this->hasOne(VendorCompany::class);
     }
 }

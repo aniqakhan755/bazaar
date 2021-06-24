@@ -23,7 +23,7 @@ class HandleApplyCouponService
     protected $productRepository;
 
     /**
-     * HandleApplyCouponService constructor.
+     * PublicController constructor.
      * @param DiscountInterface $discountRepository
      * @param ProductInterface $productRepository
      */
@@ -37,7 +37,7 @@ class HandleApplyCouponService
      * @param string $coupon
      * @return array
      */
-    public function execute(string $coupon, $sessionData = [], $cartData = [], $prefix = '')
+    public function execute(string $coupon)
     {
         $token = OrderHelper::getOrderSessionToken();
 
@@ -45,9 +45,7 @@ class HandleApplyCouponService
             $token = OrderHelper::getOrderSessionToken();
         }
 
-        if (!$sessionData) {
-            $sessionData = OrderHelper::getOrderSessionData($token);
-        }
+        $sessionData = OrderHelper::getOrderSessionData($token);
 
         $couponCode = trim($coupon);
 
@@ -63,7 +61,7 @@ class HandleApplyCouponService
         if ($discount->target === 'customer') {
             $discountCustomers = $discount->customers()->pluck('customer_id')->all();
             if (!auth('customer')->check() ||
-                !in_array(auth('customer')->id(), $discountCustomers)
+                !in_array(auth('customer')->user()->getAuthIdentifier(), $discountCustomers)
             ) {
                 return [
                     'error'   => true,
@@ -79,31 +77,22 @@ class HandleApplyCouponService
             ];
         }
 
-        $cartItems = Arr::get($cartData, 'cartItems', Cart::instance('cart')->content());
-        $rawTotal = Arr::get($cartData, 'rawTotal', Cart::instance('cart')->rawTotal());
-        $countCart = Arr::get($cartData, 'countCart', Cart::instance('cart')->count());
-
+        $cartItems = Cart::instance('cart')->content();
         $couponDiscountAmount = 0;
         $isFreeShipping = false;
-        $discountTypeOption = null;
 
         if ($discount->type_option == 'shipping') {
+            $sessionData['is_free_ship'] = true;
             $isFreeShipping = true;
-            if ($prefix) {
-                Arr::set($sessionData, $prefix . 'is_free_ship', true);
-            } else {
-                $sessionData['is_free_ship'] = true;
-            }
             OrderHelper::setOrderSessionData($token, $sessionData);
         } elseif ($discount->type_option === 'amount' && $discount->discount_on === 'per-order') {
             $couponDiscountAmount = $discount->value;
         } else {
-            $discountTypeOption = $discount->type_option;
             switch ($discount->type_option) {
                 case 'amount':
                     switch ($discount->target) {
                         case 'amount-minimum-order':
-                            if ($discount->min_order_price <= $rawTotal) {
+                            if ($discount->min_order_price <= Cart::instance('cart')->rawTotal()) {
                                 $couponDiscountAmount += $discount->value;
                             }
                             break;
@@ -111,7 +100,7 @@ class HandleApplyCouponService
                             $couponDiscountAmount += $discount->value;
                             break;
                         default:
-                            if ($countCart >= $discount->product_quantity) {
+                            if (Cart::instance('cart')->count() >= $discount->product_quantity) {
                                 $couponDiscountAmount += $discount->value;
                             }
                             break;
@@ -120,16 +109,16 @@ class HandleApplyCouponService
                 case 'percentage':
                     switch ($discount->target) {
                         case 'amount-minimum-order':
-                            if ($discount->min_order_price <= $rawTotal) {
-                                $couponDiscountAmount = $rawTotal * $discount->value / 100;
+                            if ($discount->min_order_price <= Cart::instance('cart')->rawTotal()) {
+                                $couponDiscountAmount = Cart::instance('cart')->rawTotal() * $discount->value / 100;
                             }
                             break;
                         case 'all-orders':
-                            $couponDiscountAmount = $rawTotal * $discount->value / 100;
+                            $couponDiscountAmount = Cart::instance('cart')->rawTotal() * $discount->value / 100;
                             break;
                         default:
-                            if ($countCart >= $discount->product_quantity) {
-                                $couponDiscountAmount += $rawTotal * $discount->value / 100;
+                            if (Cart::instance('cart')->count() >= $discount->product_quantity) {
+                                $couponDiscountAmount += Cart::instance('cart')->rawTotal() * $discount->value / 100;
                             }
                             break;
                     }
@@ -163,29 +152,16 @@ class HandleApplyCouponService
             $couponDiscountAmount = 0;
         }
 
-        if ($prefix) {
-            switch ($discountTypeOption) {
-                case 'percentage' || 'same-price':
-                    Arr::set($sessionData, $prefix . 'coupon_discount_amount', $couponDiscountAmount);
-                    OrderHelper::setOrderSessionData($token, $sessionData);
-                    break;
-                default:
-                    Arr::set($sessionData, $prefix . 'coupon_discount_amount', 0);
-                    break;
-            }
-        } else {
-            Arr::set($sessionData, 'coupon_discount_amount', $couponDiscountAmount);
-            OrderHelper::setOrderSessionData($token, $sessionData);
-        }
+        Arr::set($sessionData, 'coupon_discount_amount', $couponDiscountAmount);
+        OrderHelper::setOrderSessionData($token, $sessionData);
 
         session()->put('applied_coupon_code', $couponCode);
 
         return [
             'error' => false,
             'data'  => [
-                'discount_amount'      => $couponDiscountAmount,
-                'is_free_shipping'     => $isFreeShipping,
-                'discount_type_option' => $discount->type_option,
+                'discount_amount'  => $couponDiscountAmount,
+                'is_free_shipping' => $isFreeShipping,
             ],
         ];
     }
@@ -315,19 +291,19 @@ class HandleApplyCouponService
                     switch ($discount->target) {
                         case 'amount-minimum-order':
                             if ($discount->min_order_price <= $request->input('sub_total')) {
-                                foreach ($request->input('product_ids', []) as $item) {
+                                foreach ($request->input('product_ids', []) as $cartId => $item) {
                                     $couponDiscountAmount += $discount->value;
                                 }
                             }
                             break;
                         case 'all-orders':
-                            foreach ($request->input('product_ids', []) as $item) {
+                            foreach ($request->input('product_ids', []) as $cartId => $item) {
                                 $couponDiscountAmount += $discount->value;
                             }
                             break;
                         default:
                             if (count($request->input('product_ids', [])) >= $discount->product_quantity) {
-                                foreach ($request->input('product_ids', []) as $item) {
+                                foreach ($request->input('product_ids', []) as $cartId => $item) {
                                     $couponDiscountAmount += $discount->value;
                                 }
                             }
@@ -352,7 +328,7 @@ class HandleApplyCouponService
                     }
                     break;
                 case 'same-price':
-                    foreach ($request->input('product_ids', []) as $item) {
+                    foreach ($request->input('product_ids', []) as $cartId => $item) {
                         if (in_array($discount->target, ['specific-product', 'product-variant']) &&
                             in_array($item->id, $discount->products()->pluck('product_id')->all())
                         ) {

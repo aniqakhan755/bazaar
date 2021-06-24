@@ -40,27 +40,17 @@ class PublicController extends Controller
         $newsletter = $this->newsletterRepository->getFirstBy(['email' => $request->input('email')]);
         if (!$newsletter) {
             $newsletter = $this->newsletterRepository->createOrUpdate($request->input());
-
-            $mailchimpApiKey = setting('newsletter_mailchimp_api_key',
-                config('plugins.newsletter.general.mailchimp.api_key'));
-            $mailchimpListId = setting('newsletter_mailchimp_list_id',
-                config('plugins.newsletter.general.mailchimp.list_id'));
-
-            if ($mailchimpApiKey && $mailchimpListId) {
+            if (config('plugins.newsletter.general.mailchimp.api_key') && config('plugins.newsletter.general.mailchimp.list_id')) {
                 Newsletter::subscribe($newsletter->email);
             }
 
-            $sendgridApiKey = setting('newsletter_sendgrid_api_key',
-                config('plugins.newsletter.general.sendgrid.api_key'));
-            $sendgridListId = setting('newsletter_sendgrid_list_id',
-                config('plugins.newsletter.general.sendgrid.list_id'));
-            if ($sendgridApiKey && $sendgridListId) {
-                $sg = new SendGrid($sendgridApiKey);
+            if (config('plugins.newsletter.general.sendgrid.api_key') && config('plugins.newsletter.general.sendgrid.list_id')) {
+                $sg = new SendGrid(config('plugins.newsletter.general.sendgrid.api_key'));
 
                 $requestBody = json_decode(
                     '{
                         "list_ids": [
-                            "' . $sendgridListId . '"
+                            "' . config('plugins.newsletter.general.sendgrid.list_id') . '"
                         ],
                         "contacts": [
                             {
@@ -87,19 +77,19 @@ class PublicController extends Controller
 
     /**
      * Unsubscribe newsletter with token. change status to false
-     * @param int $id
+     * @param string $email
      * @param Request $request
      * @param BaseHttpResponse $response
      * @return BaseHttpResponse
      */
-    public function getUnsubscribe($id, Request $request, BaseHttpResponse $response)
+    public function getUnsubscribe($email, Request $request, BaseHttpResponse $response)
     {
         if (!URL::hasValidSignature($request)) {
             abort(404);
         }
 
         $newsletter = $this->newsletterRepository->getFirstBy([
-            'id'     => $id,
+            'email'  => $email,
             'status' => NewsletterStatusEnum::SUBSCRIBED,
         ]);
 
@@ -107,23 +97,18 @@ class PublicController extends Controller
             $newsletter->status = NewsletterStatusEnum::UNSUBSCRIBED;
             $this->newsletterRepository->createOrUpdate($newsletter);
 
-            $mailchimpApiKey = setting('newsletter_mailchimp_api_key',
-                config('plugins.newsletter.general.mailchimp.api_key'));
-            $mailchimpListId = setting('newsletter_mailchimp_list_id',
-                config('plugins.newsletter.general.mailchimp.list_id'));
-
-            if ($mailchimpApiKey && $mailchimpListId) {
+            if (config('plugins.newsletter.general.mailchimp.api_key') && config('plugins.newsletter.general.mailchimp.list_id')) {
                 Newsletter::unsubscribe($newsletter->email);
             }
 
             return $response
-                ->setNextUrl(route('public.index'))
+                ->setNextUrl(url('/'))
                 ->setMessage(__('Unsubscribe to newsletter successfully'));
         }
 
         return $response
             ->setError()
-            ->setNextUrl(route('public.index'))
+            ->setNextUrl(url('/'))
             ->setMessage(__('Your email does not exist in the system or you have unsubscribed already!'));
     }
 }

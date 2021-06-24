@@ -3,7 +3,6 @@
 use Botble\Page\Models\Page;
 
 Route::group(['namespace' => 'Botble\Page\Http\Controllers', 'middleware' => ['web', 'core']], function () {
-
     Route::group(['prefix' => BaseHelper::getAdminPrefix(), 'middleware' => 'auth'], function () {
 
         Route::group(['prefix' => 'pages', 'as' => 'pages.'], function () {
@@ -19,13 +18,11 @@ Route::group(['namespace' => 'Botble\Page\Http\Controllers', 'middleware' => ['w
 
     if (defined('THEME_MODULE_SCREEN_NAME')) {
         Route::group(apply_filters(BASE_FILTER_GROUP_PUBLIC_ROUTE, []), function () {
-
             if (SlugHelper::getPrefix(Page::class)) {
                 Route::get(SlugHelper::getPrefix(Page::class) . '/{slug}', [
                     'uses' => 'PublicController@getPage',
                 ]);
             }
-
         });
     }
 });

@@ -3,6 +3,7 @@
 namespace Botble\Ecommerce\Tables;
 
 use BaseHelper;
+use Illuminate\Support\Facades\Auth;
 
 class OrderIncompleteTable extends OrderTable
 {
@@ -38,12 +39,14 @@ class OrderIncompleteTable extends OrderTable
             })
             ->editColumn('created_at', function ($item) {
                 return BaseHelper::formatDate($item->created_at);
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('orders.view-incomplete-order', 'orders.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('orders.view-incomplete-order', 'orders.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -67,11 +70,38 @@ class OrderIncompleteTable extends OrderTable
             'ec_orders.amount',
             'ec_orders.currency_id',
         ];
+        
+        $user = Auth::user();
+      
+        if(count($user->roles) > 0)
+        {
+            $role_name = $user->roles[0]->slug;
+            if($role_name  == 'vendor')
+            {
+                $user_id = Auth::user()->id;
+                $query = $model
+                ->select($select)
+                ->with(['user'])
+                ->leftJoin('ec_order_product', 'ec_orders.id', '=', 'ec_order_product.order_id')
+                ->leftJoin('ec_products', 'ec_order_product.product_id', '=', 'ec_products.id')
+                ->where('ec_products.user_id',$user_id)
+                ->where('ec_orders.is_finished', 0);
+            }else
+            {
+    
+            $query = $model
+                ->select()
+                ->with(['user'])
+                ->where('ec_orders.is_finished', 0);
+            }
+        }else
+        {
 
         $query = $model
             ->select()
             ->with(['user'])
             ->where('ec_orders.is_finished', 0);
+        }
 
         return $this->applyScopes(apply_filters(BASE_FILTER_TABLE_QUERY, $query, $model, $select));
     }
@@ -128,5 +158,21 @@ class OrderIncompleteTable extends OrderTable
     public function bulkActions(): array
     {
         return $this->addDeleteAction(route('orders.deletes'), 'orders.destroy', parent::bulkActions());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getBulkChanges(): array
+    {
+        return [];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function buttons()
+    {
+        return [];
     }
 }

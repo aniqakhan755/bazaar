@@ -4,6 +4,7 @@ namespace Botble\Newsletter\Tables;
 
 use BaseHelper;
 use Botble\Newsletter\Enums\NewsletterStatusEnum;
+use Botble\Newsletter\Models\Newsletter;
 use Botble\Newsletter\Repositories\Interfaces\NewsletterInterface;
 use Botble\Table\Abstracts\TableAbstract;
 use Illuminate\Contracts\Routing\UrlGenerator;
@@ -35,9 +36,9 @@ class NewsletterTable extends TableAbstract
         UrlGenerator $urlGenerator,
         NewsletterInterface $newsletterRepository
     ) {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $newsletterRepository;
+        $this->setOption('id', 'table-newsletters');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasPermission('newsletter.destroy')) {
             $this->hasOperations = false;
@@ -63,12 +64,14 @@ class NewsletterTable extends TableAbstract
             })
             ->editColumn('status', function ($item) {
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations(null, 'newsletter.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations(null, 'newsletter.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -122,6 +125,14 @@ class NewsletterTable extends TableAbstract
                 'width' => '100px',
             ],
         ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function buttons()
+    {
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, [], Newsletter::class);
     }
 
     /**

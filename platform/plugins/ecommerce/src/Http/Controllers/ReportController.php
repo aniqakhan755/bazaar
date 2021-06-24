@@ -19,6 +19,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Throwable;
+use Illuminate\Support\Facades\Auth;
 
 class ReportController extends BaseController
 {
@@ -69,26 +70,89 @@ class ReportController extends BaseController
             ->addStylesDirectly('vendor/core/core/dashboard/css/dashboard.css');
 
         $count = [];
-        $count['revenue'] = $this->orderRepository
+        $user = Auth::user();
+        if(count($user->roles) > 0)
+        {
+            $role_name = $user->roles[0]->slug;
+            if($role_name  == 'vendor')
+            {
+                $user_id = Auth::user()->id;
+                $count['revenue'] = $this->orderRepository
+                    ->getModel()
+                    ->whereDate('ec_orders.created_at', now()->toDateString())
+                    ->join('payments', 'payments.order_id', '=', 'ec_orders.id')
+                    ->Join('ec_order_product', 'ec_orders.id', '=', 'ec_order_product.order_id')
+                    ->Join('ec_products', 'ec_order_product.product_id', '=', 'ec_products.id')
+                    ->where('ec_products.user_id',$user_id)
+                    ->where('payments.status', PaymentStatusEnum::COMPLETED)
+                    ->sum('sub_total');
+
+                $count['orders'] = $this->orderRepository
+                    ->getModel()
+                    ->Join('ec_order_product', 'ec_orders.id', '=', 'ec_order_product.order_id')
+                    ->Join('ec_products', 'ec_order_product.product_id', '=', 'ec_products.id')
+                    ->where('ec_products.user_id',$user_id)
+                    ->whereDate('ec_orders.created_at', now()->toDateString())
+                    ->count();
+
+                $count['products'] = $this->productRepository->count([
+                    'status'       => BaseStatusEnum::PUBLISHED,
+                    'is_variation' => false,
+                    'user_id'      => $user_id, 
+                ]);
+                $count['customers'] = $this->customerRepository->count();
+
+                $topSellingProducts = $topSellingProductsTable
+                    ->setAjaxUrl(route('ecommerce.report.top-selling-products'));
+            }
+            else
+            {
+                $count['revenue'] = $this->orderRepository
+                ->getModel()
+                ->whereDate('ec_orders.created_at', now()->toDateString())
+                ->join('payments', 'payments.order_id', '=', 'ec_orders.id')
+                ->where('payments.status', PaymentStatusEnum::COMPLETED)
+                ->sum('sub_total');
+
+                $count['orders'] = $this->orderRepository
+                    ->getModel()
+                    ->whereDate('created_at', now()->toDateString())
+                    ->count();
+
+                $count['products'] = $this->productRepository->count([
+                    'status'       => BaseStatusEnum::PUBLISHED,
+                    'is_variation' => false,
+                ]);
+                $count['customers'] = $this->customerRepository->count();
+
+                $topSellingProducts = $topSellingProductsTable
+                    ->setAjaxUrl(route('ecommerce.report.top-selling-products'));
+                }
+        }
+        else
+        {
+            $count['revenue'] = $this->orderRepository
             ->getModel()
             ->whereDate('ec_orders.created_at', now()->toDateString())
             ->join('payments', 'payments.order_id', '=', 'ec_orders.id')
             ->where('payments.status', PaymentStatusEnum::COMPLETED)
             ->sum('sub_total');
 
-        $count['orders'] = $this->orderRepository
-            ->getModel()
-            ->whereDate('created_at', now()->toDateString())
-            ->count();
+            $count['orders'] = $this->orderRepository
+                ->getModel()
+                ->whereDate('created_at', now()->toDateString())
+                ->count();
 
-        $count['products'] = $this->productRepository->count([
-            'status'       => BaseStatusEnum::PUBLISHED,
-            'is_variation' => false,
-        ]);
-        $count['customers'] = $this->customerRepository->count();
+            $count['products'] = $this->productRepository->count([
+                'status'       => BaseStatusEnum::PUBLISHED,
+                'is_variation' => false,
+            ]);
+            $count['customers'] = $this->customerRepository->count();
 
-        $topSellingProducts = $topSellingProductsTable
-            ->setAjaxUrl(route('ecommerce.report.top-selling-products'));
+            $topSellingProducts = $topSellingProductsTable
+                ->setAjaxUrl(route('ecommerce.report.top-selling-products'));
+        }
+
 
         return view('plugins/ecommerce::reports.index', compact('count', 'topSellingProducts'));
     }
@@ -104,11 +168,9 @@ class ReportController extends BaseController
         $chartTime = null;
         $defaultRange = trans('plugins/ecommerce::reports.today');
 
-        $now = now();
-
         switch ($request->input('filter', 'week')) {
             case 'date':
-                $startDate = $now->startOfDay()->toDateString();
+                $startDate = now()->startOfDay()->toDateString();
                 $endDate = now()->toDateString();
                 $defaultRange = trans('plugins/ecommerce::reports.today');
                 break;
@@ -165,14 +227,96 @@ class ReportController extends BaseController
     public function getDashboardWidgetGeneral(BaseHttpResponse $response)
     {
         $startOfMonth = now()->startOfMonth()->toDateString();
-        $today = now()->toDateString();
+        $today = now()->toDateTimeString();
+        
+        $user = Auth::user();
+        if(count($user->roles) > 0)
+        {
+            $role_name = $user->roles[0]->slug;
+            if($role_name  == 'vendor')
+            {
+                $user_id = Auth::user()->id;
 
-        $processingOrders = $this->orderRepository
+                $processingOrders = $this->orderRepository
+                ->getModel()
+                ->Join('ec_order_product', 'ec_orders.id', '=', 'ec_order_product.order_id')
+                ->Join('ec_products', 'ec_order_product.product_id', '=', 'ec_products.id')
+                ->whereIn('ec_orders.status', [ OrderStatusEnum::PENDING,OrderStatusEnum::PROCESSING,OrderStatusEnum::DELIVERING,OrderStatusEnum::DELIVERED])
+                ->where('ec_orders.created_at', '>=', $startOfMonth)
+                ->where('ec_orders.created_at', '<=', $today)
+                ->where('ec_products.user_id',$user_id)
+                ->count();
+                $completedOrders = $this->orderRepository
+                ->getModel()
+                ->Join('ec_order_product', 'ec_orders.id', '=', 'ec_order_product.order_id')
+                ->Join('ec_products', 'ec_order_product.product_id', '=', 'ec_products.id')
+                ->where('ec_products.user_id',$user_id)
+                ->where(['ec_orders.status' => OrderStatusEnum::COMPLETED])
+                ->where('ec_orders.created_at', '>=', $startOfMonth)
+                ->where('ec_orders.created_at', '<=', $today)
+                ->count();
+               
+            $revenue = $this->orderRepository->countRevenueByDateRange($startOfMonth, $today);
+    
+            $lowStockProducts = $this->productRepository
+                ->getModel()
+                ->where('with_storehouse_management', 1)
+                ->where('user_id',$user_id)
+                ->where('quantity', '<', 2)
+                ->where('quantity', '>', 0)
+                ->count();
+    
+            $outOfStockProducts = $this->productRepository
+                ->getModel()
+                ->where('with_storehouse_management', 1)
+                ->where('user_id',$user_id)
+                ->where('quantity', '<', 1)
+                ->count();
+              
+            }
+            else
+            {
+                $processingOrders = $this->orderRepository
+                ->getModel()
+                ->where(['status' => OrderStatusEnum::PENDING])
+                ->where('created_at', '>=', $startOfMonth)
+                ->where('created_at', '<=', $today)
+                ->count();
+    
+                
+    
+            $completedOrders = $this->orderRepository
+                ->getModel()
+                ->where(['status' => OrderStatusEnum::COMPLETED])
+                ->where('created_at', '>=', $startOfMonth)
+                ->where('created_at', '<=', $today)
+                ->count();
+    
+            $revenue = $this->orderRepository->countRevenueByDateRange($startOfMonth, $today);
+    
+            $lowStockProducts = $this->productRepository
+                ->getModel()
+                ->where('with_storehouse_management', 1)
+                ->where('quantity', '<', 2)
+                ->where('quantity', '>', 0)
+                ->count();
+    
+            $outOfStockProducts = $this->productRepository
+                ->getModel()
+                ->where('with_storehouse_management', 1)
+                ->where('quantity', '<', 1)
+                ->count();
+            }
+        }
+        else{
+            $processingOrders = $this->orderRepository
             ->getModel()
             ->where(['status' => OrderStatusEnum::PENDING])
             ->where('created_at', '>=', $startOfMonth)
             ->where('created_at', '<=', $today)
             ->count();
+
+            
 
         $completedOrders = $this->orderRepository
             ->getModel()
@@ -195,6 +339,9 @@ class ReportController extends BaseController
             ->where('with_storehouse_management', 1)
             ->where('quantity', '<', 1)
             ->count();
+        }
+
+       
 
         return $response
             ->setData(

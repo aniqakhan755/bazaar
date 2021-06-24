@@ -124,6 +124,7 @@ class MediaFile extends BaseModel
      */
     public function canGenerateThumbnails(): bool
     {
-        return RvMedia::canGenerateThumbnails($this->mime_type);
+        return RvMedia::isImage($this->mime_type) &&
+            !in_array($this->mime_type, ['image/svg+xml', 'image/x-icon']);
     }
 }

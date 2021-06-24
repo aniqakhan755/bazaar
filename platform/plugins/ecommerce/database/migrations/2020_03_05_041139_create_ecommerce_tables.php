@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 class CreateEcommerceTables extends Migration
 {
@@ -53,8 +53,8 @@ class CreateEcommerceTables extends Migration
             $table->string('title');
             $table->string('symbol', 10);
             $table->tinyInteger('is_prefix_symbol')->unsigned()->default(0);
-            $table->tinyInteger('decimals')->unsigned()->default(0)->nullable();
-            $table->integer('order')->default(0)->unsigned()->nullable();
+            $table->tinyInteger('decimals')->unsigned()->default(0);
+            $table->integer('order')->default(0)->unsigned();
             $table->tinyInteger('is_default')->default(0);
             $table->double('exchange_rate')->default(1);
             $table->timestamps();
@@ -64,7 +64,7 @@ class CreateEcommerceTables extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->longText('content')->nullable();
+            $table->text('content')->nullable();
             $table->string('status', 60)->default('published');
             $table->text('images')->nullable();
             $table->string('sku')->nullable();

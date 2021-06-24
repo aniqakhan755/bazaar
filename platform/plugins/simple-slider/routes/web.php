@@ -28,7 +28,7 @@ Route::group(['namespace' => 'Botble\SimpleSlider\Http\Controllers', 'middleware
                 'destroy',
             ])->parameters(['' => 'simple-slider-item']);
 
-            Route::match(['GET', 'POST'], 'list/{id}', [
+            Route::get('list/{id}', [
                 'as'   => 'index',
                 'uses' => 'SimpleSliderItemController@index',
             ]);

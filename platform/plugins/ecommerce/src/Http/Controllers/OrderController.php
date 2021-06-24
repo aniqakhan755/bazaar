@@ -220,7 +220,7 @@ class OrderController extends BaseController
                 'action'      => 'confirm_order',
                 'description' => trans('plugins/ecommerce::order.order_was_verified_by'),
                 'order_id'    => $order->id,
-                'user_id'     => Auth::id(),
+                'user_id'     => Auth::user()->getKey(),
             ]);
 
             $payment = $this->paymentRepository->createOrUpdate([
@@ -231,7 +231,7 @@ class OrderController extends BaseController
                 'payment_type'    => 'confirm',
                 'order_id'        => $order->id,
                 'charge_id'       => Str::upper(Str::random(10)),
-                'user_id'         => Auth::id(),
+                'user_id'         => Auth::user()->getAuthIdentifier(),
             ]);
 
             $order->payment_id = $payment->id;
@@ -244,7 +244,7 @@ class OrderController extends BaseController
                         'money' => format_price($order->amount, $order->currency_id),
                     ]),
                     'order_id'    => $order->id,
-                    'user_id'     => Auth::id(),
+                    'user_id'     => Auth::user()->getKey(),
                 ]);
             }
 
@@ -321,9 +321,25 @@ class OrderController extends BaseController
             ->where('id', $id)
             ->with(['products', 'user'])
             ->firstOrFail();
+            $user = Auth::user();
+            if(count($user->roles) > 0)
+            {
+                $role_name = $user->roles[0]->slug;
+                if($role_name  == 'vendor')
+                {
+                    $user_id = Auth::user()->id;
+                    if($order->products[0]->product->user_id != $user_id)
+                    {
+                        abort(404);
+                    }
+                }
+            }
+
 
         page_title()->setTitle(trans('plugins/ecommerce::order.edit_order', ['code' => get_order_code($id)]));
 
+      
+          
         $weight = 0;
         foreach ($order->products as $product) {
             if ($product && $product->weight) {
@@ -333,7 +349,15 @@ class OrderController extends BaseController
 
         $defaultStore = get_primary_store_locator();
 
-        return view('plugins/ecommerce::orders.edit', compact('order', 'weight', 'defaultStore'));
+        $user = Auth::user();
+        $role_name ="";
+       
+        if(count($user->roles) > 0)
+        {
+            $role_name = $user->roles[0]->slug;
+        }
+
+        return view('plugins/ecommerce::orders.edit', compact('order', 'weight', 'defaultStore','role_name'));
     }
 
     /**
@@ -429,13 +453,13 @@ class OrderController extends BaseController
             'action'      => 'confirm_order',
             'description' => trans('plugins/ecommerce::order.order_was_verified_by'),
             'order_id'    => $order->id,
-            'user_id'     => Auth::id(),
+            'user_id'     => Auth::user()->getKey(),
         ]);
 
         $payment = $this->paymentRepository->getFirstBy(['order_id' => $order->id]);
 
         if ($payment) {
-            $payment->user_id = Auth::id();
+            $payment->user_id = Auth::user()->getKey();
             $payment->save();
         }
 
@@ -444,7 +468,7 @@ class OrderController extends BaseController
             OrderHelper::setEmailVariables($order);
             $mailer->sendUsingTemplate(
                 'order_confirm',
-                $order->user->email ?: $order->address->email
+                $order->user->email ? $order->user->email : $order->address->email
             );
         }
 
@@ -513,15 +537,13 @@ class OrderController extends BaseController
 
         $storeLocators = $this->storeLocatorRepository->allBy(['is_shipping_location' => true]);
 
-        $url = route('orders.create-shipment', $order->id);
-
         if ($request->has('view')) {
             return view('plugins/ecommerce::orders.shipment-form',
-                compact('order', 'weight', 'shipping', 'storeLocators', 'url'));
+                compact('order', 'weight', 'shipping', 'storeLocators'));
         }
 
         return $response->setData(view('plugins/ecommerce::orders.shipment-form',
-            compact('order', 'weight', 'shipping', 'storeLocators', 'url'))->render());
+            compact('order', 'weight', 'shipping', 'storeLocators'))->render());
     }
 
     /**
@@ -556,7 +578,7 @@ class OrderController extends BaseController
 
         $shipment = [
             'order_id'   => $order->id,
-            'user_id'    => Auth::id(),
+            'user_id'    => Auth::user()->getKey(),
             'weight'     => $weight,
             'note'       => $request->input('note'),
             'cod_amount' => $request->input('cod_amount') ?? ($order->payment->status !== PaymentStatusEnum::COMPLETED ? $order->amount : 0),
@@ -594,7 +616,7 @@ class OrderController extends BaseController
                 OrderHelper::setEmailVariables($order);
                 $mailer->sendUsingTemplate(
                     'customer_delivery_order',
-                    $order->user->email ?: $order->address->email
+                    $order->user->email ? $order->user->email : $order->address->email
                 );
             }
 
@@ -602,7 +624,7 @@ class OrderController extends BaseController
                 'action'      => 'create_shipment',
                 'description' => $result->getMessage() . ' ' . trans('plugins/ecommerce::order.by_username'),
                 'order_id'    => $id,
-                'user_id'     => Auth::id(),
+                'user_id'     => Auth::user()->getKey(),
             ]);
 
             $shipmentHistoryRepository->createOrUpdate([
@@ -610,7 +632,7 @@ class OrderController extends BaseController
                 'description' => trans('plugins/ecommerce::order.shipping_was_created_from'),
                 'shipment_id' => $shipment->id,
                 'order_id'    => $id,
-                'user_id'     => Auth::id(),
+                'user_id'     => Auth::user()->getKey(),
             ]);
         }
 
@@ -631,7 +653,7 @@ class OrderController extends BaseController
             'action'      => 'cancel_shipment',
             'description' => trans('plugins/ecommerce::order.shipping_was_canceled_by'),
             'order_id'    => $shipment->order_id,
-            'user_id'     => Auth::id(),
+            'user_id'     => Auth::user()->getKey(),
         ]);
 
         return $response
@@ -678,24 +700,11 @@ class OrderController extends BaseController
         $this->orderRepository->createOrUpdate(['status' => OrderStatusEnum::CANCELED, 'is_confirmed' => true],
             compact('id'));
 
-        foreach ($order->products as $orderProduct) {
-            $product = $orderProduct->product;
-            $product->quantity += $orderProduct->qty;
-
-            if ($product->is_variation) {
-                $originalProduct = $product->original_product;
-                $originalProduct->quantity += $orderProduct->qty;
-                $originalProduct->save();
-            }
-
-            $product->save();
-        }
-
         $this->orderHistoryRepository->createOrUpdate([
             'action'      => 'cancel_order',
             'description' => trans('plugins/ecommerce::order.order_was_canceled_by'),
             'order_id'    => $order->id,
-            'user_id'     => Auth::id(),
+            'user_id'     => Auth::user()->getKey(),
         ]);
 
         $mailer = EmailHandler::setModule(ECOMMERCE_MODULE_SCREEN_NAME);
@@ -703,7 +712,7 @@ class OrderController extends BaseController
             OrderHelper::setEmailVariables($order);
             $mailer->sendUsingTemplate(
                 'customer_cancel_order',
-                $order->user->email ?: $order->address->email
+                $order->user->email ? $order->user->email : $order->address->email
             );
         }
 
@@ -738,7 +747,7 @@ class OrderController extends BaseController
             OrderHelper::setEmailVariables($order);
             $mailer->sendUsingTemplate(
                 'order_confirm_payment',
-                $order->user->email ?: $order->address->email
+                $order->user->email ? $order->user->email : $order->address->email
             );
         }
 
@@ -748,7 +757,7 @@ class OrderController extends BaseController
                 'money' => format_price($order->amount),
             ]),
             'order_id'    => $order->id,
-            'user_id'     => Auth::id(),
+            'user_id'     => Auth::user()->getKey(),
         ]);
 
         return $response->setMessage(trans('plugins/ecommerce::order.confirm_payment_success'));
@@ -829,7 +838,7 @@ class OrderController extends BaseController
                     'price' => format_price($request->input('refund_amount')),
                 ]),
                 'order_id'    => $order->id,
-                'user_id'     => Auth::id(),
+                'user_id'     => Auth::user()->getKey(),
                 'extras'      => json_encode([
                     'amount' => $request->input('refund_amount'),
                     'method' => $payment->payment_channel ?? PaymentMethodEnum::COD,
@@ -1048,12 +1057,11 @@ class OrderController extends BaseController
         try {
             $mailer = EmailHandler::setModule(ECOMMERCE_MODULE_SCREEN_NAME);
             if ($mailer->templateEnabled('order_recover')) {
-                $order->dont_show_order_info_in_product_list = true;
                 OrderHelper::setEmailVariables($order);
 
                 $mailer->sendUsingTemplate(
                     'order_recover',
-                    $order->user->email ?: $order->address->email
+                    $order->user->email ? $order->user->email : $order->address->email
                 );
             }
             return $response->setMessage(trans('plugins/ecommerce::order.sent_email_incomplete_order_success'));

@@ -20,7 +20,7 @@ class GoogleClient extends Client
     {
         if (is_string($config)) {
             if (!$config = json_decode($config, true)) {
-                throw new LogicException('Invalid data for auth config');
+                throw new LogicException('invalid data for auth config');
             }
         }
 

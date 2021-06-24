@@ -3,13 +3,14 @@
 namespace Botble\Page\Tables;
 
 use BaseHelper;
+use Botble\Page\Models\Page;
+use Illuminate\Support\Facades\Auth;
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Page\Repositories\Interfaces\PageInterface;
 use Botble\Table\Abstracts\TableAbstract;
 use Html;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\DataTables;
 
@@ -33,9 +34,9 @@ class PageTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, PageInterface $pageRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $pageRepository;
+        $this->setOption('id', 'table-pages');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['pages.edit', 'pages.destroy'])) {
             $this->hasOperations = false;
@@ -78,12 +79,14 @@ class PageTable extends TableAbstract
             })
             ->editColumn('status', function ($item) {
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('pages.edit', 'pages.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('pages.edit', 'pages.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -101,7 +104,8 @@ class PageTable extends TableAbstract
             'pages.status',
         ];
 
-        $query = $model->select($select);
+        $query = $model
+            ->select($select);
 
         return $this->applyScopes(apply_filters(BASE_FILTER_TABLE_QUERY, $query, $model, $select));
     }
@@ -147,7 +151,9 @@ class PageTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('pages.create'), 'pages.create');
+        $buttons = $this->addCreateButton(route('pages.create'), 'pages.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, Page::class);
     }
 
     /**

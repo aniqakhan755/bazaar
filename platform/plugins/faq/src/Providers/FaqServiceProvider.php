@@ -13,7 +13,7 @@ use Botble\Faq\Models\Faq;
 use Botble\Faq\Repositories\Caches\FaqCacheDecorator;
 use Botble\Faq\Repositories\Eloquent\FaqRepository;
 use Botble\Faq\Repositories\Interfaces\FaqInterface;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Illuminate\Support\ServiceProvider;
 use Language;
 
@@ -37,12 +37,10 @@ class FaqServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->setNamespace('plugins/faq')
-            ->loadAndPublishConfigurations(['permissions', 'general'])
+            ->loadAndPublishConfigurations(['permissions'])
             ->loadMigrations()
             ->loadAndPublishTranslations()
-            ->loadRoutes(['web'])
-            ->loadAndPublishViews()
-            ->publishAssets();
+            ->loadRoutes(['web']);
 
         $this->app->booted(function () {
             if (defined('LANGUAGE_MODULE_SCREEN_NAME')) {
@@ -80,8 +78,5 @@ class FaqServiceProvider extends ServiceProvider
                     'permissions' => ['faq_category.index'],
                 ]);
         });
-
-        $this->app->register(HookServiceProvider::class);
-        $this->app->register(EventServiceProvider::class);
     }
 }

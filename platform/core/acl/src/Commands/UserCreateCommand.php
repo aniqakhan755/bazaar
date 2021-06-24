@@ -22,7 +22,7 @@ class UserCreateCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Create a super user for Botble CMS';
+    protected $description = 'Create a super user for Bazaar';
 
     /**
      * @var UserInterface

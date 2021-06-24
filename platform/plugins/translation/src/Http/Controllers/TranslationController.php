@@ -9,7 +9,7 @@ use Botble\Base\Supports\Language;
 use Botble\Translation\Http\Requests\LocaleRequest;
 use Botble\Translation\Http\Requests\TranslationRequest;
 use Botble\Translation\Manager;
-use Illuminate\Support\Facades\DB;
+use DB;
 use File;
 use Illuminate\Http\Request;
 use Botble\Translation\Models\Translation;
@@ -77,7 +77,8 @@ class TranslationController extends BaseController
             ->with('group', $group)
             ->with('numTranslations', $numTranslations)
             ->with('numChanged', $numChanged)
-            ->with('editUrl', route('translations.group.edit', ['group' => $group]));
+            ->with('editUrl', route('translations.group.edit', ['group' => $group]))
+            ->with('deleteEnabled', $this->manager->getConfig('delete_enabled'));
     }
 
     /**
@@ -146,12 +147,6 @@ class TranslationController extends BaseController
      */
     public function postPublish(Request $request, BaseHttpResponse $response)
     {
-        if (!File::isWritable(resource_path('lang')) || !File::isWritable(resource_path('lang/vendor'))) {
-            return $response
-                ->setError(true)
-                ->setMessage(trans('plugins/translation::translation.folder_is_not_writeable'));
-        }
-
         $group = $request->input('group');
 
         $this->manager->exportTranslations($group, $group === '_json');
@@ -168,18 +163,11 @@ class TranslationController extends BaseController
 
         Assets::addScriptsDirectly('vendor/core/plugins/translation/js/locales.js');
 
-        $existingLocales = Language::getAvailableLocales();
+        $locales = Language::getAvailableLocales();
         $languages = Language::getListLanguages();
         $flags = Language::getListLanguageFlags();
 
-        $locales = [];
-        foreach ($languages as $item) {
-            if (!in_array($item[0], $locales)) {
-                $locales[$item[0]] = $item[2];
-            }
-        }
-
-        return view('plugins/translation::locales', compact('existingLocales', 'locales', 'flags'));
+        return view('plugins/translation::locales', compact('locales', 'languages', 'flags'));
     }
 
     /**
@@ -189,12 +177,6 @@ class TranslationController extends BaseController
      */
     public function postLocales(LocaleRequest $request, BaseHttpResponse $response)
     {
-        if (!File::isWritable(resource_path('lang')) || !File::isWritable(resource_path('lang/vendor'))) {
-            return $response
-                ->setError(true)
-                ->setMessage(trans('plugins/translation::translation.folder_is_not_writeable'));
-        }
-
         $defaultLocale = resource_path('lang/en');
         $locale = $request->input('locale');
         if (File::exists($defaultLocale)) {
@@ -221,13 +203,6 @@ class TranslationController extends BaseController
     public function deleteLocale($locale, BaseHttpResponse $response)
     {
         if ($locale !== 'en') {
-
-            if (!File::isWritable(resource_path('lang')) || !File::isWritable(resource_path('lang/vendor'))) {
-                return $response
-                    ->setError(true)
-                    ->setMessage(trans('plugins/translation::translation.folder_is_not_writeable'));
-            }
-
             $defaultLocale = resource_path('lang/' . $locale);
             if (File::exists($defaultLocale)) {
                 File::deleteDirectory($defaultLocale);
@@ -357,17 +332,11 @@ class TranslationController extends BaseController
             $json[$translation['key']] = $translation['value'];
         }
 
-        if (!File::isWritable(resource_path('lang'))) {
-            return $response
-                ->setError(true)
-                ->setMessage(trans('plugins/translation::translation.folder_is_not_writeable'));
-        }
+        $jsonFile = resource_path('lang/' . $request->input('locale') . '.json');
 
         ksort($json);
 
-        $jsonFile = resource_path('lang/' . $request->input('locale') . '.json');
-
-        File::put($jsonFile, json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        File::put($jsonFile, json_encode_prettify($json));
 
         return $response
             ->setPreviousUrl(route('translations.theme-translations'))

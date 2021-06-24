@@ -50,13 +50,13 @@ class RenderingSiteMapListener
         $posts = $this->postRepository->getDataSiteMap();
 
         foreach ($posts as $post) {
-            SiteMapManager::add($post->url, $post->updated_at, '0.8');
+            SiteMapManager::add($post->url, $post->updated_at, '0.8', 'daily');
         }
 
         $categories = $this->categoryRepository->getDataSiteMap();
 
         foreach ($categories as $category) {
-            SiteMapManager::add($category->url, $category->updated_at, '0.8');
+            SiteMapManager::add($category->url, $category->updated_at, '0.8', 'daily');
         }
 
         $tags = $this->tagRepository->getDataSiteMap();

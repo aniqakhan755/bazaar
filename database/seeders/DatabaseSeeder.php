@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Botble\Base\Supports\BaseSeeder;
+use Illuminate\Support\Facades\Artisan;
 
 class DatabaseSeeder extends BaseSeeder
 {
@@ -13,15 +14,14 @@ class DatabaseSeeder extends BaseSeeder
      */
     public function run()
     {
-        $this->activateAllPlugins();
+        Artisan::call('cms:plugin:activate:all');
 
         $this->call(BrandSeeder::class);
         $this->call(CurrencySeeder::class);
         $this->call(ProductCategorySeeder::class);
-        $this->call(ProductCollectionSeeder::class);
-        $this->call(ProductLabelSeeder::class);
         $this->call(ProductSeeder::class);
         $this->call(ProductAttributeSeeder::class);
+        $this->call(ProductCollectionSeeder::class);
         $this->call(CustomerSeeder::class);
         $this->call(ReviewSeeder::class);
         $this->call(TaxSeeder::class);
@@ -32,17 +32,13 @@ class DatabaseSeeder extends BaseSeeder
         $this->call(BlogSeeder::class);
         $this->call(SimpleSliderSeeder::class);
         $this->call(PageSeeder::class);
+        $this->call(MenuSeeder::class);
+        $this->call(ThemeOptionSeeder::class);
+        $this->call(WidgetSeeder::class);
         $this->call(AdsSeeder::class);
         $this->call(FaqSeeder::class);
         $this->call(UserSeeder::class);
         $this->call(SettingSeeder::class);
         $this->call(StoreLocatorSeeder::class);
-        $this->call(MenuSeeder::class);
-        $this->call(ThemeOptionSeeder::class);
-        $this->call(WidgetSeeder::class);
-
-        if (is_plugin_active('marketplace')) {
-            $this->call(MarketplaceSeeder::class);
-        }
     }
 }

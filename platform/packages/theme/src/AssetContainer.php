@@ -5,6 +5,9 @@ namespace Botble\Theme;
 use Exception;
 use File;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 
 class AssetContainer
 {
@@ -49,31 +52,70 @@ class AssetContainer
      * Root asset path.
      *
      * @param string $uri
+     * @param boolean $secure
      * @return string
      */
-    public function originUrl($uri)
+    public function originUrl($uri, $secure = null)
     {
-        return $this->configAssetUrl($uri);
+        return $this->configAssetUrl($uri, $secure);
     }
 
     /**
      * Generate a URL to an application asset.
      *
      * @param string $path
+     * @param bool $secure
      * @return string
      */
-    protected function configAssetUrl($path)
+    protected function configAssetUrl($path, $secure = null)
     {
-        return asset($path);
+        static $assetUrl;
+
+        // Remove this.
+        $index = 'index.php';
+
+        if (URL::isValidUrl($path)) {
+            return $path;
+        }
+
+        // Finding asset url config.
+        if (empty($assetUrl)) {
+            $assetUrl = config('packages.theme.general.assetUrl', '');
+        }
+
+        // Using asset url, if available.
+        if ($assetUrl) {
+            $base = rtrim($assetUrl, '/');
+
+            // Asset URL without index.
+            $basePath = Str::contains($base, $index) ? str_replace('/' . $index, '', $base) : $base;
+        } else {
+            if (empty($secure)) {
+                $scheme = Request::getScheme() . '://';
+            } else {
+                $scheme = $secure ? 'https://' : 'http://';
+            }
+
+            // Get root URL.
+            $root = Request::root();
+            $start = Str::startsWith($root, 'http://') ? 'http://' : 'https://';
+            $root = preg_replace('~' . $start . '~', $scheme, $root, 1);
+
+            // Asset URL without index.
+            $basePath = Str::contains($root, $index) ? str_replace('/' . $index, '', $root) : $root;
+        }
+
+        return asset($basePath . '/' . $path);
     }
 
     /**
      * Return asset path with current theme path.
      *
      * @param string $uri
+     * @param boolean $secure
      * @return string
      */
-    public function url($uri)
+    public function url($uri, $secure = null)
     {
         // If path is full, so we just return.
         if (preg_match('#^http|//:#', $uri)) {
@@ -82,7 +124,7 @@ class AssetContainer
 
         $path = $this->getCurrentPath() . $uri;
 
-        return $this->configAssetUrl($path);
+        return $this->configAssetUrl($path, $secure);
     }
 
     /**
@@ -128,22 +170,22 @@ class AssetContainer
 
                 $this->add($name, $path, $dependencies, $attributes);
             }
+        } else {
+            $type = File::extension($source) == 'css' ? 'style' : 'script';
 
-            return $this;
+            // Remove unnecessary slashes from internal path.
+            if (!preg_match('|^//|', $source)) {
+                $source = ltrim($source, '/');
+            }
+
+            if ($version) {
+                $source .= '?v=' . $version;
+            }
+
+            return $this->$type($name, $source, $dependencies, $attributes);
         }
 
-        $type = File::extension($source) == 'css' ? 'style' : 'script';
-
-        // Remove unnecessary slashes from internal path.
-        if (!preg_match('|^//|', $source)) {
-            $source = ltrim($source, '/');
-        }
-
-        if ($version) {
-            $source .= '?v=' . $version;
-        }
-
-        return $this->$type($name, $source, $dependencies, $attributes);
+        return $this;
     }
 
     /**
@@ -616,8 +658,8 @@ class AssetContainer
     }
 
     /**
-     * @param string $group
-     * @param string $name
+     * @param $group
+     * @param $name
      * @return string
      */
     protected function assetUrl($group, $name)

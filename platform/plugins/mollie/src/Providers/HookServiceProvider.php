@@ -3,12 +3,11 @@
 namespace Botble\Mollie\Providers;
 
 use Botble\Payment\Enums\PaymentMethodEnum;
-use Botble\Payment\Supports\PaymentHelper;
 use Html;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 use Mollie;
+use OrderHelper;
 use Throwable;
 
 class HookServiceProvider extends ServiceProvider
@@ -76,16 +75,15 @@ class HookServiceProvider extends ServiceProvider
     public function checkoutWithMollie(array $data, Request $request)
     {
         if ($request->input('payment_method') == MOLLIE_PAYMENT_METHOD_NAME) {
-            $orderIds = (array)$request->input('order_id', []);
             $response = Mollie::api()->payments->create([
                 'amount'      => [
                     'currency' => $request->input('currency'),
                     'value'    => number_format($request->input('amount'), 2, '.', ''),
                 ],
-                'description' => 'Order #' . Arr::first($orderIds),
-                'redirectUrl' => PaymentHelper::getRedirectURL(),
+                'description' => 'Order #' . $request->input('order_id'),
+                'redirectUrl' => route('public.checkout.success', OrderHelper::getOrderSessionToken()),
                 'webhookUrl'  => route('mollie.payment.callback'),
-                'metadata'    => ['order_id' => $orderIds],
+                'metadata'    => ['order_id' => $request->input('order_id')],
             ]);
 
             header('Location: ' . $response->getCheckoutUrl());

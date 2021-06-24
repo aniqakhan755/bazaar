@@ -30,7 +30,9 @@ class RenderProductAttributeSetsOnSearchPageSupport
      */
     public function render(array $params = [])
     {
-        $params = array_merge(['view' => 'plugins/ecommerce::themes.attributes.attributes-filter-renderer'], $params);
+        $params = array_merge([
+            'view' => 'plugins/ecommerce::themes.attributes.attributes-filter-renderer',
+        ], $params);
 
         $attributeSets = $this->productAttributeSetRepository
             ->advancedGet([

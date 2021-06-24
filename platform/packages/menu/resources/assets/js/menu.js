@@ -21,7 +21,6 @@ class MenuNestable {
     updatePositionForSerializedObj(arrayObject) {
         let result = arrayObject;
         let that = this;
-
         $.each(result, (index, val) => {
             val.position = index;
             if (typeof val.children == 'undefined') {
@@ -29,7 +28,6 @@ class MenuNestable {
             }
             that.updatePositionForSerializedObj(val.children);
         });
-
         return result;
     }
 

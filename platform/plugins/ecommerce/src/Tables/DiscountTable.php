@@ -3,6 +3,7 @@
 namespace Botble\Ecommerce\Tables;
 
 use BaseHelper;
+use Botble\Ecommerce\Models\Discount;
 use Botble\Ecommerce\Repositories\Interfaces\DiscountInterface;
 use Botble\Table\Abstracts\TableAbstract;
 use Illuminate\Contracts\Routing\UrlGenerator;
@@ -29,9 +30,9 @@ class DiscountTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, DiscountInterface $discountRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $discountRepository;
+        $this->setOption('id', 'table-discounts');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasPermission('discounts.destroy')) {
             $this->hasOperations = false;
@@ -59,7 +60,6 @@ class DiscountTable extends TableAbstract
                 if ($item->quantity === null) {
                     return $item->total_used;
                 }
-
                 return $item->total_used . '/' . $item->quantity;
             })
             ->editColumn('start_date', function ($item) {
@@ -70,12 +70,14 @@ class DiscountTable extends TableAbstract
                     return '-';
                 }
                 return $item->end_date;
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations(null, 'discounts.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations(null, 'discounts.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -133,7 +135,9 @@ class DiscountTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('discounts.create'), 'discounts.create');
+        $buttons = $this->addCreateButton(route('discounts.create'), 'discounts.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, Discount::class);
     }
 
     /**

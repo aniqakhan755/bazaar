@@ -4,16 +4,16 @@ namespace Botble\Ecommerce\Providers;
 
 use Assets;
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Blog\Repositories\Interfaces\PostInterface;
 use Botble\Dashboard\Supports\DashboardWidgetInstance;
 use Botble\Ecommerce\Models\Brand;
-use Botble\Ecommerce\Models\Customer;
+use Botble\Ecommerce\Models\Order;
+use Botble\Ecommerce\Models\Review;
 use Botble\Ecommerce\Models\ProductCategory;
 use Botble\Ecommerce\Repositories\Interfaces\CustomerInterface;
 use Botble\Ecommerce\Repositories\Interfaces\OrderInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ReviewInterface;
-use Botble\Payment\Supports\PaymentHelper;
-use Form;
 use Html;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Arr;
@@ -21,7 +21,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 use Menu;
-use OrderHelper;
 use Throwable;
 
 class HookServiceProvider extends ServiceProvider
@@ -49,9 +48,7 @@ class HookServiceProvider extends ServiceProvider
         add_filter(BASE_FILTER_TOP_HEADER_LAYOUT, [$this, 'registerTopHeaderNotification'], 121);
         add_filter(BASE_FILTER_APPEND_MENU_NAME, [$this, 'getPendingOrders'], 130, 2);
 
-        add_filter(RENDER_PRODUCTS_IN_CHECKOUT_PAGE, [$this, 'renderProductsInCheckoutPage'], 1000, 1);
-
-        $this->app->booted(function () {
+        app()->booted(function () {
             add_filter(DASHBOARD_FILTER_ADMIN_LIST, function ($widgets) {
                 foreach ($widgets as $key => $widget) {
                     if (in_array($key, [
@@ -68,7 +65,29 @@ class HookServiceProvider extends ServiceProvider
             }, 150);
 
             add_filter(DASHBOARD_FILTER_ADMIN_LIST, function ($widgets, $widgetSettings) {
-                $items = app(OrderInterface::class)->count(['ec_orders.is_finished' => 1]);
+                
+                $user = Auth::user();
+                $role_name ="";
+                if(count($user->roles) > 0)
+                {
+                    $role_name = $user->roles[0]->slug;
+                    if($role_name  == 'vendor')
+                    {
+                        $user_id = Auth::user()->id;
+                        $orderItems =Order::leftJoin('ec_order_product', 'ec_orders.id', '=', 'ec_order_product.order_id')
+                                            ->leftJoin('ec_products', 'ec_order_product.product_id', '=', 'ec_products.id')
+                                            ->where('ec_products.user_id',$user_id)
+                                            ->where('is_finished','1')->count();
+                        //dd($orderItems );
+                        $items = $orderItems ;
+                    }
+                    else{
+                        $items = app(OrderInterface::class)->count(['ec_orders.is_finished' => 1]);
+                    }
+                }
+                else{ 
+                    $items = app(OrderInterface::class)->count(['ec_orders.is_finished' => 1]);
+                }
                 return (new DashboardWidgetInstance)
                     ->setType('stats')
                     ->setPermission('orders.index')
@@ -82,9 +101,19 @@ class HookServiceProvider extends ServiceProvider
             }, 2, 2);
 
             add_filter(DASHBOARD_FILTER_ADMIN_LIST, function ($widgets, $widgetSettings) {
-                $items = app(ProductInterface::class)->count(['status'       => BaseStatusEnum::PUBLISHED,
-                                                              'is_variation' => 0,
-                ]);
+                $user = Auth::user();
+                $role_name ="";
+                $items = app(ProductInterface::class)->count(['status' => BaseStatusEnum::PUBLISHED, 'is_variation' => 0]);
+                if(count($user->roles) > 0)
+                {
+                    $role_name = $user->roles[0]->slug;
+                    if($role_name  == 'vendor')
+                    {
+                        $user_id = Auth::user()->id;
+                        $items = app(ProductInterface::class)->count(['status' => BaseStatusEnum::PUBLISHED, 'is_variation' => 0,'user_id' => $user_id]);
+                    }
+                }
+             
                 return (new DashboardWidgetInstance)
                     ->setType('stats')
                     ->setPermission('products.index')
@@ -112,7 +141,29 @@ class HookServiceProvider extends ServiceProvider
             }, 4, 2);
 
             add_filter(DASHBOARD_FILTER_ADMIN_LIST, function ($widgets, $widgetSettings) {
-                $items = app(ReviewInterface::class)->count(['status' => BaseStatusEnum::PUBLISHED]);
+               
+                $user = Auth::user();
+                $role_name ="";
+                if(count($user->roles) > 0)
+                {
+                    $role_name = $user->roles[0]->slug;
+                    if($role_name  == 'vendor')
+                    {
+                        $user_id = Auth::user()->id;
+                        $reviewItems =Review::leftJoin('ec_products', 'ec_reviews.product_id', '=', 'ec_products.id')
+                                            ->where('ec_products.user_id',$user_id)
+                                            ->where('ec_reviews.status',BaseStatusEnum::PUBLISHED)->count();
+                        //dd($orderItems );
+                        $items = $reviewItems ;
+                    }
+                    else{
+                        $items = app(ReviewInterface::class)->count(['status' => BaseStatusEnum::PUBLISHED]);
+                    }
+                }
+                else{ 
+                    $items = app(ReviewInterface::class)->count(['status' => BaseStatusEnum::PUBLISHED]);
+                }
+                
                 return (new DashboardWidgetInstance)
                     ->setType('stats')
                     ->setPermission('reviews.index')
@@ -124,41 +175,6 @@ class HookServiceProvider extends ServiceProvider
                     ->setRoute(route('reviews.index'))
                     ->init($widgets, $widgetSettings);
             }, 5, 2);
-
-            if (defined('PAYMENT_FILTER_PAYMENT_PARAMETERS')) {
-                add_filter(PAYMENT_FILTER_PAYMENT_PARAMETERS, function ($html) {
-                    if (!auth('customer')->check()) {
-                        return $html;
-                    }
-
-                    return $html . Form::hidden('customer_id', auth('customer')->id())
-                            ->toHtml() . Form::hidden('customer_type', Customer::class)->toHtml();
-                }, 123);
-            }
-
-            if (defined('PAYMENT_FILTER_REDIRECT_URL')) {
-                add_filter(PAYMENT_FILTER_REDIRECT_URL, function ($checkoutToken) {
-                    return route('public.checkout.success', $checkoutToken ?: OrderHelper::getOrderSessionToken());
-                }, 123);
-            }
-
-            if (defined('PAYMENT_ACTION_PAYMENT_PROCESSED')) {
-                add_action(PAYMENT_ACTION_PAYMENT_PROCESSED, function ($data) {
-
-                    $orderIds = (array)$data['order_id'];
-
-                    if ($orderIds) {
-                        $orders = $this->app->make(OrderInterface::class)->allBy([['id', 'IN', $orderIds]]);
-                        foreach ($orders as $order) {
-                            $data['amount'] = $order->amount;
-                            $data['order_id'] = $order->id;
-                            PaymentHelper::storeLocalPayment($data);
-                        }
-                    }
-
-                    return OrderHelper::processOrderMulti($orderIds, $data['charge_id']);
-                }, 123);
-            }
         });
     }
 
@@ -294,25 +310,44 @@ class HookServiceProvider extends ServiceProvider
     protected function setPendingOrders(): Collection
     {
         if (!$this->pendingOrders) {
-            $this->pendingOrders = $this->app->make(OrderInterface::class)->allBy([
-                'status'                => BaseStatusEnum::PENDING,
-                'ec_orders.is_finished' => 1,
-            ], ['address']);
+         
+          
+            $user = Auth::user();
+            $role_name ="";
+            if(count($user->roles) > 0)
+            {
+                $this->pendingOrders = collect([]);
+                $role_name = $user->roles[0]->slug;
+                if($role_name  == 'vendor')
+                {
+                    $user_id = Auth::user()->id;
+                    $orderItems =$this->app->make(OrderInterface::class)->allBy([
+                        'status'                => BaseStatusEnum::PENDING,
+                        'ec_orders.is_finished' => 1,
+                        ], ['address','products']);
+                        for($i=0 ; $i<count($orderItems);$i++)
+                        {
+                           if($orderItems[$i]->products[0]->product->user_id == $user_id)
+                           {
+                            $this->pendingOrders->push($orderItems[$i]);
+                           }
+                        }
+                }
+                else{
+                    $this->pendingOrders = $this->app->make(OrderInterface::class)->allBy([
+                        'status'                => BaseStatusEnum::PENDING,
+                        'ec_orders.is_finished' => 1,
+                    ], ['address']);
+                }
+            }
+            else
+            {
+                $this->pendingOrders = $this->app->make(OrderInterface::class)->allBy([
+                    'status'                => BaseStatusEnum::PENDING,
+                    'ec_orders.is_finished' => 1,
+                ], ['address']);
+            }
         }
-
         return $this->pendingOrders;
-    }
-
-    /**
-     * @param Collection|string $products
-     * @return string
-     */
-    public function renderProductsInCheckoutPage($products)
-    {
-        if ($products instanceof Collection) {
-            return view('plugins/ecommerce::orders.checkout.products', compact('products'))->render();
-        }
-
-        return $products;
     }
 }

@@ -41,7 +41,7 @@ class ProductTagSeeder extends BaseSeeder
         ProductTag::truncate();
         Slug::where('reference_type', ProductTag::class)->delete();
 
-        foreach ($tags as $item) {
+        foreach ($tags as $key => $item) {
             $tag = ProductTag::create($item);
 
             Slug::create([

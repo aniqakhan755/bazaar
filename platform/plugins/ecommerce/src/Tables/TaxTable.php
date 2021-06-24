@@ -4,6 +4,7 @@ namespace Botble\Ecommerce\Tables;
 
 use BaseHelper;
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Ecommerce\Models\Tax;
 use Botble\Ecommerce\Repositories\Interfaces\TaxInterface;
 use Botble\Table\Abstracts\TableAbstract;
 use Html;
@@ -31,9 +32,9 @@ class TaxTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, TaxInterface $taxRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $taxRepository;
+        $this->setOption('id', 'table-taxes');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['tax.edit', 'tax.destroy'])) {
             $this->hasOperations = false;
@@ -66,12 +67,14 @@ class TaxTable extends TableAbstract
             })
             ->editColumn('created_at', function ($item) {
                 return BaseHelper::formatDate($item->created_at);
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('tax.edit', 'tax.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('tax.edit', 'tax.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -140,7 +143,9 @@ class TaxTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('tax.create'), 'tax.create');
+        $buttons = $this->addCreateButton(route('tax.create'), 'tax.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, Tax::class);
     }
 
     /**

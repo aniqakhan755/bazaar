@@ -1,6 +1,4 @@
-<div class="table-responsive">
-    {!! $dataTable->table(compact('id', 'class'), false) !!}
-</div>
+{!! $dataTable->table(compact('id', 'class'), false) !!}
 @push('footer')
     {!! $dataTable->scripts() !!}
 @endpush

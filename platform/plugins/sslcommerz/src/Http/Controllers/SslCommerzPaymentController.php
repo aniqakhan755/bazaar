@@ -7,18 +7,21 @@ use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Base\Models\BaseModel;
 use Botble\Payment\Enums\PaymentStatusEnum;
 use Botble\Payment\Models\Payment;
-use Botble\Payment\Supports\PaymentHelper;
-use Botble\SslCommerz\Http\Requests\PaymentRequest;
+use Botble\Payment\Services\Traits\PaymentTrait;
 use Botble\SslCommerz\Library\SslCommerz\SslCommerzNotification;
+use Illuminate\Http\Request;
+use OrderHelper;
 
 class SslCommerzPaymentController extends BaseController
 {
+    use PaymentTrait;
+
     /**
-     * @param PaymentRequest $request
+     * @param Request $request
      * @param BaseHttpResponse $response
      * @return BaseHttpResponse
      */
-    public function success(PaymentRequest $request, BaseHttpResponse $response)
+    public function success(Request $request, BaseHttpResponse $response)
     {
         $transactionId = $request->input('tran_id');
         $amount = $request->input('amount');
@@ -31,52 +34,50 @@ class SslCommerzPaymentController extends BaseController
 
         $this->processOrder($request, $validation);
 
-        $redirectURL = PaymentHelper::getRedirectURL($checkoutToken);
-
         if (!$validation) {
             return $response
                 ->setError()
-                ->setNextUrl($redirectURL)
+                ->setNextUrl(route('public.checkout.success', $checkoutToken))
                 ->setMessage(__('Payment failed!'));
         }
 
         return $response
-            ->setNextUrl($redirectURL)
+            ->setNextUrl(route('public.checkout.success', $checkoutToken))
             ->setMessage(__('Checkout successfully!'));
     }
 
     /**
-     * @param PaymentRequest $request
+     * @param Request $request
      * @param string $status
      * @return bool|BaseModel
      */
-    protected function processOrder(PaymentRequest $request, bool $validation = false)
+    protected function processOrder(Request $request, bool $validation = false)
     {
         $transactionId = $request->input('tran_id');
+        $amount = $request->input('amount');
         $currency = $request->input('currency');
-        $orderIds = explode(';', $request->input('value_a'));
+        $orderId = $request->input('value_a');
 
-        do_action(PAYMENT_ACTION_PAYMENT_PROCESSED, [
-            'amount'          => $request->input('amount'),
+        $this->storeLocalPayment([
+            'amount'          => $amount,
             'currency'        => $currency,
             'charge_id'       => $transactionId,
             'payment_channel' => SSLCOMMERZ_PAYMENT_METHOD_NAME,
             'status'          => $validation ? PaymentStatusEnum::COMPLETED : PaymentStatusEnum::FAILED,
-            'customer_id'     => $request->input('value_c'),
-            'customer_type'   => urldecode($request->input('value_d')),
+            'customer_id'     => auth('customer')->check() ? auth('customer')->user()->getAuthIdentifier() : null,
             'payment_type'    => 'direct',
-            'order_id'        => $orderIds,
+            'order_id'        => $orderId,
         ]);
 
-        return true;
+        return OrderHelper::processOrder($orderId, $transactionId);
     }
 
     /**
-     * @param PaymentRequest $request
+     * @param Request $request
      * @param BaseHttpResponse $response
      * @return BaseHttpResponse
      */
-    public function fail(PaymentRequest $request, BaseHttpResponse $response)
+    public function fail(Request $request, BaseHttpResponse $response)
     {
         $this->processOrder($request);
 
@@ -84,16 +85,16 @@ class SslCommerzPaymentController extends BaseController
 
         return $response
             ->setError()
-            ->setNextUrl(PaymentHelper::getRedirectURL($checkoutToken))
+            ->setNextUrl(route('public.checkout.success', $checkoutToken))
             ->setMessage(__('Payment failed!'));
     }
 
     /**
-     * @param PaymentRequest $request
+     * @param Request $request
      * @param BaseHttpResponse $response
      * @return BaseHttpResponse
      */
-    public function cancel(PaymentRequest $request, BaseHttpResponse $response)
+    public function cancel(Request $request, BaseHttpResponse $response)
     {
         $this->processOrder($request);
 
@@ -101,16 +102,16 @@ class SslCommerzPaymentController extends BaseController
 
         return $response
             ->setError()
-            ->setNextUrl(PaymentHelper::getRedirectURL($checkoutToken))
+            ->setNextUrl(route('public.checkout.success', $checkoutToken))
             ->setMessage(__('Payment failed!'));
     }
 
     /**
-     * @param PaymentRequest $request
+     * @param Request $request
      * @param BaseHttpResponse $response
      * @return BaseHttpResponse
      */
-    public function ipn(PaymentRequest $request, BaseHttpResponse $response)
+    public function ipn(Request $request, BaseHttpResponse $response)
     {
         // Received all the payment information from the gateway
         // Check transaction id is posted or not.

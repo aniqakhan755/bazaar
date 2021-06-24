@@ -3,6 +3,9 @@
 @section('body-class') login @stop
 @section('body-style') background-image: url({{ get_login_background() }}); @stop
 
+@push('header')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css">
+@endpush
 @section ('page')
     <div class="container-fluid">
         <div class="row">
@@ -13,7 +16,7 @@
                         <div class="logo-title-container">
                             <div class="copy animated fadeIn">
                                 <h1>{{ setting('admin_title', config('core.base.general.base_name')) }}</h1>
-                                <p>{!! clean(trans('core/base::layouts.copyright', ['year' => now()->format('Y'), 'company' => setting('admin_title', config('core.base.general.base_name')), 'version' => get_cms_version()])) !!}</p>
+                                <p>{!! clean(trans('core/base::layouts.copyright', ['year' => now()->format('Y'), 'company' => setting('admin_title', config('core.base.general.base_name'))])) !!}</p>
                             </div>
                         </div> <!-- .logo-title-container -->
                     </div>
@@ -26,7 +29,7 @@
 
                     @yield('content')
 
-                    <div class="clearfix"></div>
+                    <div style="clear:both"></div>
 
                 </div> <!-- .login-container -->
 

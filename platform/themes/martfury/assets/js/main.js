@@ -872,6 +872,9 @@
                 $('.ps-panel--search-result').removeClass('active');
             }
         });
+        // $('#input-search').on('keypress', function() {
+        //     $('.ps-panel--search-result').addClass('active');
+        // })
     }
 
     $(function() {
@@ -909,5 +912,6 @@
 
     $(window).on('load', function() {
         $('body').addClass('loaded');
+        // subscribePopup();
     });
 })(jQuery);

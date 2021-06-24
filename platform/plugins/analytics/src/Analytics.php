@@ -22,7 +22,7 @@ class Analytics
     protected $viewId;
 
     /**
-     * @param \Botble\Analytics\AnalyticsClient $client
+     * @param AnalyticsClient $client
      * @param string $viewId
      */
     public function __construct(AnalyticsClient $client, string $viewId)
@@ -42,7 +42,6 @@ class Analytics
 
     /**
      * @param string $viewId
-     *
      * @return $this
      */
     public function setViewId(string $viewId)

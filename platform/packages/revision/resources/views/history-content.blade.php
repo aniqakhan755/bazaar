@@ -14,7 +14,7 @@
                 @if ($model->revisionHistory !== null && count($model->revisionHistory)>0)
                     @foreach($model->revisionHistory as $history)
                         <tr>
-                            <td style="min-width: 145px;">{{ $history->userResponsible() ? $history->userResponsible()->name : 'N/A' }}</td>
+                            <td style="min-width: 145px;">{{ $history->userResponsible() ? $history->userResponsible()->getFullName() : 'N/A' }}</td>
                             <td style="min-width: 145px;">{{ $history->fieldName() }}</td>
                             <td>{{ $history->oldValue() }}</td>
                             <td><span class="html-diff-content" data-original="{{ $history->oldValue() }}">{{ $history->newValue() }}</span></td>

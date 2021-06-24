@@ -55,7 +55,7 @@ class ThemeAssetsRemoveCommand extends Command
             return 1;
         }
 
-        $result = $this->themeService->removeAssets($this->getTheme());
+        $result = $this->themeService->removeAssets($this->argument('name'));
 
         if ($result['error']) {
             $this->error($result['message']);

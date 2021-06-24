@@ -87,6 +87,7 @@ class PackageMakeCrudCommand extends BaseMakeCommand
     protected function removeUnusedFiles(string $location)
     {
         $files = [
+            'composer.json',
             'config/permissions.stub',
             'helpers/constants.stub',
             'routes/web.stub',

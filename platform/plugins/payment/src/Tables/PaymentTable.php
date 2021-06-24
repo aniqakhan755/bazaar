@@ -2,7 +2,7 @@
 
 namespace Botble\Payment\Tables;
 
-use Illuminate\Support\Facades\Auth;
+use Auth;
 use BaseHelper;
 use Botble\Payment\Enums\PaymentStatusEnum;
 use Botble\Payment\Repositories\Interfaces\PaymentInterface;
@@ -10,6 +10,7 @@ use Botble\Table\Abstracts\TableAbstract;
 use Html;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Yajra\DataTables\DataTables;
+use Botble\Payment\Models\Payment;
 
 class PaymentTable extends TableAbstract
 {
@@ -32,9 +33,9 @@ class PaymentTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, PaymentInterface $paymentRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $paymentRepository;
+        $this->setOption('id', 'table-plugins-payment');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['payment.show', 'payment.destroy'])) {
             $this->hasOperations = false;
@@ -66,12 +67,14 @@ class PaymentTable extends TableAbstract
             })
             ->editColumn('status', function ($item) {
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('payment.show', 'payment.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('payment.show', 'payment.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -90,7 +93,29 @@ class PaymentTable extends TableAbstract
             'payments.status',
         ];
 
-        $query = $model->select($select);
+        $user = Auth::user();
+        $role_name ="";
+       
+        if(count($user->roles) > 0)
+        {
+            $role_name = $user->roles[0]->slug;
+            if($role_name  == 'vendor')
+            {
+                $user_id = Auth::user()->id;
+                $query = $model
+                ->leftJoin('ec_order_product', 'payments.order_id', '=', 'ec_order_product.order_id')
+                ->leftJoin('ec_products', 'ec_order_product.product_id', '=', 'ec_products.id')
+                ->select($select)
+                ->where('ec_products.user_id',$user_id);
+            }
+            else{
+                $query = $model->select($select);
+            }
+        }
+        else{
+            $query = $model->select($select);
+        }
+       
 
         return $this->applyScopes(apply_filters(BASE_FILTER_TABLE_QUERY, $query, $model, $select));
     }
@@ -132,6 +157,14 @@ class PaymentTable extends TableAbstract
                 'width' => '100px',
             ],
         ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function buttons()
+    {
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, [], Payment::class);
     }
 
     /**

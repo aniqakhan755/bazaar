@@ -1,5 +1,11 @@
 <template>
     <div>
+        <div v-if="isLoading" class="col-12">
+            <div class="half-circle-spinner">
+                <div class="circle circle-1"></div>
+                <div class="circle circle-2"></div>
+            </div>
+        </div>
         <p v-if="data.length">
             <strong>{{ name }}:</strong>
             <a v-if="!isLoading" :href="item.url" v-for="item in data" :title="item.name">{{ item.name }}</a>

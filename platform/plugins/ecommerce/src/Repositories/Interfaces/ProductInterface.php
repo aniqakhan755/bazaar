@@ -83,10 +83,34 @@ interface ProductInterface extends RepositoryInterface
 
     /**
      * @param Product $model
+     * @return Collection
+     */
+    public function getCrossSaleProducts($model);
+
+    /**
+     * @param Product $model
+     * @return array
+     */
+    public function getCrossSaleProductIds($model);
+
+    /**
+     * @param Product $model
      * @param null $products
      * @return array|null
      */
     public function syncUpSaleProducts($model, $products = null);
+
+    /**
+     * @param Product $model
+     * @return Collection
+     */
+    public function getUpSaleProducts($model);
+
+    /**
+     * @param Product $model
+     * @return array
+     */
+    public function getUpSaleProductIds($model);
 
     /**
      * @param Product $product

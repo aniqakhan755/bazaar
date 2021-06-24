@@ -5,15 +5,15 @@ namespace Botble\Ads\Providers;
 use AdsManager;
 use Botble\Ads\Facades\AdsManagerFacade;
 use Botble\Ads\Models\Ads;
+use Illuminate\Foundation\AliasLoader;
+use Illuminate\Support\ServiceProvider;
 use Botble\Ads\Repositories\Caches\AdsCacheDecorator;
 use Botble\Ads\Repositories\Eloquent\AdsRepository;
 use Botble\Ads\Repositories\Interfaces\AdsInterface;
 use Botble\Base\Supports\Helper;
-use Botble\Base\Traits\LoadAndPublishDataTrait;
 use Event;
-use Illuminate\Foundation\AliasLoader;
+use Botble\Base\Traits\LoadAndPublishDataTrait;
 use Illuminate\Routing\Events\RouteMatched;
-use Illuminate\Support\ServiceProvider;
 
 class AdsServiceProvider extends ServiceProvider
 {
@@ -52,11 +52,7 @@ class AdsServiceProvider extends ServiceProvider
 
         if (function_exists('shortcode')) {
             add_shortcode('ads', 'Ads', 'Ads', function ($shortcode) {
-                if (empty($shortcode->key)) {
-                    return null;
-                }
-
-                return AdsManager::displayAds((string)$shortcode->key);
+                return AdsManager::displayAds($shortcode->key);
             });
         }
     }

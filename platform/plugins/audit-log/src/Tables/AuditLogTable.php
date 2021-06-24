@@ -2,6 +2,7 @@
 
 namespace Botble\AuditLog\Tables;
 
+use Botble\AuditLog\Models\AuditHistory;
 use Illuminate\Support\Facades\Auth;
 use Botble\AuditLog\Repositories\Interfaces\AuditLogInterface;
 use Botble\Table\Abstracts\TableAbstract;
@@ -29,9 +30,9 @@ class AuditLogTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, AuditLogInterface $auditLogRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $auditLogRepository;
+        $this->setOption('id', 'table-audit-logs');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasPermission('audit-log.destroy')) {
             $this->hasOperations = false;
@@ -51,12 +52,14 @@ class AuditLogTable extends TableAbstract
             })
             ->editColumn('action', function ($history) {
                 return view('plugins/audit-log::activity-line', compact('history'))->render();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations(null, 'audit-log.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations(null, 'audit-log.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -102,12 +105,14 @@ class AuditLogTable extends TableAbstract
      */
     public function buttons()
     {
-        return [
+        $buttons = [
             'empty' => [
                 'link' => route('audit-log.empty'),
                 'text' => Html::tag('i', '', ['class' => 'fa fa-trash'])->toHtml() . ' ' . trans('plugins/audit-log::history.delete_all'),
             ],
         ];
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, AuditHistory::class);
     }
 
     /**

@@ -8,6 +8,8 @@ return [
     'order_by'                => 'Order By',
     'order'                   => 'Order',
     'status'                  => 'Status',
+    'company_name'            => 'Company Name',
+    'cnic_verified'           => 'CNIC Verified',  
     'created_at'              => 'Created At',
     'updated_at'              => 'Updated At',
     'description'             => 'Description',
@@ -60,5 +62,4 @@ return [
     'image'                   => 'Image',
     'bulk_changes'            => 'Bulk changes',
     'submit'                  => 'Submit',
-    'please_select_record'    => 'Please select at least one record to perform this action!',
 ];

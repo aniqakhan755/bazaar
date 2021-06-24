@@ -12,7 +12,7 @@ use Botble\Setting\Repositories\Interfaces\SettingInterface;
 use Botble\Setting\Supports\SettingsManager;
 use Botble\Setting\Supports\SettingStore;
 use EmailHandler;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Foundation\Application;
 use Illuminate\Routing\Events\RouteMatched;

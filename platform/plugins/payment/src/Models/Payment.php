@@ -5,10 +5,10 @@ namespace Botble\Payment\Models;
 use Botble\ACL\Models\User;
 use Botble\Base\Models\BaseModel;
 use Botble\Base\Traits\EnumCastable;
+use Botble\Ecommerce\Models\Order;
 use Botble\Payment\Enums\PaymentMethodEnum;
 use Botble\Payment\Enums\PaymentStatusEnum;
 use Html;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Payment extends BaseModel
 {
@@ -35,7 +35,6 @@ class Payment extends BaseModel
         'order_id',
         'payment_type',
         'customer_id',
-        'customer_type',
         'refunded_amount',
         'refund_note',
     ];
@@ -55,13 +54,9 @@ class Payment extends BaseModel
     {
         return $this->belongsTo(User::class)->withDefault();
     }
-
-    /**
-     * @return MorphTo
-     */
-    public function customer(): MorphTo
+    public function order()
     {
-        return $this->morphTo();
+        return $this->belongsTo(Order::class)->withDefault();
     }
 
     /**

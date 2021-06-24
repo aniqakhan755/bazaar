@@ -5,6 +5,7 @@ namespace Botble\Ecommerce\Tables;
 use BaseHelper;
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Ecommerce\Exports\ProductExport;
+use Botble\Ecommerce\Models\Product;
 use Botble\Ecommerce\Repositories\Interfaces\ProductInterface;
 use Botble\Table\Abstracts\TableAbstract;
 use Html;
@@ -38,9 +39,9 @@ class ProductTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, ProductInterface $productRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $productRepository;
+        $this->setOption('id', 'table-products');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['products.edit', 'products.destroy'])) {
             $this->hasOperations = false;
@@ -53,6 +54,7 @@ class ProductTable extends TableAbstract
      */
     public function ajax()
     {
+       
         $data = $this->table
             ->eloquent($this->query())
             ->editColumn('name', function ($item) {
@@ -71,7 +73,7 @@ class ProductTable extends TableAbstract
                     return RvMedia::getImageUrl($item->image, 'thumb', false, RvMedia::getDefaultImage());
                 }
 
-                return $this->displayThumbnail($item->image);
+                return view('plugins/ecommerce::products.partials.thumbnail', compact('item'))->render();
             })
             ->editColumn('checkbox', function ($item) {
                 return $this->getCheckbox($item->id);
@@ -89,25 +91,27 @@ class ProductTable extends TableAbstract
                 return $item->with_storehouse_management ? $item->quantity : '&#8734;';
             })
             ->editColumn('sku', function ($item) {
-                return $item->sku ?: '&mdash;';
+                return $item->sku ? $item->sku : '&mdash;';
             })
             ->editColumn('order', function ($item) {
                 return view('plugins/ecommerce::products.partials.sort-order', compact('item'))->render();
+            })
+            ->editColumn('user_id', function ($item) {
+                return $item->productUser->username;
             })
             ->editColumn('created_at', function ($item) {
                 return BaseHelper::formatDate($item->created_at);
             })
             ->editColumn('status', function ($item) {
                 return $item->status->toHtml();
-            })
-            ->editColumn('stock_status', function ($item) {
-                return $item->stock_status_html;
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('products.edit', 'products.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('products.edit', 'products.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -131,13 +135,27 @@ class ProductTable extends TableAbstract
             'ec_products.end_date',
             'ec_products.quantity',
             'ec_products.with_storehouse_management',
-            'ec_products.stock_status',
+            'ec_products.user_id',
         ];
-
+       
+        $user = Auth::user();
+        $role_name ="";
+       
         $query = $model
-            ->select($select)
-            ->where('is_variation', 0);
-
+        ->select($select)
+        ->where('is_variation', 0);
+        if(count($user->roles) > 0)
+        {
+            $role_name = $user->roles[0]->slug;
+            if($role_name  == 'vendor')
+            {
+                $user_id = Auth::user()->id;
+                $query = $model
+                ->select($select)
+                ->where('is_variation', 0)
+                ->where('user_id',$user_id);
+            }
+        }
         return $this->applyScopes(apply_filters(BASE_FILTER_TABLE_QUERY, $query, $model, $select));
     }
 
@@ -155,18 +173,18 @@ class ProductTable extends TableAbstract
     public function columns()
     {
         return [
-            'id'           => [
+            'id'         => [
                 'name'  => 'ec_products.id',
                 'title' => trans('core/base::tables.id'),
                 'width' => '20px',
             ],
-            'image'        => [
+            'image'      => [
                 'name'  => 'ec_products.images',
                 'title' => trans('plugins/ecommerce::products.image'),
                 'width' => '100px',
                 'class' => 'text-center',
             ],
-            'name'         => [
+            'name'       => [
                 'name'  => 'ec_products.name',
                 'title' => trans('core/base::tables.name'),
                 'class' => 'text-left',
@@ -176,34 +194,35 @@ class ProductTable extends TableAbstract
                 'title' => trans('plugins/ecommerce::products.price'),
                 'class' => 'text-left',
             ],
-            'stock_status' => [
-                'name'  => 'ec_products.stock_status',
-                'title' => trans('plugins/ecommerce::products.stock_status'),
-                'class' => 'text-left',
-            ],
-            'quantity'     => [
+            'quantity'        => [
                 'name'  => 'ec_products.quantity',
                 'title' => trans('plugins/ecommerce::products.quantity'),
                 'class' => 'text-left',
             ],
-            'sku'          => [
+            'sku'        => [
                 'name'  => 'ec_products.sku',
                 'title' => trans('plugins/ecommerce::products.sku'),
                 'class' => 'text-left',
             ],
-            'order'        => [
+            'order'      => [
                 'name'  => 'ec_products.order',
                 'title' => trans('core/base::tables.order'),
                 'width' => '50px',
                 'class' => 'text-center',
             ],
-            'created_at'   => [
+            'user_id' => [
+                'name'  => 'ec_products.user_id',
+                'title' => trans('core/base::tables.user_id'),
+                'width' => '100px',
+                'class' => 'text-center',
+            ],
+            'created_at' => [
                 'name'  => 'ec_products.created_at',
                 'title' => trans('core/base::tables.created_at'),
                 'width' => '100px',
                 'class' => 'text-center',
             ],
-            'status'       => [
+            'status'     => [
                 'name'  => 'ec_products.status',
                 'title' => trans('core/base::tables.status'),
                 'width' => '100px',
@@ -217,7 +236,9 @@ class ProductTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('products.create'), 'products.create');
+        $buttons = $this->addCreateButton(route('products.create'), 'products.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, Product::class);
     }
 
     /**

@@ -3,19 +3,15 @@
 namespace Botble\Ecommerce\Models;
 
 use Botble\Base\Supports\Avatar;
-use Botble\Ecommerce\Notifications\ResetPasswordNotification;
-use Eloquent;
-use Exception;
+use Botble\Ecommerce\Notifications\CustomerResetPassword;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use RvMedia;
-use MacroableModels;
-use Illuminate\Support\Str;
 
 /**
- * @mixin Eloquent
+ * @mixin \Eloquent
  */
 class Customer extends Authenticatable
 {
@@ -58,7 +54,7 @@ class Customer extends Authenticatable
      */
     public function sendPasswordResetNotification($token)
     {
-        $this->notify(new ResetPasswordNotification($token));
+        $this->notify(new CustomerResetPassword($token));
     }
 
     /**
@@ -66,15 +62,7 @@ class Customer extends Authenticatable
      */
     public function getAvatarUrlAttribute()
     {
-        if ($this->avatar) {
-            return RvMedia::getImageUrl($this->avatar, 'thumb');
-        }
-
-        try {
-            return (new Avatar)->create($this->name)->toBase64();
-        } catch (Exception $exception) {
-            return RvMedia::getDefaultImage();
-        }
+        return $this->avatar ? RvMedia::getImageUrl($this->avatar, 'thumb') : (string)(new Avatar)->create($this->name)->toBase64();
     }
 
     /**
@@ -118,21 +106,5 @@ class Customer extends Authenticatable
             Review::where('customer_id', $customer->id)->delete();
             Wishlist::where('customer_id', $customer->id)->delete();
         });
-    }
-
-    /**
-     * @param string $key
-     * @return mixed
-     */
-    public function __get($key)
-    {
-        if (class_exists('MacroableModels')) {
-            $method = 'get' . Str::studly($key) . 'Attribute';
-            if (MacroableModels::modelHasMacro(get_class($this), $method)) {
-                return call_user_func([$this, $method]);
-            }
-        }
-
-        return parent::__get($key);
     }
 }

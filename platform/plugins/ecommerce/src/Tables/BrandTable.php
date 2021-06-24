@@ -4,6 +4,7 @@ namespace Botble\Ecommerce\Tables;
 
 use BaseHelper;
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Ecommerce\Models\Brand;
 use Botble\Ecommerce\Repositories\Interfaces\BrandInterface;
 use Botble\Table\Abstracts\TableAbstract;
 use Html;
@@ -31,9 +32,9 @@ class BrandTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, BrandInterface $brandRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $brandRepository;
+        $this->setOption('id', 'table-brands');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['brands.edit', 'brands.destroy'])) {
             $this->hasOperations = false;
@@ -59,22 +60,21 @@ class BrandTable extends TableAbstract
                 return $this->getCheckbox($item->id);
             })
             ->editColumn('logo', function ($item) {
-                return $this->displayThumbnail($item->logo);
+                return view('plugins/ecommerce::brands.partials.thumbnail', compact('item'))->render();
             })
             ->editColumn('created_at', function ($item) {
                 return BaseHelper::formatDate($item->created_at);
             })
-            ->editColumn('is_featured', function ($item) {
-                return $item->is_featured ? trans('core/base::base.yes') : trans('core/base::base.no');
-            })
             ->editColumn('status', function ($item) {
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('brands.edit', 'brands.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('brands.edit', 'brands.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -138,7 +138,9 @@ class BrandTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('brands.create'), 'brands.create');
+        $buttons = $this->addCreateButton(route('brands.create'), 'brands.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, Brand::class);
     }
 
     /**

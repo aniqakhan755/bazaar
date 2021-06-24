@@ -57,7 +57,7 @@ class ThemeActivateCommand extends Command
             return 1;
         }
 
-        $result = $this->themeService->activate($this->getTheme());
+        $result = $this->themeService->activate($this->argument('name'));
 
         if ($result['error']) {
             $this->error($result['message']);

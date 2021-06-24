@@ -61,10 +61,9 @@ class LoginController extends BaseController
     public function showLoginForm()
     {
         page_title()->setTitle(trans('core/acl::auth.login_title'));
-
+        //setcookie('dir_prefix','admin', time() + (86400 * 1), "/");
         Assets::addScripts(['jquery-validation'])
             ->addScriptsDirectly('vendor/core/core/acl/js/login.js')
-            ->addStylesDirectly('vendor/core/core/acl/css/animate.min.css')
             ->addStylesDirectly('vendor/core/core/acl/css/login.css')
             ->removeStyles([
                 'select2',
@@ -120,6 +119,7 @@ class LoginController extends BaseController
             if (!session()->has('url.intended')) {
                 session()->flash('url.intended', url()->current());
             }
+            session(['dir_prefix'=>'admin']);
             return $this->sendLoginResponse($request);
         }
 
@@ -150,9 +150,25 @@ class LoginController extends BaseController
         do_action(AUTH_ACTION_AFTER_LOGOUT_SYSTEM, $request, $request->user());
 
         $this->guard()->logout();
+        $route =session('dir_prefix');
+        /*if(isset($_COOKIE['dir_prefix'])) {
+            $route = $_COOKIE['dir_prefix'];
+            setcookie("dir_prefix", "", time() - 3600);
+            if($route == 'vendor-dashboard')
+            {
+                return $this->response
+                ->setNextUrl(route('vendor.login'))
+                ->setMessage(trans('core/acl::auth.login.logout_success'));
+            }
+        }*/
 
         $request->session()->invalidate();
-
+        if($route == 'vendor-dashboard')
+            {
+                return $this->response
+                ->setNextUrl(route('vendor.login'))
+                ->setMessage(trans('core/acl::auth.login.logout_success'));
+            }
         return $this->response
             ->setNextUrl(route('access.login'))
             ->setMessage(trans('core/acl::auth.login.logout_success'));

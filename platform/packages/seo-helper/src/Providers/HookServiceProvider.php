@@ -35,11 +35,7 @@ class HookServiceProvider extends ServiceProvider
                 ->addStylesDirectly('vendor/core/packages/seo-helper/css/seo-helper.css');
             MetaBox::addMetaBox('seo_wrap', trans('packages/seo-helper::seo-helper.meta_box_header'), [$this, 'seoMetaBox'],
                 get_class($data), 'advanced', 'low');
-
-            return true;
         }
-
-        return false;
     }
 
     /**

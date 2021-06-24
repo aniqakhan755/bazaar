@@ -8,13 +8,10 @@ use Botble\Blog\Repositories\Interfaces\PostInterface;
 use Botble\Ecommerce\Repositories\Interfaces\FlashSaleInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductCategoryInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductInterface;
-use Botble\Ecommerce\Repositories\Interfaces\ProductVariationInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ReviewInterface;
 use Botble\Ecommerce\Services\Products\GetProductService;
 use Botble\Theme\Http\Controllers\PublicController;
 use Cart;
-use DB;
-use EcommerceHelper;
 use EmailHandler;
 use Illuminate\Http\Request;
 use Theme;
@@ -37,16 +34,6 @@ class MartfuryController extends PublicController
             abort(404);
         }
 
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
         $products = get_products_by_collections([
             'collections' => [
                 'by'       => 'id',
@@ -59,9 +46,7 @@ class MartfuryController extends PublicController
                 'productCollections',
                 'variationAttributeSwatchesForProductList',
                 'promotions',
-                'latestFlashSales',
             ],
-            'withCount'   => $withCount,
         ]);
 
         $data = [];
@@ -99,27 +84,15 @@ class MartfuryController extends PublicController
             abort(404);
         }
 
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
         $products = get_trending_products([
-            'take'      => 10,
-            'with'      => [
+            'take' => 10,
+            'with' => [
                 'slugable',
                 'variations',
                 'productCollections',
                 'variationAttributeSwatchesForProductList',
                 'promotions',
-                'latestFlashSales',
             ],
-            'withCount' => $withCount,
         ]);
 
         $data = [];
@@ -159,27 +132,15 @@ class MartfuryController extends PublicController
 
         $data = [];
 
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
         $products = get_featured_products([
-            'take'      => 10,
-            'with'      => [
+            'take' => 10,
+            'with' => [
                 'slugable',
                 'variations',
                 'productCollections',
                 'variationAttributeSwatchesForProductList',
                 'promotions',
-                'latestFlashSales',
             ],
-            'withCount' => $withCount,
         ]);
 
         foreach ($products as $product) {
@@ -200,24 +161,13 @@ class MartfuryController extends PublicController
             abort(404);
         }
 
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
         $products = get_top_rated_products(10, [
             'slugable',
             'variations',
             'productCollections',
             'variationAttributeSwatchesForProductList',
             'promotions',
-            'latestFlashSales',
-        ], $withCount);
+        ]);
 
         $data = [];
         foreach ($products as $product) {
@@ -238,27 +188,15 @@ class MartfuryController extends PublicController
             abort(404);
         }
 
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
         $products = get_products_on_sale([
-            'take'      => 10,
-            'with'      => [
+            'take' => 10,
+            'with' => [
                 'slugable',
                 'variations',
                 'productCollections',
                 'variationAttributeSwatchesForProductList',
                 'promotions',
-                'latestFlashSales',
             ],
-            'withCount' => $withCount,
         ]);
 
         $data = [];
@@ -316,20 +254,7 @@ class MartfuryController extends PublicController
             abort(404);
         }
 
-        $productImages = $product->images;
-        if ($product->is_variation) {
-            $product = $product->original_product;
-            $selectedAttrs = app(ProductVariationInterface::class)->getAttributeIdsOfChildrenProduct($product->id);
-            if (count($productImages) == 0) {
-                $productImages = $product->images;
-            }
-        } else {
-            $selectedAttrs = $product->defaultVariation->productAttributes;
-        }
-
-        Theme::asset()->remove('app-js');
-
-        return $response->setData(Theme::partial('quick-view', compact('product', 'selectedAttrs', 'productImages')));
+        return $response->setData(Theme::partial('quick-view', compact('product')));
     }
 
     /**
@@ -425,28 +350,10 @@ class MartfuryController extends PublicController
 
         $request->merge(['num' => 10]);
 
-        $with = [
-            'slugable',
-            'variations',
-            'productCollections',
-            'variationAttributeSwatchesForProductList',
-            'promotions',
-            'latestFlashSales',
-        ];
+        $products = $productService->getProduct($request, null, null,
+            ['slugable', 'variations', 'productCollections', 'variationAttributeSwatchesForProductList', 'promotions']);
 
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
-        $products = $productService->getProduct($request, null, null, $with, $withCount);
-
-        $query = $request->input('q');
+        $query = $request->get('q');
 
         return $response->setData(Theme::partial('ajax-search-results', compact('products', 'query')));
     }
@@ -489,23 +396,11 @@ class MartfuryController extends PublicController
             return $response;
         }
 
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
         $products = $productRepository->getProductsByCategories([
             'categories' => [
                 'by'       => 'id',
                 'value_in' => [$categoryId],
             ],
-            'take'       => 10,
-            'withCount'  => $withCount,
         ]);
 
         $data = [];
@@ -555,12 +450,8 @@ class MartfuryController extends PublicController
      * @param FlashSaleInterface $flashSaleRepository
      * @return BaseHttpResponse
      */
-    public function ajaxGetFlashSale(
-        Request $request,
-        $id,
-        BaseHttpResponse $response,
-        FlashSaleInterface $flashSaleRepository
-    ) {
+    public function ajaxGetFlashSale(Request $request, $id, BaseHttpResponse $response, FlashSaleInterface $flashSaleRepository)
+    {
         if (!$request->ajax() || !$request->wantsJson()) {
             abort(404);
         }
@@ -571,17 +462,7 @@ class MartfuryController extends PublicController
             ->where('status', BaseStatusEnum::PUBLISHED)
             ->with([
                 'products' => function ($query) {
-                    $withCount = [];
-                    if (EcommerceHelper::isReviewEnabled()) {
-                        $withCount = [
-                            'reviews',
-                            'reviews as reviews_avg' => function ($query) {
-                                $query->select(DB::raw('avg(star)'));
-                            },
-                        ];
-                    }
-
-                    return $query->where('status', BaseStatusEnum::PUBLISHED)->withCount($withCount);
+                    return $query->where('status', BaseStatusEnum::PUBLISHED);
                 },
             ])
             ->first();

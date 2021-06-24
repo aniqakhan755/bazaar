@@ -8,7 +8,6 @@ use Botble\Payment\Enums\PaymentMethodEnum;
 use Botble\SslCommerz\Library\SslCommerz\SslCommerzNotification;
 use Html;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 use Throwable;
 
@@ -82,45 +81,34 @@ class HookServiceProvider extends ServiceProvider
             $body['currency'] = $request->input('currency');
             $body['tran_id'] = uniqid(); // tran_id must be unique
 
-            $orderIds = (array) $request->input('order_id', []);
-            $orderId = Arr::first($orderIds);
+            $orderAddress = $this->app->make(OrderAddressInterface::class)
+                ->getFirstBy(['order_id' => $request->input('order_id')]);
 
-            $orderAddress = $this->app->make(OrderAddressInterface::class)->getFirstBy(['order_id' => $orderId]);
-
+            // CUSTOMER INFORMATION
+            $body['cus_name'] = $orderAddress->name;
+            $body['cus_email'] = $orderAddress->email;
+            $body['cus_add1'] = $orderAddress->address;
             $body['cus_add2'] = '';
             $body['cus_city'] = '';
             $body['cus_state'] = '';
             $body['cus_postcode'] = '';
+            $body['cus_country'] = $orderAddress->country_name;
+            $body['cus_phone'] = $orderAddress->phone;
             $body['cus_fax'] = '';
-
-            $body['cus_name'] = 'Not set';
-            $body['cus_email'] = 'Not set';
-            $body['cus_add1'] = 'Not set';
-            $body['cus_country'] = 'Not set';
-            $body['cus_phone'] = 'Not set';
-
-            // CUSTOMER INFORMATION
-            if ($orderAddress) {
-                $body['cus_name'] = $orderAddress->name;
-                $body['cus_email'] = $orderAddress->email;
-                $body['cus_add1'] = $orderAddress->address;
-                $body['cus_country'] = $orderAddress->country_name;
-                $body['cus_phone'] = $orderAddress->phone;
-            }
 
             $primaryStore = $this->app->make(StoreLocatorInterface::class)->getFirstBy(['is_primary' => 1]);
 
-            $body['ship_name'] = 'Not set';
-            $body['ship_add1'] = 'Not set';
-            $body['ship_add2'] = 'Not set';
-            $body['ship_city'] = 'Not set';
-            $body['ship_state'] = 'Not set';
-            $body['ship_postcode'] = 'Not set';
-            $body['ship_phone'] = 'Not set';
-            $body['ship_country'] = 'Not set';
-
             # SHIPMENT INFORMATION
-            if ($primaryStore) {
+            if (!$primaryStore) {
+                $body['ship_name'] = 'Not set';
+                $body['ship_add1'] = 'Not set';
+                $body['ship_add2'] = 'Not set';
+                $body['ship_city'] = 'Not set';
+                $body['ship_state'] = 'Not set';
+                $body['ship_postcode'] = 'Not set';
+                $body['ship_phone'] = 'Not set';
+                $body['ship_country'] = 'Not set';
+            } else {
                 $body['ship_name'] = $primaryStore->name;
                 $body['ship_add1'] = $primaryStore->address;
                 $body['ship_add2'] = '';
@@ -134,16 +122,13 @@ class HookServiceProvider extends ServiceProvider
             $body['shipping_method'] = 'NO';
 
             $body['product_category'] = 'Goods';
-            $body['product_name'] = 'Order #' . $orderId;
+            $body['product_name'] = 'Order #' . $request->input('order_id');
             $body['product_profile'] = 'physical-goods';
 
-            $body['value_a'] = implode(';', $orderIds);
+            $body['value_a'] = $request->input('order_id');
             $body['value_b'] = session('tracked_start_checkout');
-            $body['value_c'] = $request->input('customer_id');
-            $body['value_d'] = urlencode($request->input('customer_type'));
 
             $sslc = new SslCommerzNotification;
-
             // initiate(Transaction Data , false: Redirect to SSLCOMMERZ gateway/ true: Show all the Payment gateway here )
             $sslc->makePayment($body, 'hosted');
         }

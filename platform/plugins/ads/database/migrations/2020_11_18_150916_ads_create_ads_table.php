@@ -21,7 +21,7 @@ class AdsCreateAdsTable extends Migration
             $table->string('image', 255)->nullable();
             $table->string('url', 255)->nullable();
             $table->bigInteger('clicked')->default(0);
-            $table->integer('order')->default(0)->nullable();
+            $table->integer('order')->default(0);
             $table->string('status', 60)->default('published');
             $table->timestamps();
         });

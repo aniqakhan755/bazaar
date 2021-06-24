@@ -82,7 +82,7 @@ class PageService
         }
 
         Theme::breadcrumb()
-            ->add(__('Home'), route('public.index'))
+            ->add(__('Home'), url('/'))
             ->add($page->name, $page->url);
 
         do_action(BASE_ACTION_PUBLIC_RENDER_SINGLE, PAGE_MODULE_SCREEN_NAME, $page);

@@ -95,8 +95,8 @@ class Asset
      *        // Call the "add" method on the default container
      *        Asset::add('jquery', 'js/jquery.js');
      * </code>
-     * @param string $method
-     * @param array $parameters
+     * @param $method
+     * @param $parameters
      * @return mixed
      */
     public function __call($method, $parameters)

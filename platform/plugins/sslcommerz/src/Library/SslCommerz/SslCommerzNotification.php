@@ -362,7 +362,7 @@ class SslCommerzNotification extends AbstractSslCommerz
 
     protected function setSuccessUrl()
     {
-        $this->successUrl = route('public.index') . '/' . ltrim($this->config['success_url'], '/');
+        $this->successUrl = url('/') . $this->config['success_url'];
     }
 
     /**
@@ -375,7 +375,7 @@ class SslCommerzNotification extends AbstractSslCommerz
 
     protected function setFailedUrl()
     {
-        $this->failedUrl = route('public.index') . '/' . ltrim($this->config['failed_url'], '/');
+        $this->failedUrl = url('/') . $this->config['failed_url'];
     }
 
     /**
@@ -388,7 +388,7 @@ class SslCommerzNotification extends AbstractSslCommerz
 
     protected function setCancelUrl()
     {
-        $this->cancelUrl = route('public.index') . '/' . ltrim($this->config['cancel_url'], '/');
+        $this->cancelUrl = url('/') . $this->config['cancel_url'];
     }
 
     /**

@@ -122,20 +122,18 @@ abstract class SettingStore
     /**
      * Save any changes done to the settings data.
      *
-     * @return false
+     * @return void
      */
     public function save()
     {
         if (!$this->unsaved) {
             // either nothing has been changed, or data has not been loaded, so
             // do nothing by returning early
-            return false;
+            return;
         }
 
         $this->write($this->data);
         $this->unsaved = false;
-
-        return true;
     }
 
     /**

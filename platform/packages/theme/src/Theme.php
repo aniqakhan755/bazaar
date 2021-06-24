@@ -380,9 +380,8 @@ class Theme implements ThemeContract
             return $this->theme;
         }
 
-        $theme = setting('theme');
-        if ($theme) {
-            return $theme;
+        if (setting('theme')) {
+            return setting('theme');
         }
 
         return Arr::first(scan_folder(theme_path()));
@@ -716,7 +715,7 @@ class Theme implements ThemeContract
             return $this->regions[$region];
         }
 
-        return $default ?: '';
+        return $default ? $default : '';
     }
 
     /**
@@ -778,21 +777,16 @@ class Theme implements ThemeContract
     {
         // Fire event global assets.
         $this->fire('asset', $this->asset);
-
         // Fire event before render theme.
         $this->fire('beforeRenderTheme', $this);
-
         // Fire event before render layout.
         $this->fire('beforeRenderLayout.' . $this->layout, $this);
-
         // Keeping arguments.
         $this->arguments = $args;
 
         $content = $this->view->make($view, $args)->render();
-
         // View path of content.
         $this->content = $view;
-
         // Set up a content regional.
         $this->regions['content'] = $content;
 
@@ -931,7 +925,7 @@ class Theme implements ThemeContract
      */
     public function hasContentArgument($key): bool
     {
-        return isset($this->arguments[$key]);
+        return (bool)isset($this->arguments[$key]);
     }
 
     /**
@@ -990,7 +984,8 @@ class Theme implements ThemeContract
             'CMS'               => 'Botble CMS',
             'CMS-Version'       => get_cms_version(),
             'Authorization-At'  => setting('membership_authorization_at'),
-            'Activated-License' => !empty(setting('licensed_to')) ? 'Yes' : 'No',
+            'Activated-License' => 'Yes',
+            //'Activated-License' => !empty(setting('licensed_to')) ? 'Yes' : 'No',
         ]);
 
         return $content;

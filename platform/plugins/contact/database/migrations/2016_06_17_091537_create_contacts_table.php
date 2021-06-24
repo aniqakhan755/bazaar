@@ -22,14 +22,14 @@ class CreateContactsTable extends Migration
             $table->string('phone', 60)->nullable();
             $table->string('address', 120)->nullable();
             $table->string('subject', 120)->nullable();
-            $table->longText('content');
+            $table->text('content');
             $table->string('status', 60)->default('unread');
             $table->timestamps();
         });
 
         Schema::create('contact_replies', function (Blueprint $table) {
             $table->id();
-            $table->longText('message');
+            $table->text('message');
             $table->integer('contact_id');
             $table->timestamps();
         });

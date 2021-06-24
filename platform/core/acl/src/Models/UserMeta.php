@@ -43,7 +43,7 @@ class UserMeta extends BaseModel
     public static function setMeta($key, $value = null, $userId = 0)
     {
         if ($userId == 0) {
-            $userId = Auth::id();
+            $userId = Auth::user()->getKey();
         }
 
         $meta = self::firstOrCreate([
@@ -63,7 +63,7 @@ class UserMeta extends BaseModel
     public static function getMeta($key, $default = null, $userId = 0)
     {
         if ($userId == 0) {
-            $userId = Auth::id();
+            $userId = Auth::user()->getKey();
         }
 
         $meta = self::where([

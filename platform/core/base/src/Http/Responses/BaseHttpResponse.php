@@ -58,7 +58,6 @@ class BaseHttpResponse implements Responsable
     public function setData($data): self
     {
         $this->data = $data;
-
         return $this;
     }
 
@@ -69,7 +68,6 @@ class BaseHttpResponse implements Responsable
     public function setPreviousUrl($previousUrl): self
     {
         $this->previousUrl = $previousUrl;
-
         return $this;
     }
 
@@ -80,7 +78,6 @@ class BaseHttpResponse implements Responsable
     public function setNextUrl($nextUrl): self
     {
         $this->nextUrl = $nextUrl;
-
         return $this;
     }
 
@@ -91,7 +88,6 @@ class BaseHttpResponse implements Responsable
     public function withInput(bool $withInput = true): self
     {
         $this->withInput = $withInput;
-
         return $this;
     }
 
@@ -102,7 +98,6 @@ class BaseHttpResponse implements Responsable
     public function setCode(int $code): self
     {
         $this->code = $code;
-
         return $this;
     }
 
@@ -121,7 +116,6 @@ class BaseHttpResponse implements Responsable
     public function setMessage($message): self
     {
         $this->message = $message;
-
         return $this;
     }
 
@@ -140,7 +134,6 @@ class BaseHttpResponse implements Responsable
     public function setError(bool $error = true): self
     {
         $this->error = $error;
-
         return $this;
     }
 

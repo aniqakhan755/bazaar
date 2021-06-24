@@ -91,14 +91,15 @@ class SimpleSliderController extends BaseController
     }
 
     /**
-     * @param int $id
+     * @param $id
      * @param FormBuilder $formBuilder
      * @param Request $request
      * @return string
      */
     public function edit($id, FormBuilder $formBuilder, Request $request)
     {
-        Assets::addScripts(['blockui', 'sortable'])
+        Assets::addStylesDirectly(['vendor/core/plugins/simple-slider/css/simple-slider-admin.css'])
+            ->addScripts(['blockui', 'sortable'])
             ->addScriptsDirectly(['vendor/core/plugins/simple-slider/js/simple-slider-admin.js']);
 
         $simpleSlider = $this->simpleSliderRepository->findOrFail($id);

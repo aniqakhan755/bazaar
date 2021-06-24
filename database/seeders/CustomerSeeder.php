@@ -23,55 +23,47 @@ class CustomerSeeder extends BaseSeeder
         Customer::truncate();
         Address::truncate();
 
-        $customers = [
-            'vendor@botble.com',
-            'customer@botble.com',
-            'john.smith@botble.com',
-        ];
+        $customer = Customer::create([
+            'name'     => 'John Smith',
+            'email'    => 'john.smith@botble.com',
+            'password' => bcrypt('12345678'),
+            'phone'    => $faker->e164PhoneNumber,
+            'avatar'   => 'customers/1.jpg',
+        ]);
 
-        foreach ($customers as $item) {
-            $customer = Customer::create([
-                'name'     => $faker->name,
-                'email'    => $item,
-                'password' => bcrypt('12345678'),
-                'phone'    => $faker->e164PhoneNumber,
-                'avatar'   => 'customers/' . $faker->numberBetween(1, 10) . '.jpg',
-            ]);
+        $customer->confirmed_at = now();
+        $customer->save();
 
-            $customer->confirmed_at = now();
-            $customer->save();
+        Address::create([
+            'name'        => $customer->name,
+            'phone'       => $faker->e164PhoneNumber,
+            'email'       => $customer->email,
+            'country'     => $faker->countryCode,
+            'state'       => $faker->state,
+            'city'        => $faker->city,
+            'address'     => $faker->streetAddress,
+            'zip_code'    => $faker->postcode,
+            'customer_id' => $customer->id,
+            'is_default'  => true,
+        ]);
 
-            Address::create([
-                'name'        => $customer->name,
-                'phone'       => $faker->e164PhoneNumber,
-                'email'       => $customer->email,
-                'country'     => $faker->countryCode,
-                'state'       => $faker->state,
-                'city'        => $faker->city,
-                'address'     => $faker->streetAddress,
-                'zip_code'    => $faker->postcode,
-                'customer_id' => $customer->id,
-                'is_default'  => true,
-            ]);
-
-            Address::create([
-                'name'        => $customer->name,
-                'phone'       => $faker->e164PhoneNumber,
-                'email'       => $customer->email,
-                'country'     => $faker->countryCode,
-                'state'       => $faker->state,
-                'city'        => $faker->city,
-                'address'     => $faker->streetAddress,
-                'zip_code'    => $faker->postcode,
-                'customer_id' => $customer->id,
-                'is_default'  => false,
-            ]);
-        }
+        Address::create([
+            'name'        => $customer->name,
+            'phone'       => $faker->e164PhoneNumber,
+            'email'       => $customer->email,
+            'country'     => $faker->countryCode,
+            'state'       => $faker->state,
+            'city'        => $faker->city,
+            'address'     => $faker->streetAddress,
+            'zip_code'    => $faker->postcode,
+            'customer_id' => $customer->id,
+            'is_default'  => false,
+        ]);
 
         for ($i = 0; $i < 10; $i++) {
             $customer = Customer::create([
                 'name'     => $faker->name,
-                'email'    => $faker->unique()->safeEmail,
+                'email'    => $faker->safeEmail,
                 'password' => bcrypt('12345678'),
                 'phone'    => $faker->e164PhoneNumber,
                 'avatar'   => 'customers/' . ($i + 1) . '.jpg',

@@ -20,7 +20,7 @@ class CreateAuditHistory extends Migration
             $table->text('request')->nullable();
             $table->string('action', 120);
             $table->text('user_agent')->nullable();
-            $table->string('ip_address', 39)->nullable();
+            $table->string('ip_address', 25)->nullable();
             $table->integer('reference_user')->unsigned();
             $table->integer('reference_id')->unsigned();
             $table->string('reference_name', 255);

@@ -34,7 +34,7 @@ class SslCommerzServiceProvider extends ServiceProvider
                 'plugins.sslcommerz.sslcommerz.apiCredentials.store_id' => get_payment_setting('store_id', SSLCOMMERZ_PAYMENT_METHOD_NAME),
                 'plugins.sslcommerz.sslcommerz.apiCredentials.store_password' => get_payment_setting('store_password', SSLCOMMERZ_PAYMENT_METHOD_NAME),
                 'plugins.sslcommerz.sslcommerz.connect_from_localhost' => get_payment_setting('mode', SSLCOMMERZ_PAYMENT_METHOD_NAME) == 0,
-                'plugins.sslcommerz.sslcommerz.apiDomain' => get_payment_setting('mode', SSLCOMMERZ_PAYMENT_METHOD_NAME) == 0 ? 'https://sandbox.sslcommerz.com' : 'https://securepay.sslcommerz.com',
+                'plugins.sslcommerz.sslcommerz.apiDomain' => get_payment_setting('mode', SSLCOMMERZ_PAYMENT_METHOD_NAME) == 0 ? 'https://sandbox.sslcommerz.com' : 'https://sandbox.sslcommerz.com',
             ]);
         }
     }

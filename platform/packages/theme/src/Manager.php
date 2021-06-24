@@ -10,23 +10,11 @@ class Manager
     protected $themes = [];
 
     /**
-     * Manager constructor.
+     * Construct the class
      */
     public function __construct()
     {
         $this->registerTheme(self::getAllThemes());
-    }
-
-    /**
-     * @param string|array $theme
-     * @return void
-     */
-    public function registerTheme($theme): void
-    {
-        if (!is_array($theme)) {
-            $theme = [$theme];
-        }
-        $this->themes = array_merge_recursive($this->themes, $theme);
     }
 
     /**
@@ -42,8 +30,19 @@ class Manager
                 $themes[$folder] = $theme;
             }
         }
-
         return $themes;
+    }
+
+    /**
+     * @param string|array $theme
+     * @return void
+     */
+    public function registerTheme($theme): void
+    {
+        if (!is_array($theme)) {
+            $theme = [$theme];
+        }
+        $this->themes = array_merge_recursive($this->themes, $theme);
     }
 
     /**

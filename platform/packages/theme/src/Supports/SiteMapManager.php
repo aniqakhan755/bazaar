@@ -28,7 +28,7 @@ class SiteMapManager
         $this->siteMap->setCache('public.sitemap', config('core.base.general.cache_site_map'));
 
         if (!BaseHelper::getHomepageId()) {
-            $this->siteMap->add(route('public.index'), '2021-03-22 10:00', '1.0', 'daily');
+            $this->siteMap->add(url('/'), '2020-11-15 10:00', '1.0', 'daily');
         }
 
         AdminBar::setIsDisplay(false);

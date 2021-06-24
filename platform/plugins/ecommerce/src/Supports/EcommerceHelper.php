@@ -18,6 +18,14 @@ class EcommerceHelper
     /**
      * @return bool
      */
+    public function isTaxEnabled(): bool
+    {
+        return get_ecommerce_setting('ecommerce_tax_enabled', '1') == '1';
+    }
+
+    /**
+     * @return bool
+     */
     public function isReviewEnabled(): bool
     {
         return get_ecommerce_setting('review_enabled', '1') == '1';
@@ -60,14 +68,6 @@ class EcommerceHelper
     }
 
     /**
-     * @return bool
-     */
-    public function isTaxEnabled(): bool
-    {
-        return get_ecommerce_setting('ecommerce_tax_enabled', '1') == '1';
-    }
-
-    /**
      * @return array
      */
     public function getAvailableCountries(): array
@@ -93,21 +93,27 @@ class EcommerceHelper
         return $countries;
     }
 
-    /**
-     * @return array
-     */
-    public function getSortParams(): array
+    public static function getAvailableCities(): array
     {
-        return [
-            'default_sorting' => __('Default'),
-            'date_asc'        => __('Oldest'),
-            'date_desc'       => __('Newest'),
-            'price_asc'       => __('Price: low to high'),
-            'price_desc'      => __('Price: high to low'),
-            'name_asc'        => __('Name: A-Z'),
-            'name_desc'       => __('Name : Z-A'),
-            'rating_asc'      => __('Rating: low to high'),
-            'rating_desc'     => __('Rating: high to low'),
-        ];
+        $result = [];
+
+        foreach (Helper::cities() as $value) {
+            $result[$value] = $value;
+        }
+
+        return $result;
+    }
+
+    public static function getCountries(): array
+    {
+
+        $result = [];
+
+        foreach (Helper::countries() as $value) {
+            $result[$value] = $value;
+        }
+
+        return $result;
+
     }
 }

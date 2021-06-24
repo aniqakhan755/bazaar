@@ -198,40 +198,6 @@ theme_option()
             'values'     => theme_option('payment_methods', []),
         ],
     ])
-    ->setField([
-        'id'         => 'show_featured_brands_on_products_page',
-        'section_id' => 'opt-text-subsection-ecommerce',
-        'type'       => 'select',
-        'label'      => __('Show featured brands on the products page?'),
-        'attributes' => [
-            'name'    => 'show_featured_brands_on_products_page',
-            'list'    => [
-                'no'  => trans('core/base::base.no'),
-                'yes' => trans('core/base::base.yes'),
-            ],
-            'value'   => 'yes',
-            'options' => [
-                'class' => 'form-control',
-            ],
-        ],
-    ])
-    ->setField([
-        'id'         => 'show_recommend_items_on_products_page',
-        'section_id' => 'opt-text-subsection-ecommerce',
-        'type'       => 'select',
-        'label'      => __('Show recommend items on the products page?'),
-        'attributes' => [
-            'name'    => 'show_recommend_items_on_products_page',
-            'list'    => [
-                'no'  => trans('core/base::base.no'),
-                'yes' => trans('core/base::base.yes'),
-            ],
-            'value'   => 'yes',
-            'options' => [
-                'class' => 'form-control',
-            ],
-        ],
-    ])
     ->setSection([
         'title'      => __('Site features'),
         'desc'       => __('Site features'),

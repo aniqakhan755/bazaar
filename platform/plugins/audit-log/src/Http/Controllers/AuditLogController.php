@@ -35,22 +35,17 @@ class AuditLogController extends BaseController
 
     /**
      * @param BaseHttpResponse $response
-     * @param Request $request
      * @return BaseHttpResponse
+     * @throws Throwable
      */
-    public function getWidgetActivities(BaseHttpResponse $response, Request $request)
+    public function getWidgetActivities(BaseHttpResponse $response)
     {
-        $limit = (int)$request->input('paginate', 10);
-
+        $limit = request()->input('paginate', 10);
         $histories = $this->auditLogRepository
-            ->advancedGet([
-                'with'     => ['user'],
-                'order_by' => ['created_at' => 'DESC'],
-                'paginate' => [
-                    'per_page'      => $limit,
-                    'current_paged' => 1,
-                ],
-            ]);
+            ->getModel()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->paginate($limit);
 
         return $response
             ->setData(view('plugins/audit-log::widgets.activities', compact('histories', 'limit'))->render());

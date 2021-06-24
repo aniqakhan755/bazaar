@@ -2,14 +2,14 @@
 
 namespace Botble\Backup\Supports;
 
-use Botble\Base\Supports\PclZip as Zip;
 use Exception;
 use File;
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Process\Process;
 use ZipArchive;
+use Botble\Base\Supports\PclZip as Zip;
+use Illuminate\Filesystem\Filesystem;
 
 class Backup
 {
@@ -86,26 +86,6 @@ class Backup
     public function getBackupPath($path = null): string
     {
         return storage_path('app/backup') . ($path ? '/' . $path : null);
-    }
-
-    /**
-     * @param string $key
-     * @return string
-     */
-    public function getBackupDatabasePath($key): string
-    {
-        return $this->getBackupPath($key . '/database-' . $key . '.zip');
-    }
-
-    /**
-     * @param string $key
-     * @return bool
-     */
-    public function isDatabaseBackupAvailable($key): bool
-    {
-        $file = $this->getBackupDatabasePath($key);
-
-        return file_exists($file) && filesize($file) > 1024;
     }
 
     /**

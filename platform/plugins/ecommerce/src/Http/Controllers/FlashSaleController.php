@@ -3,23 +3,20 @@
 namespace Botble\Ecommerce\Http\Controllers;
 
 use Botble\Base\Events\BeforeEditContentEvent;
-use Botble\Base\Events\CreatedContentEvent;
-use Botble\Base\Events\DeletedContentEvent;
-use Botble\Base\Events\UpdatedContentEvent;
-use Botble\Base\Forms\FormBuilder;
-use Botble\Base\Http\Controllers\BaseController;
-use Botble\Base\Http\Responses\BaseHttpResponse;
-use Botble\Ecommerce\Forms\FlashSaleForm;
 use Botble\Ecommerce\Http\Requests\FlashSaleRequest;
 use Botble\Ecommerce\Models\FlashSale;
 use Botble\Ecommerce\Repositories\Interfaces\FlashSaleInterface;
-use Botble\Ecommerce\Tables\FlashSaleTable;
-use Exception;
-use Illuminate\Contracts\View\Factory;
+use Botble\Base\Http\Controllers\BaseController;
 use Illuminate\Http\Request;
+use Exception;
+use Botble\Ecommerce\Tables\FlashSaleTable;
+use Botble\Base\Events\CreatedContentEvent;
+use Botble\Base\Events\DeletedContentEvent;
+use Botble\Base\Events\UpdatedContentEvent;
+use Botble\Base\Http\Responses\BaseHttpResponse;
+use Botble\Ecommerce\Forms\FlashSaleForm;
+use Botble\Base\Forms\FormBuilder;
 use Illuminate\Support\Arr;
-use Illuminate\View\View;
-use Throwable;
 
 class FlashSaleController extends BaseController
 {
@@ -38,8 +35,8 @@ class FlashSaleController extends BaseController
 
     /**
      * @param FlashSaleTable $table
-     * @return Factory|View
-     * @throws Throwable
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws \Throwable
      */
     public function index(FlashSaleTable $table)
     {
@@ -102,7 +99,7 @@ class FlashSaleController extends BaseController
             $extra['quantity'] = (int)$extra['quantity'];
 
             if ($flashSale->products()->where('id', $productId)->count()) {
-                $flashSale->products()->sync([(int)$productId => $extra]);
+                $flashSale->products()->sync([(int) $productId => $extra]);
             } else {
                 $flashSale->products()->attach($productId, $extra);
             }

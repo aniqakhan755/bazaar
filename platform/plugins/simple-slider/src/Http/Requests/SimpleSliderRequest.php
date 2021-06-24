@@ -17,10 +17,9 @@ class SimpleSliderRequest extends Request
     public function rules()
     {
         return [
-            'name'        => 'required',
-            'key'         => 'required',
-            'description' => 'max:1000',
-            'status'      => Rule::in(BaseStatusEnum::values()),
+            'name'   => 'required',
+            'key'    => 'required',
+            'status' => Rule::in(BaseStatusEnum::values()),
         ];
     }
 }

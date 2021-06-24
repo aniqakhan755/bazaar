@@ -24,7 +24,7 @@
                 <ul class="nav nav-tabs tab-in-left">
                     @foreach (ThemeOption::constructSections() as $section)
                         <li class="nav-item">
-                            <a href="#tab_{{ $section['id'] }}" class="nav-link @if ($loop->first) active @endif" data-toggle="tab">@if (!empty($section['icon']))<i class="{{ $section['icon'] }}"></i> @endif {{ $section['title'] }}</a>
+                            <a href="#tab_{{ $section['id'] }}" class="nav-link @if ($loop->first) active @endif" data-toggle="tab">@if (!empty($section['icon']))<i class="{{ $section['icon'] }}"></i> @endif {{ __($section['title']) }}</a>
                         </li>
                     @endforeach
                 </ul>
@@ -35,10 +35,10 @@
                         <div class="tab-pane @if ($loop->first) active @endif" id="tab_{{ $section['id'] }}">
                             @foreach (ThemeOption::constructFields($section['id']) as $field)
                                 <div class="form-group @if ($errors->has($field['attributes']['name'])) has-error @endif">
-                                    {!! Form::label($field['attributes']['name'], $field['label'], ['class' => 'control-label']) !!}
+                                    {!! Form::label($field['attributes']['name'], __($field['label']), ['class' => 'control-label']) !!}
                                     {!! ThemeOption::renderField($field) !!}
                                     @if (array_key_exists('helper', $field))
-                                        <span class="help-block">{!! clean($field['helper']) !!}</span>
+                                        <span class="help-block">{!! __($field['helper']) !!}</span>
                                     @endif
                                 </div>
                                 <hr>

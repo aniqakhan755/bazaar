@@ -3,12 +3,13 @@
 namespace Botble\Menu\Tables;
 
 use BaseHelper;
+use Botble\Menu\Models\Menu;
+use Html;
+use Illuminate\Support\Facades\Auth;
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Menu\Repositories\Interfaces\MenuInterface;
 use Botble\Table\Abstracts\TableAbstract;
-use Html;
 use Illuminate\Contracts\Routing\UrlGenerator;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\DataTables;
 
@@ -32,9 +33,9 @@ class MenuTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, MenuInterface $menuRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $menuRepository;
+        $this->setOption('id', 'table-menus');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['menus.edit', 'menus.destroy'])) {
             $this->hasOperations = false;
@@ -64,12 +65,14 @@ class MenuTable extends TableAbstract
             })
             ->editColumn('status', function ($item) {
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('menus.edit', 'menus.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('menus.edit', 'menus.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -125,7 +128,9 @@ class MenuTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('menus.create'), 'menus.create');
+        $buttons = $this->addCreateButton(route('menus.create'), 'menus.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, Menu::class);
     }
 
     /**

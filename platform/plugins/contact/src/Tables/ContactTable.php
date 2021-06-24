@@ -4,6 +4,7 @@ namespace Botble\Contact\Tables;
 
 use BaseHelper;
 use Botble\Contact\Exports\ContactExport;
+use Botble\Contact\Models\Contact;
 use Html;
 use Illuminate\Support\Facades\Auth;
 use Botble\Contact\Enums\ContactStatusEnum;
@@ -39,9 +40,9 @@ class ContactTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, ContactInterface $contactRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $contactRepository;
+        $this->setOption('id', 'table-contacts');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['contacts.edit', 'contacts.destroy'])) {
             $this->hasOperations = false;
@@ -71,12 +72,14 @@ class ContactTable extends TableAbstract
             })
             ->editColumn('status', function ($item) {
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('contacts.edit', 'contacts.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('contacts.edit', 'contacts.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -135,6 +138,14 @@ class ContactTable extends TableAbstract
                 'width' => '100px',
             ],
         ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function buttons()
+    {
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, [], Contact::class);
     }
 
     /**

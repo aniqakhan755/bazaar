@@ -1,12 +1,51 @@
+@php
+    $crossSellProducts = [];
+@endphp
+
 <div class="ps-section--shopping ps-shopping-cart pt-40">
     <div class="container">
         <div class="ps-section__header">
             <h1>{{ __('Shopping Cart') }}</h1>
         </div>
         <div class="ps-section__content">
+
+            @if (session()->has('success_msg'))
+                <div class="alert alert-success mb-40">
+                    <span>{{ session('success_msg') }}</span>
+                </div>
+            @endif
+
+            @if (session()->has('error_msg'))
+                <div class="alert alert-warning mb-40">
+                    <span>{{ session('error_msg') }}</span>
+                </div>
+            @endif
+
+            @if (isset($errors) && count($errors->all()) > 0)
+                <div class="alert alert-warning mb-40">
+                    @foreach ($errors->all() as $error)
+                        <span>{{ $error }}</span>
+                        @if (!$loop->last)
+                            <br>
+                        @endif
+                    @endforeach
+                </div>
+            @endif
+
             <form class="form--shopping-cart" method="post" action="{{ route('public.cart.update') }}">
                 @csrf
-                    @if (count($products) > 0)
+                    @if (Cart::instance('cart')->count() > 0)
+                        @php
+                            $productIds = Cart::instance('cart')->content()->pluck('id')->toArray();
+
+                            if ($productIds) {
+                                $products = get_products([
+                                    'condition' => [
+                                        ['ec_products.id', 'IN', $productIds],
+                                    ],
+                                ]);
+                            }
+                        @endphp
                             <div class="table-responsive">
                                 <table class="table ps-table--shopping-cart">
                                     <thead>
@@ -19,64 +58,65 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach(Cart::instance('cart')->content() as $key => $cartItem)
-                                            @php
-                                                $product = $products->find($cartItem->id);
-                                            @endphp
+                                        @if (isset($products) && $products)
+                                            @foreach(Cart::instance('cart')->content() as $key => $cartItem)
+                                                @php
+                                                    $product = $products->where('id', $cartItem->id)->first();
+                                                    if (!empty($product)) {
+                                                        $crossSellProducts = array_unique(array_merge($crossSellProducts, get_cross_sale_products($product->original_product)));
+                                                    }
+                                                @endphp
 
-                                            @if (!empty($product))
-                                                <tr>
-                                                    <td>
-                                                        <input type="hidden" name="items[{{ $key }}][rowId]" value="{{ $cartItem->rowId }}">
-                                                        <div class="ps-product--cart">
-                                                            <div class="ps-product__thumbnail">
-                                                                <a href="{{ $product->original_product->url }}">
-                                                                    <img src="{{ $cartItem->options['image'] }}" alt="{{ $product->name }}" />
-                                                                </a>
+                                                @if (!empty($product))
+                                                    <tr>
+                                                        <td>
+                                                            <input type="hidden" name="items[{{ $key }}][rowId]" value="{{ $cartItem->rowId }}">
+                                                            <div class="ps-product--cart">
+                                                                <div class="ps-product__thumbnail">
+                                                                    <a href="{{ $product->original_product->url }}">
+                                                                        <img src="{{ $cartItem->options['image'] }}" alt="{{ $product->name }}" />
+                                                                    </a>
+                                                                </div>
+                                                                <div class="ps-product__content"><a href="{{ $product->original_product->url }}">{{ $product->name }}</a>
+                                                                    <p class="mb-0"><small>{{ $cartItem->options['attributes'] ?? '' }}</small></p>
+                                                                    @if (!empty($cartItem->options['extras']) && is_array($cartItem->options['extras']))
+                                                                        @foreach($cartItem->options['extras'] as $option)
+                                                                            @if (!empty($option['key']) && !empty($option['value']))
+                                                                                <p class="mb-0"><small>{{ $option['key'] }}: <strong> {{ $option['value'] }}</strong></small></p>
+                                                                            @endif
+                                                                        @endforeach
+                                                                    @endif
+                                                                </div>
                                                             </div>
-                                                            <div class="ps-product__content">
-                                                                <a href="{{ $product->original_product->url }}">{{ $product->name }}</a>
-                                                                @if (is_plugin_active('marketplace') && $product->original_product->store->id)
-                                                                    <p class="d-block mb-0 sold-by"><small>{{ __('Sold by') }}: <a
-                                                                                href="{{ $product->original_product->store->url }}">{{ $product->original_product->store->name }}</a></small></p>
-                                                                @endif
-
-                                                                <p class="mb-0"><small>{{ $cartItem->options['attributes'] ?? '' }}</small></p>
-                                                                @if (!empty($cartItem->options['extras']) && is_array($cartItem->options['extras']))
-                                                                    @foreach($cartItem->options['extras'] as $option)
-                                                                        @if (!empty($option['key']) && !empty($option['value']))
-                                                                            <p class="mb-0"><small>{{ $option['key'] }}: <strong> {{ $option['value'] }}</strong></small></p>
-                                                                        @endif
-                                                                    @endforeach
-                                                                @endif
+                                                        </td>
+                                                        <td class="price">{{ format_price($cartItem->price) }}</td>
+                                                        <td>
+                                                            <div class="form-group--number product__qty">
+                                                                <button class="up">+</button>
+                                                                <button class="down">-</button>
+                                                                <input type="text" class="form-control qty-input" value="{{ $cartItem->qty }}" title="{{ __('Qty') }}" name="items[{{ $key }}][values][qty]" readonly>
                                                             </div>
-                                                        </div>
-                                                    </td>
-                                                    <td class="price text-center">
-                                                        <div class="product__price @if ($product->front_sale_price != $product->price) sale @endif">
-                                                            <span>{{ format_price($cartItem->price) }}</span>
-                                                            @if ($product->front_sale_price != $product->price)
-                                                                <small><del>{{ format_price($product->price_with_taxes) }}</del></small>
-                                                            @endif
-                                                        </div>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <div class="form-group--number product__qty">
-                                                            <button class="up">+</button>
-                                                            <button class="down">-</button>
-                                                            <input type="text" class="form-control qty-input" value="{{ $cartItem->qty }}" title="{{ __('Qty') }}" name="items[{{ $key }}][values][qty]" readonly>
-                                                        </div>
-                                                    </td>
-                                                    <td class="text-center">{{ format_price($cartItem->price * $cartItem->qty) }}</td>
-                                                    <td><a href="{{ route('public.cart.remove', $cartItem->rowId) }}" class="remove-cart-button"><i class="icon-cross"></i></a></td>
-                                                </tr>
-                                                @endif
-                                        @endforeach
+                                                        </td>
+                                                        <td>{{ format_price($cartItem->price * $cartItem->qty) }}</td>
+                                                        <td><a href="{{ route('public.cart.remove', $cartItem->rowId) }}" class="remove-cart-button"><i class="icon-cross"></i></a></td>
+                                                    </tr>
+                                                    @endif
+                                            @endforeach
+                                        @endif
                                         </tbody>
                                     </table>
                                 </div>
                     @else
                         <p class="text-center">{{ __('Your cart is empty!') }}</p>
+                    @endif
+
+                    @if (Cart::instance('cart')->count() > 0)
+                        <div class="ps-section__cart-actions">
+                            <a class="ps-btn" href="{{ route('public.products') }}">
+                                <i class="icon-arrow-left"></i> {{ __('Back to Shop') }}</a>
+                            <button class="ps-btn ps-btn--outline" type="submit">
+                                <i class="icon-sync"></i> {{ __('Update cart') }}</button>
+                        </div>
                     @endif
                 </form>
         </div>
@@ -118,14 +158,34 @@
                                 <h3>{{ __('Total') }} <span>{{ ($promotionDiscountAmount + $couponDiscountAmount) > Cart::instance('cart')->rawTotal() ? format_price(0) : format_price(Cart::instance('cart')->rawTotal() - $promotionDiscountAmount - $couponDiscountAmount) }}</span></h3>
                                 <p><small>({{ __('Shipping fees not included') }})</small></p>
                             </div>
-                        </div>
-                        <a class="ps-btn d-inline-block float-left" href="{{ route('public.products') }}"><i class="icon-arrow-left"></i> {{ __('Back to Shop') }}</a>
-                        <a class="ps-btn ps-btn d-inline-block float-right" href="{{ route('public.checkout.information', OrderHelper::getOrderSessionToken()) }}">{{ __('Proceed to checkout') }} <i class="icon-arrow-right"></i></a>
+                        </div><a class="ps-btn ps-btn--fullwidth" href="{{ route('public.checkout.information', OrderHelper::getOrderSessionToken()) }}">{{ __('Proceed to checkout') }}</a>
                     </div>
                 </div>
             </div>
         @endif
 
-        {!! Theme::partial('cross-sell-products', compact('crossSellProducts')) !!}
+        @if (Cart::instance('cart')->count() > 0)
+            @php
+                $crossSellProducts = array_slice($crossSellProducts, 0, 7);
+            @endphp
+            @if (count($crossSellProducts) > 0)
+                <div class="ps-section--default ps-customer-bought mt-60">
+                    <div class="ps-section__header text-left pb-0" style="margin-bottom: 20px">
+                        <h3 style="margin-bottom: 10px">{{ __('Customers who bought this item also bought') }}</h3>
+                    </div>
+                    <div class="ps-section__content">
+                        <div class="row">
+                            @foreach($crossSellProducts as $crossId)
+                                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
+                                    <div class="ps-product">
+                                        {!! Theme::partial('product-item', ['product' => get_product_by_id($crossId)]) !!}
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
+        @endif
     </div>
 </div>

@@ -137,13 +137,7 @@ class ThemeController extends BaseController
         if (empty($css)) {
             File::delete($file);
         } else {
-            $saved = save_file_data($file, $css, false);
-
-            if (!$saved) {
-                return $response
-                    ->setError()
-                    ->setMessage(trans('packages/theme::theme.folder_is_not_writeable', ['name' => File::dirname($file)]));
-            }
+            save_file_data($file, $css, false);
         }
 
         return $response->setMessage(trans('packages/theme::theme.update_custom_css_success'));

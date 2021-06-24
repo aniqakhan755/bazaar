@@ -4,6 +4,7 @@ namespace Botble\SimpleSlider\Tables;
 
 use BaseHelper;
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\SimpleSlider\Models\SimpleSlider;
 use Botble\SimpleSlider\Repositories\Interfaces\SimpleSliderInterface;
 use Botble\Table\Abstracts\TableAbstract;
 use Html;
@@ -36,9 +37,9 @@ class SimpleSliderTable extends TableAbstract
         UrlGenerator $urlGenerator,
         SimpleSliderInterface $simpleSliderRepository
     ) {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $simpleSliderRepository;
+        $this->setOption('id', 'simple-sliders-table');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['simple-slider.edit', 'simple-slider.destroy'])) {
             $this->hasOperations = false;
@@ -68,9 +69,6 @@ class SimpleSliderTable extends TableAbstract
             })
             ->editColumn('status', function ($item) {
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('simple-slider.edit', 'simple-slider.destroy', $item);
             });
 
         if (function_exists('shortcode')) {
@@ -79,7 +77,12 @@ class SimpleSliderTable extends TableAbstract
             });
         }
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('simple-slider.edit', 'simple-slider.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -135,7 +138,9 @@ class SimpleSliderTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('simple-slider.create'), 'simple-slider.create');
+        $buttons = $this->addCreateButton(route('simple-slider.create'), 'simple-slider.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, SimpleSlider::class);
     }
 
     /**

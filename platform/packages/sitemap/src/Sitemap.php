@@ -199,7 +199,7 @@ class Sitemap
             $loc = htmlentities($loc, ENT_XML1);
 
             if ($title != null) {
-                $title = htmlentities($title, ENT_XML1);
+                htmlentities($title, ENT_XML1);
             }
 
             if ($images) {

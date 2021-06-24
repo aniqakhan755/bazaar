@@ -47,7 +47,7 @@ class WishlistController extends Controller
         if (auth('customer')->check()) {
             $wishlist = $this->wishListRepository->advancedGet(
                 [
-                    'condition' => ['customer_id' => auth('customer')->id()],
+                    'condition' => ['customer_id' => auth('customer')->user()->getAuthIdentifier()],
                     'with'      => ['product'],
                     'paginate'  => [
                         'per_page'      => 10,
@@ -56,9 +56,10 @@ class WishlistController extends Controller
                 ]);
         }
 
-        Theme::breadcrumb()->add(__('Home'), route('public.index'))->add(__('Wishlist'), route('public.wishlist'));
+        Theme::breadcrumb()->add(__('Home'), url('/'))->add(__('Wishlist'), route('public.wishlist'));
 
-        return Theme::scope('ecommerce.wishlist', compact('wishlist'), 'plugins/ecommerce::themes.wishlist')->render();
+        return Theme::scope('ecommerce.wishlist', compact('wishlist'),
+            'plugins/ecommerce::themes.wishlist')->render();
     }
 
     /**
@@ -97,7 +98,7 @@ class WishlistController extends Controller
         }
         $this->wishListRepository->createOrUpdate([
             'product_id'  => $productId,
-            'customer_id' => auth('customer')->id(),
+            'customer_id' => auth('customer')->user()->getAuthIdentifier(),
         ]);
 
         return $response
@@ -128,7 +129,7 @@ class WishlistController extends Controller
 
         $this->wishListRepository->deleteBy([
             'product_id'  => $productId,
-            'customer_id' => auth('customer')->id(),
+            'customer_id' => auth('customer')->user()->getAuthIdentifier(),
         ]);
 
         return $response

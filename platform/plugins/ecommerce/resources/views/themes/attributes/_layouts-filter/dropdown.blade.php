@@ -4,7 +4,7 @@
         <div class="dropdown-swatch">
             <label>
                 <select class="form-control" name="attributes[]" multiple>
-                    <option value="">{{ __('-- Select --') }}</option>
+                    <option value=""></option>
                     @foreach($attributes->where('attribute_set_id', $set->id) as $attribute)
                         <option class="product-filter-item" value="{{ $attribute->id }}" {{ in_array($attribute->id, $selected) ? 'selected' : '' }}>{{ $attribute->title }}</option>
                     @endforeach

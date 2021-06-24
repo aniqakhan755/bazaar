@@ -8,7 +8,7 @@ use Botble\Payment\Enums\PaymentMethodEnum;
 use Botble\Payment\Models\Payment;
 use Botble\Payment\Services\Gateways\PayPalPaymentService;
 use Botble\Payment\Services\Gateways\StripePaymentService;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\ServiceProvider;
 use Botble\Payment\Repositories\Caches\PaymentCacheDecorator;
@@ -74,7 +74,7 @@ class PaymentServiceProvider extends ServiceProvider
                 ]);
         });
 
-        add_shortcode('payment-form', __('Payment form'), __('Payment form'), function ($shortCode) {
+        add_shortcode('payment-form', 'Payment form', 'Payment form', function ($shortCode) {
             $data = [
                 'name'        => $shortCode->name,
                 'currency'    => $shortCode->currency,
@@ -94,7 +94,7 @@ class PaymentServiceProvider extends ServiceProvider
 
         shortcode()->setAdminConfig('payment-form', view('plugins/payment::partials.shortcode-admin-config')->render());
 
-        add_shortcode('payment-info', __('Payment info'), __('Payment info'), function ($shortCode) {
+        add_shortcode('payment-info', 'Payment info', 'Payment info', function ($shortCode) {
             $payment = app(PaymentInterface::class)->getFirstBy(['charge_id' => $shortCode->charge_id]);
 
             if (!$payment) {

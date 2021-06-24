@@ -1,6 +1,5 @@
 <?php
 
-use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Ecommerce\Repositories\Interfaces\BrandInterface;
 use Illuminate\Support\Collection;
 
@@ -16,7 +15,6 @@ if (!function_exists('get_featured_brands')) {
         return app(BrandInterface::class)->advancedGet([
             'condition' => [
                 'is_featured' => 1,
-                'status'      => BaseStatusEnum::PUBLISHED,
             ],
             'order_by'  => [
                 'order'      => 'ASC',

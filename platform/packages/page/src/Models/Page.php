@@ -4,9 +4,9 @@ namespace Botble\Page\Models;
 
 use Botble\ACL\Models\User;
 use Botble\Base\Enums\BaseStatusEnum;
-use Botble\Base\Models\BaseModel;
 use Botble\Base\Traits\EnumCastable;
 use Botble\Revision\RevisionableTrait;
+use Botble\Base\Models\BaseModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Page extends BaseModel
@@ -22,12 +22,12 @@ class Page extends BaseModel
     protected $table = 'pages';
 
     /**
-     * @var bool
+     * @var mixed
      */
     protected $revisionEnabled = true;
 
     /**
-     * @var bool
+     * @var mixed
      */
     protected $revisionCleanup = true;
 
