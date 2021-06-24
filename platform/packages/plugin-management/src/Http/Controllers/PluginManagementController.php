@@ -7,18 +7,15 @@ use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\PluginManagement\Services\PluginService;
 use Exception;
 use File;
-use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Contracts\View\Factory;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
-use Illuminate\View\View;
 
 class PluginManagementController extends Controller
 {
     /**
      * Show all plugins in system
-     * @return Application|Factory|View
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index()
     {

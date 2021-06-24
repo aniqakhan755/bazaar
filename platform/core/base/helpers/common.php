@@ -53,11 +53,7 @@ if (!function_exists('is_in_admin')) {
      */
     function is_in_admin(): bool
     {
-        $prefix = BaseHelper::getAdminPrefix();
-
-        $segments = array_slice(request()->segments(), 0, count(explode('/', $prefix)));
-
-        $isInAdmin = implode('/', $segments) === $prefix;
+        $isInAdmin = request()->segment(1) === BaseHelper::getAdminPrefix();
 
         return apply_filters(IS_IN_ADMIN_FILTER, $isInAdmin);
     }
@@ -92,7 +88,7 @@ if (!function_exists('get_cms_version')) {
         try {
             return trim(get_file_data(core_path('VERSION'), false));
         } catch (Exception $exception) {
-            return '5.14';
+            return '5.9';
         }
     }
 }

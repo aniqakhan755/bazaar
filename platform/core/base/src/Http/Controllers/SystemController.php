@@ -12,6 +12,7 @@ use Botble\Base\Supports\SystemManagement;
 use Botble\Base\Tables\InfoTable;
 use Botble\Table\TableBuilder;
 use Exception;
+use File;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Contracts\View\Factory;
@@ -55,7 +56,7 @@ class SystemController extends Controller
         $systemEnv = SystemManagement::getSystemEnv();
         $serverEnv = SystemManagement::getServerEnv();
 
-        $requiredPhpVersion = Arr::get($composerArray, 'require.php', '^7.3');
+        $requiredPhpVersion = Arr::get($composerArray, 'require.php', '^7.2.5');
         $requiredPhpVersion = str_replace('^', '', $requiredPhpVersion);
         $requiredPhpVersion = str_replace('~', '', $requiredPhpVersion);
 
@@ -109,9 +110,9 @@ class SystemController extends Controller
                 $files->delete($app->getCachedRoutesPath());
                 break;
             case 'clear_log':
-                if ($files->isDirectory(storage_path('logs'))) {
-                    foreach ($files->allFiles(storage_path('logs')) as $file) {
-                        $files->delete($file->getPathname());
+                if (File::isDirectory(storage_path('logs'))) {
+                    foreach (File::allFiles(storage_path('logs')) as $file) {
+                        File::delete($file->getPathname());
                     }
                 }
                 break;

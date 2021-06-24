@@ -8,6 +8,7 @@ use Botble\Table\Abstracts\TableAbstract;
 use Html;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Auth;
 
 class TopSellingProductsTable extends TableAbstract
 {
@@ -42,7 +43,7 @@ class TopSellingProductsTable extends TableAbstract
      */
     public function ajax()
     {
-        $data = $this->table
+        return $this->table
             ->eloquent($this->query())
             ->editColumn('id', function ($item) {
                 if (!$item->is_variation) {
@@ -56,13 +57,23 @@ class TopSellingProductsTable extends TableAbstract
                     return Html::link($item->url, $item->name, ['target' => '_blank']);
                 }
 
-                $attributeText = $item->variation_attributes;
+                $attributeText = '';
+                $attributes = get_product_attributes($item->id);
+                if (!empty($attributes)) {
+                    $attributeText .= ' (';
+                    foreach ($attributes as $index => $attribute) {
+                        $attributeText .= $attribute->attribute_set_title . ': ' . $attribute->title;
+                        if ($index < count($attributes) - 1) {
+                            $attributeText .= ', ';
+                        }
+                    }
+                    $attributeText .= ')';
+                }
 
-                return Html::link($item->original_product->url, $item->original_product->name, ['target' => '_blank'])
-                        ->toHtml() . ' ' . Html::tag('small', $attributeText);
-            });
-
-        return $this->toJson($data);
+                return Html::link($item->original_product->url, $item->original_product->name, ['target' => '_blank'])->toHtml() . Html::tag('small', $attributeText);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -70,21 +81,73 @@ class TopSellingProductsTable extends TableAbstract
      */
     public function query()
     {
-        $query = $this->repository
+        $query = "";
+        $user = Auth::user();
+        if(count($user->roles) > 0)
+        {
+            $role_name = $user->roles[0]->slug;
+            if($role_name  == 'vendor')
+            {
+                $user_id = Auth::user()->id;
+
+                $query = $this->repository
+                    ->getModel()
+                    ->join('ec_order_product', 'ec_products.id', '=', 'ec_order_product.product_id')
+                    ->join('ec_orders', 'ec_orders.id', '=', 'ec_order_product.order_id')
+                    ->join('payments', 'payments.order_id', '=', 'ec_orders.id')
+                    ->where('ec_products.user_id',$user_id)
+                    ->where('payments.status', PaymentStatusEnum::COMPLETED)
+
+                    ->whereDate('ec_orders.created_at', '>=', now()->startOfMonth()->toDateString())
+                    ->whereDate('ec_orders.created_at', '<=', now()->endOfMonth()->toDateString())
+
+                    ->select([
+                        'ec_products.id',
+                        'ec_products.is_variation',
+                        'ec_products.name',
+                        'ec_order_product.qty',
+                    ])
+                    ->orderBy('ec_order_product.qty', 'DESC');
+            }
+            else
+            {
+                $query = $this->repository
+                ->getModel()
+                ->join('ec_order_product', 'ec_products.id', '=', 'ec_order_product.product_id')
+                ->join('ec_orders', 'ec_orders.id', '=', 'ec_order_product.order_id')
+                ->join('payments', 'payments.order_id', '=', 'ec_orders.id')
+                ->where('payments.status', PaymentStatusEnum::COMPLETED)
+
+                ->whereDate('ec_orders.created_at', '>=', now()->startOfMonth()->toDateString())
+                ->whereDate('ec_orders.created_at', '<=', now()->endOfMonth()->toDateString())
+
+                ->select([
+                    'ec_products.id',
+                    'ec_products.is_variation',
+                    'ec_products.name',
+                    'ec_order_product.qty',
+                ])
+                ->orderBy('ec_order_product.qty', 'DESC');
+            }
+        }
+        else
+        { $query = $this->repository
             ->getModel()
             ->join('ec_order_product', 'ec_products.id', '=', 'ec_order_product.product_id')
             ->join('ec_orders', 'ec_orders.id', '=', 'ec_order_product.order_id')
             ->join('payments', 'payments.order_id', '=', 'ec_orders.id')
             ->where('payments.status', PaymentStatusEnum::COMPLETED)
+
             ->whereDate('ec_orders.created_at', '>=', now()->startOfMonth()->toDateString())
             ->whereDate('ec_orders.created_at', '<=', now()->endOfMonth()->toDateString())
+
             ->select([
                 'ec_products.id',
                 'ec_products.is_variation',
                 'ec_products.name',
                 'ec_order_product.qty',
             ])
-            ->orderBy('ec_order_product.qty', 'DESC');
+            ->orderBy('ec_order_product.qty', 'DESC');}
 
         return $this->applyScopes($query);
     }
@@ -108,7 +171,7 @@ class TopSellingProductsTable extends TableAbstract
                 'orderable' => false,
                 'class'     => 'text-left',
             ],
-            'qty'  => [
+            'qty'          => [
                 'name'      => 'ec_order_product.qty',
                 'title'     => trans('plugins/ecommerce::reports.quantity'),
                 'orderable' => false,
@@ -126,7 +189,6 @@ class TopSellingProductsTable extends TableAbstract
         if ($this->query()->count() == 0) {
             return view('core/dashboard::partials.no-data')->render();
         }
-
         return parent::renderTable($data, $mergeData);
     }
 }

@@ -18,11 +18,7 @@
                     <div class="ws-nm">
                         <input type="text" class="next-input" onclick="this.focus(); this.select();" value="{{ route('public.checkout.recover', $order->token) }}">
                         <br>
-                        @if ($order->user->email ? $order->user->email : $order->address->email)
-                            <button class="btn btn-secondary btn-trigger-send-order-recover-modal" data-action="{{ route('orders.send-order-recover-email', $order->id) }}">{{ trans('plugins/ecommerce::order.send_an_email_to_recover_this_order') }}</button>
-                        @else
-                            <strong><i>{{ trans('plugins/ecommerce::order.cannot_send_order_recover_to_mail') }}</i></strong>
-                        @endif
+                        <button class="btn btn-secondary btn-trigger-send-order-recover-modal" data-action="{{ route('orders.send-order-recover-email', $order->id) }}">{{ trans('plugins/ecommerce::order.send_an_email_to_recover_this_order') }}</button>
                     </div>
                 </div>
             </div>
@@ -38,12 +34,27 @@
                             <div class="table-wrapper p-none mb20 ps-relative">
                                 <table class="table-normal">
                                     <tbody>
-                                        @php
-                                            $order->load(['products.product' => function ($q) { return $q->where(['ec_products.status' => \Botble\Base\Enums\BaseStatusEnum::PUBLISHED]); }]);
-                                        @endphp
                                         @foreach ($order->products as $orderProduct)
                                             @php
-                                                $product = $orderProduct->product;
+                                                $product = get_products([
+                                                    'condition' => [
+                                                        'ec_products.status' => \Botble\Base\Enums\BaseStatusEnum::PUBLISHED,
+                                                        'ec_products.id' => $orderProduct->product_id,
+                                                    ],
+                                                    'take' => 1,
+                                                    'select' => [
+                                                        'ec_products.id',
+                                                        'ec_products.images',
+                                                        'ec_products.name',
+                                                        'ec_products.price',
+                                                        'ec_products.sale_price',
+                                                        'ec_products.sale_type',
+                                                        'ec_products.start_date',
+                                                        'ec_products.end_date',
+                                                        'ec_products.sku',
+                                                        'ec_products.is_variation',
+                                                    ],
+                                                ]);
                                             @endphp
                                             @if ($product)
                                                 <tr>
@@ -53,7 +64,16 @@
                                                     <td class="pl5 p-r5">
                                                         <a target="_blank" href="{{ route('products.edit', $product->original_product->id) }}" title="{{ $orderProduct->product_name }}">{{ $orderProduct->product_name }}</a>
                                                         <p>
-                                                            <small>{{ $product->variation_attributes }}</small>
+                                                            @php $attributes = get_product_attributes($product->id) @endphp
+                                                            @if (!empty($attributes))
+                                                                @foreach ($attributes as $attr)
+                                                                    @if (!$loop->last)
+                                                                        {{ $attr->attribute_set_title }}: {{ $attr->title }} <br>
+                                                                    @else
+                                                                        {{ $attr->attribute_set_title }}: {{ $attr->title }}
+                                                                    @endif
+                                                                @endforeach
+                                                            @endif
                                                         </p>
                                                         @if ($product->sku)
                                                             <p>{{ trans('plugins/ecommerce::order.sku') }} : <span>{{ $product->sku }}</span></p>

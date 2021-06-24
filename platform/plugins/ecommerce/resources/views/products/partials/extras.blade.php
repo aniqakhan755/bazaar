@@ -8,7 +8,7 @@
             <input type="hidden" name="related_products" value="@if ($product) {{ implode(',', $product->products()->allRelatedIds()->toArray()) }} @endif" />
             <div class="box-search-advance product">
                 <div>
-                    <input type="text" class="next-input textbox-advancesearch" placeholder="{{ trans('plugins/ecommerce::products.search_products') }}" data-target="{{ $dataUrl }}">
+                    <input type="text" class="next-input textbox-advancesearch" placeholder="{{ trans('plugins/ecommerce::products.search_products') }}" data-target="{{ route('products.get-list-product-for-search', $product ? $product->id : 0) }}">
                 </div>
                 <div class="panel panel-default">
 
@@ -22,7 +22,7 @@
             <input type="hidden" name="cross_sale_products" value="@if ($product) {{ implode(',', $product->crossSales()->allRelatedIds()->toArray()) }} @endif"/>
             <div class="box-search-advance product">
                 <div>
-                    <input type="text" class="next-input textbox-advancesearch" placeholder="{{ trans('plugins/ecommerce::products.search_products') }}" data-target="{{ $dataUrl }}">
+                    <input type="text" class="next-input textbox-advancesearch" placeholder="{{ trans('plugins/ecommerce::products.search_products') }}" data-target="{{ route('products.get-list-product-for-search', $product ? $product->id : 0) }}">
                 </div>
                 <div class="panel panel-default">
 
@@ -38,7 +38,7 @@
                 <input type="hidden" name="up_sale_products" value="@if ($product) {{ implode(',', $product->upSales()->allRelatedIds()->toArray()) }} @endif"/>
                 <div class="box-search-advance product">
                     <div>
-                        <input type="text" class="next-input textbox-advancesearch" placeholder="{{ trans('plugins/ecommerce::products.search_products') }}" data-target="{{ $dataUrl }}">
+                        <input type="text" class="next-input textbox-advancesearch" placeholder="{{ trans('plugins/ecommerce::products.search_products') }}" data-target="{{ route('products.get-list-product-for-search', $product ? $product->id : 0) }}">
                     </div>
                     <div class="panel panel-default">
 
@@ -53,7 +53,7 @@
                 <input type="hidden" name="grouped_products" value="@if ($product) {{ implode(',', $product->groupedItems()->pluck('product_id')->all()) }} @endif"/>
                 <div class="box-search-advance product">
                     <div>
-                        <input type="text" class="next-input textbox-advancesearch" placeholder="{{ trans('plugins/ecommerce::products.search_products') }}" data-target="{{ $dataUrl }}">
+                        <input type="text" class="next-input textbox-advancesearch" placeholder="{{ trans('plugins/ecommerce::products.search_products') }}" data-target="{{ route('products.get-list-product-for-search', $product ? $product->id : 0) }}">
                     </div>
                     <div class="panel panel-default">
 

@@ -4,7 +4,6 @@ namespace Botble\Ecommerce\Supports;
 
 use Botble\Ecommerce\Models\Currency;
 use Botble\Ecommerce\Repositories\Interfaces\CurrencyInterface;
-use Illuminate\Support\Collection;
 
 class CurrencySupport
 {
@@ -12,11 +11,6 @@ class CurrencySupport
      * @var Currency
      */
     protected $currency;
-
-    /**
-     * @var Collection
-     */
-    protected $currencies = [];
 
     /**
      * @param Currency $currency
@@ -40,19 +34,11 @@ class CurrencySupport
 
         if (empty($currency)) {
             if (session('currency')) {
-                if ($this->currencies && $this->currencies instanceof Collection) {
-                    $currency = $this->currencies->where('title', session('currency'))->first();
-                } else {
-                    $currency = app(CurrencyInterface::class)->getFirstBy(['title' => session('currency')]);
-                }
+                $currency = app(CurrencyInterface::class)->getFirstBy(['title' => session('currency')]);
             }
 
             if (!$currency) {
-                if ($this->currencies && $this->currencies instanceof Collection) {
-                    $currency = $this->currencies->where('is_default', 1)->first();
-                } else {
-                    $currency = app(CurrencyInterface::class)->getFirstBy(['is_default' => 1]);
-                }
+                $currency = app(CurrencyInterface::class)->getFirstBy(['is_default' => 1]);
             }
 
             if (!$currency) {
@@ -63,21 +49,5 @@ class CurrencySupport
         }
 
         return $currency;
-    }
-
-    /**
-     * @return Collection
-     */
-    public function currencies(): Collection
-    {
-        if (!$this->currencies instanceof Collection) {
-            $this->currencies = collect([]);
-        }
-
-        if ($this->currencies->count() == 0) {
-            $this->currencies = app(CurrencyInterface::class)->getAllCurrencies();
-        }
-
-        return $this->currencies;
     }
 }

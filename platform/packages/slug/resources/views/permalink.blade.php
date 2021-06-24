@@ -4,8 +4,11 @@
     $endingURL = config('core.base.general.public_single_ending_url');
     $previewURL = str_replace('--slug--', $value, url($prefix) . '/' . config('packages.slug.general.pattern')) . $endingURL . (Auth::user() && $preview ? '?preview=true' : '');
 @endphp
+@if(count(Auth::user()->roles) > 0)
 
-<div id="edit-slug-box" dir="ltr" @if (empty($value) && !$errors->has($name)) class="hidden" @endif>
+<?php $role_name = Auth::user()->roles[0]->slug; ?>
+@endif
+<div id="edit-slug-box" @if (empty($value) && !$errors->has($name))   class="hidden" @endif  @if($role_name === 'vendor') style="display:none;" @endif>
     @if (in_array(Route::currentRouteName(), ['pages.create', 'pages.edit']) && BaseHelper::isHomepage(Route::current()->parameter('page')))
         <label class="control-label" for="current-slug">{{ trans('core/base::forms.permalink') }}:</label>
         <span id="sample-permalink">

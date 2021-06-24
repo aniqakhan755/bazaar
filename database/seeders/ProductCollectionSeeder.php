@@ -15,8 +15,6 @@ class ProductCollectionSeeder extends BaseSeeder
      */
     public function run()
     {
-        ProductCollection::truncate();
-
         $productCollections = [
             [
                 'name' => 'New Arrival',

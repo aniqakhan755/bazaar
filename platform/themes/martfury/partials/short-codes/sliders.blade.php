@@ -15,10 +15,10 @@
                 </div>
                 <div class="ps-section__right">
                     <div class="ps-collection">
-                        {!! AdsManager::display('top-slider-image-1', ['style' => 'height: 190px;']) !!}
+                        {!! AdsManager::display('top-slider-image-1') !!}
                     </div>
                     <div class="ps-collection">
-                        {!! AdsManager::display('top-slider-image-2', ['style' => 'height: 190px;']) !!}
+                        {!! AdsManager::display('top-slider-image-2') !!}
                     </div>
                 </div>
             @else

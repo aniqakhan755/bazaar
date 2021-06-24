@@ -4,6 +4,7 @@ namespace Botble\Ecommerce\Tables;
 
 use BaseHelper;
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Ecommerce\Models\Review;
 use Botble\Ecommerce\Repositories\Interfaces\ReviewInterface;
 use Botble\Table\Abstracts\TableAbstract;
 use Html;
@@ -32,9 +33,9 @@ class ReviewTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, ReviewInterface $reviewRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $reviewRepository;
+        $this->setOption('id', 'table-reviews');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['review.edit', 'review.destroy'])) {
             $this->hasOperations = false;
@@ -69,12 +70,14 @@ class ReviewTable extends TableAbstract
             })
             ->editColumn('created_at', function ($item) {
                 return BaseHelper::formatDate($item->created_at);
-            })
-            ->addColumn('operations', function ($item) {
-                return view('plugins/ecommerce::reviews.partials.actions', compact('item'))->render();
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return view('plugins/ecommerce::reviews.partials.actions', compact('item'))->render();
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -92,10 +95,33 @@ class ReviewTable extends TableAbstract
             'ec_reviews.status',
             'ec_reviews.created_at',
         ];
-
-        $query = $model
+        $user = Auth::user();
+        $role_name ="";
+       
+        if(count($user->roles) > 0)
+        {
+            $role_name = $user->roles[0]->slug;
+            if($role_name  == 'vendor')
+            {
+                $user_id = Auth::user()->id;
+                $query = $model
+                ->leftJoin('ec_products', 'ec_reviews.product_id', '=', 'ec_products.id')
+                ->select($select)
+                ->where('ec_products.user_id',$user_id);
+            }
+            else{
+                $query = $model
+                ->select($select)
+                ->with(['user', 'product']);
+            }
+        }
+        else{
+            $query = $model
             ->select($select)
             ->with(['user', 'product']);
+        }
+
+     
 
         return $this->applyScopes(apply_filters(BASE_FILTER_TABLE_QUERY, $query, $model, $select));
     }
@@ -149,6 +175,14 @@ class ReviewTable extends TableAbstract
     /**
      * {@inheritDoc}
      */
+    public function buttons()
+    {
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, [], Review::class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function bulkActions(): array
     {
         return $this->addDeleteAction(route('reviews.deletes'), 'review.destroy', parent::bulkActions());
@@ -184,7 +218,6 @@ class ReviewTable extends TableAbstract
         ) {
             return view('plugins/ecommerce::reviews.intro');
         }
-
         return parent::renderTable($data, $mergeData);
     }
 }

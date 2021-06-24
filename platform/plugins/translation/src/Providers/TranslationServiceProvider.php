@@ -10,7 +10,7 @@ use Botble\Translation\Console\ExportCommand;
 use Botble\Translation\Console\ImportCommand;
 use Botble\Translation\Console\ResetCommand;
 use Botble\Translation\Manager;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Illuminate\Support\ServiceProvider;
 
 class TranslationServiceProvider extends ServiceProvider

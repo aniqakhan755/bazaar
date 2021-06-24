@@ -18,7 +18,7 @@
             </div>
             <div class="form-group">
                 <label class="text-title-field"
-                       for="analytics_view_id">{{ trans('plugins/analytics::analytics.settings.view_id') }}</label>
+                       for="view_id">{{ trans('plugins/analytics::analytics.settings.view_id') }}</label>
                 <input data-counter="120" type="text" class="next-input" name="analytics_view_id" id="analytics_view_id"
                        value="{{ setting('analytics_view_id', config('plugins.analytics.general.view_id')) }}" placeholder="{{ trans('plugins/analytics::analytics.settings.view_id_description') }}">
             </div>

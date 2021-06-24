@@ -22,7 +22,7 @@ Route::group(['namespace' => 'Botble\Newsletter\Http\Controllers', 'middleware' 
             'uses' => 'PublicController@postSubscribe',
         ]);
 
-        Route::get('newsletter/unsubscribe/{user}', [
+        Route::get('newsletter/unsubscribe/{email}', [
             'as'   => 'public.newsletter.unsubscribe',
             'uses' => 'PublicController@getUnsubscribe',
         ]);

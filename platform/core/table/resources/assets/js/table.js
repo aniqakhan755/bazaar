@@ -336,7 +336,7 @@
                 });
 
                 if (ids.length === 0) {
-                    Botble.showError(BotbleVariables.languages.tables.please_select_record);
+                    Botble.showError('Please select at least one record to perform this action!');
                     return false;
                 }
 
@@ -372,11 +372,11 @@
                         if (data.error) {
                             Botble.showError(data.message);
                         } else {
+                            $table.find('.table-check-all').prop('checked', false);
+                            window.LaravelDataTables[_self.data('parent-table')].draw();
                             Botble.showSuccess(data.message);
                         }
 
-                        $table.find('.table-check-all').prop('checked', false);
-                        window.LaravelDataTables[_self.data('parent-table')].draw();
                         _self.closest('.modal').modal('hide');
                         _self.removeClass('button-loading');
                     },
@@ -399,7 +399,7 @@
                 });
 
                 if (ids.length === 0) {
-                    Botble.showError(BotbleVariables.languages.tables.please_select_record);
+                    Botble.showError('Please select at least one record to perform this action!');
                     return false;
                 }
 
@@ -441,15 +441,16 @@
                         if (data.error) {
                             Botble.showError(data.message);
                         } else {
+                            $table.find('.table-check-all').prop('checked', false);
+                            $.each(ids, (index, item) => {
+                                window.LaravelDataTables[_self.data('parent-table')].row($table.find('.checkboxes[value="' + item + '"]').closest('tr')).remove().draw();
+                            });
                             Botble.showSuccess(data.message);
-                        }
 
-                        $table.find('.table-check-all').prop('checked', false);
-                        $.each(ids, (index, item) => {
-                            window.LaravelDataTables[_self.data('parent-table')].row($table.find('.checkboxes[value="' + item + '"]').closest('tr')).remove().draw();
-                        });
-                        _self.closest('.modal').modal('hide');
-                        _self.removeClass('button-loading');
+                            _self.closest('.modal').modal('hide');
+                            _self.removeClass('button-loading');
+                        }
+                        _self.text(text);
                     },
                     error: data => {
                         Botble.handleError(data);

@@ -12,7 +12,7 @@ return [
     'setting_general'    => 'Cơ bản',
     'system_information' => 'Thông tin hệ thống',
     'theme'              => 'Giao diện',
-    'copyright'          => 'Bản quyền :year &copy; :company. Phiên bản: <span>:version</span>',
+    'copyright'          => 'Bản quyền :year &copy; :company.',
     'profile'            => 'Thông tin cá nhân',
     'logout'             => 'Đăng xuất',
     'no_search_result'   => 'Không có kết quả tìm kiếm, hãy thử lại với từ khóa khác.',

@@ -18,7 +18,7 @@
                         <th class="border-none-b">{{ trans('core/setting::setting.template') }}</th>
                         <th class="border-none-b"> {{ trans('core/setting::setting.description') }} </th>
                         @if ($type !== 'core')
-                            <th class="border-none-b text-center"> {{ trans('core/setting::setting.enable') }}</th>
+                            <th class="border-none-b"> {{ trans('core/setting::setting.enable') }}</th>
                         @endif
                     </tr>
                     </thead>
@@ -32,19 +32,16 @@
                                 </a>
                             </td>
                             <td>{{ trans($template['description']) }}</td>
-
-                            <td class="text-center template-setting-on-off">
-                                @if ($type !== 'core' && Arr::get($template, 'can_off', false))
-                                    <div class="form-group">
+                            @if ($type !== 'core' && Arr::get($template, 'can_off', false))
+                                <td>
+                                    <div class="form-group ">
                                         {!! Form::onOff(get_setting_email_status_key($type, $module, $key),
                                             get_setting_email_status($type, $module, $key) == 1,
                                             ['data-key' => 'email-config-status-btn', 'data-change-url' => route('setting.email.status.change')]
                                         ) !!}
                                     </div>
-                                @else
-                                    &mdash;
-                                @endif
-                            </td>
+                                </td>
+                            @endif
                         </tr>
                     @endforeach
                     </tbody>

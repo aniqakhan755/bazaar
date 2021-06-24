@@ -106,14 +106,6 @@ class Post extends BaseModel
     }
 
     /**
-     * @return Category
-     */
-    public function getFirstCategoryAttribute()
-    {
-        return $this->categories->first();
-    }
-
-    /**
      * @return MorphTo
      */
     public function author(): MorphTo

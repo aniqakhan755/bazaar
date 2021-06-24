@@ -16,7 +16,7 @@ class StoreProductTagService
     public $productTagRepository;
 
     /**
-     * StoreProductTagService constructor.
+     * StoreTagService constructor.
      * @param ProductTagInterface $productTagRepository
      */
     public function __construct(ProductTagInterface $productTagRepository)

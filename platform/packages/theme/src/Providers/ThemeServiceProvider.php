@@ -12,7 +12,7 @@ use Botble\Theme\Contracts\Theme as ThemeContract;
 use Botble\Theme\Http\Middleware\AdminBarMiddleware;
 use Botble\Theme\Theme;
 use Botble\Theme\Commands\ThemeRenameCommand;
-use Illuminate\Support\Facades\Event;
+use Event;
 use File;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Routing\Router;

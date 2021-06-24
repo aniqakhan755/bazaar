@@ -3,10 +3,10 @@
 namespace Botble\Ads\Forms;
 
 use AdsManager;
+use Botble\Base\Forms\FormAbstract;
+use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Ads\Http\Requests\AdsRequest;
 use Botble\Ads\Models\Ads;
-use Botble\Base\Enums\BaseStatusEnum;
-use Botble\Base\Forms\FormAbstract;
 
 class AdsForm extends FormAbstract
 {
@@ -29,9 +29,9 @@ class AdsForm extends FormAbstract
                 ],
             ])
             ->add('key', 'text', [
-                'label'         => trans('plugins/ads::ads.key'),
-                'label_attr'    => ['class' => 'control-label required'],
-                'attr'          => [
+                'label'      => trans('plugins/ads::ads.key'),
+                'label_attr' => ['class' => 'control-label'],
+                'attr'       => [
                     'placeholder'  => trans('plugins/ads::ads.key'),
                     'data-counter' => 255,
                 ],
@@ -73,7 +73,7 @@ class AdsForm extends FormAbstract
                 'label'         => trans('plugins/ads::ads.expired_at'),
                 'label_attr'    => ['class' => 'control-label'],
                 'attr'          => [
-                    'class' => 'form-control datepicker',
+                    'class'        => 'form-control datepicker',
                 ],
                 'default_value' => now()->format('m/d/Y'),
             ])

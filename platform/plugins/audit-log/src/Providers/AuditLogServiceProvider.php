@@ -2,7 +2,6 @@
 
 namespace Botble\AuditLog\Providers;
 
-use Botble\AuditLog\Commands\CleanOldLogsCommand;
 use Botble\AuditLog\Facades\AuditLogFacade;
 use Botble\AuditLog\Models\AuditHistory;
 use Botble\AuditLog\Repositories\Caches\AuditLogCacheDecorator;
@@ -10,8 +9,7 @@ use Botble\AuditLog\Repositories\Eloquent\AuditLogRepository;
 use Botble\AuditLog\Repositories\Interfaces\AuditLogInterface;
 use Botble\Base\Supports\Helper;
 use Botble\Base\Traits\LoadAndPublishDataTrait;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Console\Scheduling\Schedule;
+use Event;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\ServiceProvider;
@@ -62,10 +60,6 @@ class AuditLogServiceProvider extends ServiceProvider
 
         $this->app->booted(function () {
             $this->app->register(HookServiceProvider::class);
-
-            $schedule = $this->app->make(Schedule::class);
-
-            $schedule->command(CleanOldLogsCommand::class)->dailyAt('00:30');
         });
     }
 }

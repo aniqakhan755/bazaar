@@ -2,13 +2,13 @@
 
 namespace Botble\DevTool\Commands\Abstracts;
 
-use Botble\Base\Supports\MountManager;
 use File;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 use League\Flysystem\Adapter\Local as LocalAdapter;
 use League\Flysystem\FileNotFoundException;
 use League\Flysystem\Filesystem;
+use League\Flysystem\MountManager;
 
 abstract class BaseMakeCommand extends Command
 {

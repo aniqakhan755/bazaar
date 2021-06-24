@@ -5,7 +5,6 @@
     <button class="btn-success btn btn-save-sort-order" style="display: none;"><i
                 class="fa fa-save"></i> {{ trans('plugins/simple-slider::simple-slider.save_sorting') }}</button>
 </div>
-<div class="clearfix"></div>
 <br>
 
 @include('core/table::simple-table')

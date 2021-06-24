@@ -9,8 +9,9 @@ use Botble\Page\Repositories\Caches\PageCacheDecorator;
 use Botble\Page\Repositories\Eloquent\PageRepository;
 use Botble\Page\Repositories\Interfaces\PageInterface;
 use Botble\Shortcode\View\View;
+use Event;
 use Illuminate\Routing\Events\RouteMatched;
-use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -33,6 +34,7 @@ class PageServiceProvider extends ServiceProvider
 
         $this->setNamespace('packages/page')
             ->loadAndPublishConfigurations(['permissions', 'general'])
+            ->loadRoutes(['web'])
             ->loadAndPublishViews()
             ->loadAndPublishTranslations()
             ->loadMigrations();
@@ -64,7 +66,5 @@ class PageServiceProvider extends ServiceProvider
         });
 
         $this->app->register(EventServiceProvider::class);
-
-        $this->app->register(RouteServiceProvider::class);
     }
 }

@@ -17,7 +17,6 @@ use Botble\Ecommerce\Models\Wishlist;
 use Botble\Slug\Models\Slug;
 use Faker\Factory;
 use File;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use SlugHelper;
@@ -155,7 +154,6 @@ class ProductSeeder extends BaseSeeder
         DB::table('ec_product_variations')->truncate();
         DB::table('ec_product_variation_items')->truncate();
         DB::table('ec_product_collection_products')->truncate();
-        DB::table('ec_product_label_products')->truncate();
         DB::table('ec_product_category_product')->truncate();
         DB::table('ec_product_related_relations')->truncate();
         Slug::where('reference_type', Product::class)->delete();
@@ -227,10 +225,6 @@ class ProductSeeder extends BaseSeeder
 
             $product->productCollections()->sync([$faker->numberBetween(1, 3)]);
 
-            if ($product->id % 3 == 0) {
-                $product->productLabels()->sync([$faker->numberBetween(1, 3)]);
-            }
-
             $product->categories()->sync([
                 $faker->numberBetween(1, 37),
                 $faker->numberBetween(1, 37),
@@ -286,12 +280,12 @@ class ProductSeeder extends BaseSeeder
                     'wide'                       => $product->wide,
                     'length'                     => $product->length,
                     'price'                      => $product->price,
-                    'sale_price'                 => $product->id % 4 == 0 ? ($product->price - $product->price * $faker->numberBetween(10,
+                    'sale_price'                 => $product->sale_price ? ($product->price - $product->price * $faker->numberBetween(10,
                             30) / 100) : null,
                     'brand_id'                   => $product->brand_id,
                     'with_storehouse_management' => $product->with_storehouse_management,
                     'is_variation'               => true,
-                    'images'                     => json_encode([isset($product->images[$j]) ? $product->images[$j] : Arr::first($product->images)]),
+                    'images'                     => json_encode($images),
                 ]);
 
                 $productVariation = ProductVariation::create([
@@ -304,6 +298,7 @@ class ProductSeeder extends BaseSeeder
                     $product->update([
                         'sku'        => $variation->sku,
                         'sale_price' => $variation->sale_price,
+                        'images'     => json_encode($variation->images),
                     ]);
                 }
 

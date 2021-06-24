@@ -315,7 +315,6 @@ class ShortcodeCompiler
         if (empty($this->registered)) {
             return $content;
         }
-
         $pattern = $this->getRegex();
 
         return preg_replace_callback('/' . $pattern . '/s', [$this, 'stripTag'], $content);

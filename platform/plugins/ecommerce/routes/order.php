@@ -98,7 +98,7 @@ Route::group(['namespace' => 'Botble\Ecommerce\Http\Controllers', 'middleware' =
         });
 
         Route::group(['prefix' => 'incomplete-orders', 'as' => 'orders.'], function () {
-            Route::match(['GET', 'POST'], '', [
+            Route::get('', [
                 'as'         => 'incomplete-list',
                 'uses'       => 'OrderController@getIncompleteList',
                 'permission' => 'orders.index',
@@ -140,6 +140,11 @@ Route::group(['namespace' => 'Botble\Ecommerce\Http\Controllers\Fronts', 'middle
             Route::get('success', [
                 'as'   => 'success',
                 'uses' => 'PublicCheckoutController@getCheckoutSuccess',
+            ]);
+            
+            Route::get('success-multi', [
+                'as'   => 'success-multi',
+                'uses' => 'PublicCheckoutController@getCheckoutSuccessMulti',
             ]);
 
             Route::get('recover', [

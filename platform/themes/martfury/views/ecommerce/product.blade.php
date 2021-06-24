@@ -1,7 +1,21 @@
 @php
+    $originalProduct = $product;
+    $selectedAttrs = [];
+    $productImages = $product->images;
+    if ($product->is_variation) {
+        $product = get_parent_product($product->id);
+        $selectedAttrs = app(\Botble\Ecommerce\Repositories\Interfaces\ProductVariationInterface::class)
+            ->getAttributeIdsOfChildrenProduct($originalProduct->id);
+        if (count($productImages) == 0) {
+            $productImages = $product->images;
+        }
+    } else {
+        $selectedAttrs = $product->defaultVariation->productAttributes->pluck('id')->all();
+    }
+
     $countRating = 0;
     if (EcommerceHelper::isReviewEnabled()) {
-        $reviews = $product->reviews->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED);
+        $reviews = $originalProduct->reviews->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED);
         $countRating = $reviews->count();
     }
 
@@ -25,7 +39,7 @@
                                             @foreach ($productImages as $img)
                                                 <div class="item">
                                                     <a href="{{ RvMedia::getImageUrl($img) }}">
-                                                        <img src="{{ RvMedia::getImageUrl($img) }}" alt="{{ $product->name }}"/>
+                                                        <img src="{{ RvMedia::getImageUrl($img) }}" alt="{{ $originalProduct->name }}"/>
                                                     </a>
                                                 </div>
                                             @endforeach
@@ -35,7 +49,7 @@
                                 <div class="ps-product__variants" data-item="4" data-md="4" data-sm="4" data-arrow="false">
                                     @foreach ($productImages as $img)
                                         <div class="item">
-                                            <img src="{{ RvMedia::getImageUrl($img, 'thumb') }}" alt="{{ $product->name }}"/>
+                                            <img src="{{ RvMedia::getImageUrl($img, 'thumb') }}" alt="{{ $originalProduct->name }}"/>
                                         </div>
                                     @endforeach
                                 </div>
@@ -43,21 +57,16 @@
                             <div class="ps-product__info">
                                 <h1>{{ $product->name }}</h1>
                                 <div class="ps-product__meta">
-                                    @if (is_plugin_active('marketplace'))
-                                        @if ($product->store_id)
-                                            <p>{{ __('Sold by') }}: <a href="{{ $product->store->url }}">{{ $product->store->name }}</a></p>
-                                        @endif
-                                    @else
-                                        @if ($product->brand_id)
-                                            <p>{{ __('Brand') }}: <a href="{{ $product->brand->url }}">{{ $product->brand->name }}</a></p>
-                                        @endif
+                                    @if ($product->brand_id)
+                                        <p>{{ __('Brand') }}: <a href="{{ $product->brand->url }}">{{ $product->brand->name }}</a></p>
+                                        <p><a href="#">{{$product->productUser->company->company_name}}</a></p>
                                     @endif
                                     @if (EcommerceHelper::isReviewEnabled())
                                         @if ($countRating > 0)
                                             <div class="rating_wrap">
                                                 <a href="#tab-reviews">
                                                     <div class="rating">
-                                                        <div class="product_rate" style="width: {{ get_average_star_of_product($product->id) * 20 }}%"></div>
+                                                        <div class="product_rate" style="width: {{ get_average_star_of_product($originalProduct->id) * 20 }}%"></div>
                                                     </div>
                                                     <span class="rating_num">({{ $countRating }} {{ __('reviews') }})</span>
                                                 </a>
@@ -71,7 +80,7 @@
                                         {!! clean($product->description) !!}
                                     </div>
                                 </div>
-                                @php $flashSale = $product->latestFlashSales()->first(); @endphp
+                                @php $flashSale = $product->flashSales()->first(); @endphp
 
                                 @if ($flashSale)
                                     <div class="ps-product__countdown">
@@ -109,29 +118,7 @@
                                             'view'     => Theme::getThemeNamespace() . '::views.ecommerce.attributes.swatches-renderer'
                                         ]) !!}
                                     </div>
-                                    <div class="number-items-available mb-3">
-                                        @if ($product->isOutOfStock())
-                                            <span class="text-danger">({{ __('Out of stock') }})</span>
-                                        @else
-                                            @if (!$productVariation)
-                                                <span class="text-danger">({{ __('Not available') }})</span>
-                                            @else
-                                                @if ($productVariation->isOutOfStock())
-                                                    <span class="text-danger">({{ __('Out of stock') }})</span>
-                                                @elseif  (!$productVariation->with_storehouse_management || $productVariation->quantity < 1)
-                                                    <span class="text-success">({{ __('Available') }})</span>
-                                                @elseif ($productVariation->quantity)
-                                                    <span class="text-success">
-                                                        @if ($productVariation->quantity != 1)
-                                                            ({{ __(':number products available', ['number' => $productVariation->quantity]) }})
-                                                        @else
-                                                            ({{ __(':number product available', ['number' => $productVariation->quantity]) }})
-                                                        @endif
-                                                    </span>
-                                                @endif
-                                            @endif
-                                        @endif
-                                    </div>
+                                    <div class="number-items-available" style="display: none; margin-bottom: 10px;"></div>
                                 @endif
                                 <form class="add-to-cart-form" method="POST" action="{{ route('public.cart.add-to-cart') }}">
                                     @csrf
@@ -145,12 +132,12 @@
                                                 <input class="form-control qty-input" type="text" name="qty" value="1" placeholder="1" readonly>
                                             </div>
                                         </figure>
-                                        <input type="hidden" name="id" class="hidden-product-id" value="{{ ($product->is_variation || !$product->defaultVariation->product_id) ? $product->id : $product->defaultVariation->product_id }}"/>
+                                        <input type="hidden" name="id" class="hidden-product-id" value="{{ ($originalProduct->is_variation || !$originalProduct->defaultVariation->product_id) ? $originalProduct->id : $originalProduct->defaultVariation->product_id }}"/>
 
                                         @if (EcommerceHelper::isCartEnabled())
-                                            <button class="ps-btn ps-btn--black @if ($product->isOutOfStock()) btn-disabled @endif" type="submit" @if ($product->isOutOfStock()) disabled @endif>{{ __('Add to cart') }}</button>
+                                            <button class="ps-btn ps-btn--black" type="submit">{{ __('Add to cart') }}</button>
                                             @if (EcommerceHelper::isQuickBuyButtonEnabled())
-                                                <button class="ps-btn @if ($product->isOutOfStock()) btn-disabled @endif" type="submit" name="checkout" @if ($product->isOutOfStock()) disabled @endif>{{ __('Buy Now') }}</button>
+                                                <button class="ps-btn" type="submit" name="checkout">{{ __('Buy Now') }}</button>
                                             @endif
                                         @endif
                                         <div class="ps-product__actions">
@@ -163,6 +150,7 @@
                                     @if ($product->sku)
                                         <p><strong>{{ __('SKU') }}:</strong> <span id="product-sku">{{ $product->sku }}</span></p>
                                     @endif
+
                                     @if ($product->categories->count())
                                         <p class="categories"><strong> {{ __('Categories') }}:</strong>
                                             @foreach($product->categories as $category)
@@ -324,6 +312,22 @@
                             @endif
                         @endfor
                     </aside>
+                    <aside class="widget widget_product widget_features">
+                        <p><i class="icon-store"></i> <strong>Seller information</strong></p>
+                        <p><i ></i>{{$product->productUser->company->company_name}}    </p>
+
+{{--                        <p><i ></i> <a href="mailto:{{$product->productUser->email}}"> {{$product->productUser->email}}</a></p>--}}
+                        <div class="rating_wrap mb-4" style="padding-left: 50px;">
+
+
+                            <div class="rating">
+                                <div class="product_rate"
+                                     style="width: {{ get_average_star_of_company($product->productUser->id) * 20 }}%"></div>
+
+                            </div>
+                        </div>
+                        <p><i ></i> <a class="ps-btn ps-btn--fullwidth" href="{{route('public.seller',$product->productUser->company->companySlug->key)}}"> View Store</a></p>
+                    </aside>
                     @if (is_plugin_active('ads'))
                         <aside class="widget">
                             {!! AdsManager::display('product-sidebar') !!}
@@ -333,10 +337,25 @@
             </div>
 
             @php
-                $crossSellProducts = get_cross_sale_products($product, 7);
+                $crossSellProducts = array_slice(get_cross_sale_products($originalProduct), 0, 7);
             @endphp
             @if (count($crossSellProducts) > 0)
-                {!! Theme::partial('cross-sell-products', compact('crossSellProducts')) !!}
+                <div class="ps-section--default ps-customer-bought">
+                    <div class="ps-section__header">
+                        <h3>{{ __('Customers who bought this item also bought') }}</h3>
+                    </div>
+                    <div class="ps-section__content">
+                        <div class="row">
+                            @foreach($crossSellProducts as $crossId)
+                                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-6">
+                                    <div class="ps-product">
+                                        {!! Theme::partial('product-item', ['product' => get_product_by_id($crossId)]) !!}
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             @endif
 
             <div class="ps-section--default" id="products">

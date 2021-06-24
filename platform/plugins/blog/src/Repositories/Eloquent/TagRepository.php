@@ -3,8 +3,8 @@
 namespace Botble\Blog\Repositories\Eloquent;
 
 use Botble\Base\Enums\BaseStatusEnum;
-use Botble\Blog\Repositories\Interfaces\TagInterface;
 use Botble\Support\Repositories\Eloquent\RepositoriesAbstract;
+use Botble\Blog\Repositories\Interfaces\TagInterface;
 
 class TagRepository extends RepositoriesAbstract implements TagInterface
 {
@@ -26,12 +26,12 @@ class TagRepository extends RepositoriesAbstract implements TagInterface
     /**
      * {@inheritDoc}
      */
-    public function getPopularTags($limit, array $with = ['slugable'], array $withCount = ['posts'])
+    public function getPopularTags($limit)
     {
         $data = $this->model
-            ->with($with)
-            ->withCount($withCount)
-            ->orderBy('posts_count', 'DESC')
+            ->with('slugable')
+            ->orderBy('tags.id', 'DESC')
+            ->select('tags.*')
             ->limit($limit);
 
         return $this->applyBeforeExecuteQuery($data)->get();

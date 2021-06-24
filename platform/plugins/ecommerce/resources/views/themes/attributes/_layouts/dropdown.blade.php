@@ -4,13 +4,11 @@
         <div class="dropdown-swatch">
             <label>
                 <select class="form-control">
-                    <option value="">{{ __('Select') . ' ' . strtolower($set->title) }}</option>
+                    <option value="">{{ __('Select ') . strtolower($set->title) }}</option>
                     @foreach($attributes->where('attribute_set_id', $set->id) as $attribute)
                         <option class="product-filter-item"
                                 value="{{ $attribute->id }}"
-                                data-id="{{ $attribute->id }}"
-                                {{ $selected->where('id', $attribute->id)->count() ? 'selected' : '' }}
-                                @if (!$variationInfo->where('id', $attribute->id)->count()) disabled="disabled" @endif>
+                            {{ in_array($attribute->id, $selected) ? 'selected' : '' }}>
                             {{ $attribute->title }}
                         </option>
                     @endforeach

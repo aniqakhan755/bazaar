@@ -2,8 +2,8 @@
 
 namespace Botble\Page\Providers;
 
-use Botble\Page\Listeners\RenderingSiteMapListener;
 use Botble\Theme\Events\RenderingSiteMapEvent;
+use Botble\Page\Listeners\RenderingSiteMapListener;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider

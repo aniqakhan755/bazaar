@@ -29,6 +29,22 @@
                                 @endif
 
                                 @if (Cart::instance('cart')->count() > 0)
+                                    @php
+                                        $crossSellProducts = [];
+
+                                        Theme::set('body_class', 'shopping-cart');
+
+                                        $productIds = Cart::instance('cart')->content()->pluck('id')->toArray();
+
+                                        if ($productIds) {
+                                            $products = get_products([
+                                                'condition' => [
+                                                    ['ec_products.id', 'IN', $productIds],
+                                                ],
+                                            ]);
+                                        }
+                                    @endphp
+
                                     <form class="cart-form" method="post" action="{{ route('public.cart.update') }}">
                                         {!! csrf_field() !!}
                                         <div class="cart-product-table-wrap responsive-table">
@@ -49,6 +65,14 @@
                                                     @foreach(Cart::instance('cart')->content() as $key => $cartItem)
                                                         @php
                                                             $product = $products->where('id', $cartItem->id)->first();
+                                                            if(!empty($product)) {
+                                                                //get parent product to get cross sell
+                                                                $configurableProduct = get_parent_product($product->id);
+
+                                                                if (!empty($configurableProduct)) {
+                                                                    $crossSellProducts = array_unique(array_merge($crossSellProducts, get_cross_sale_products($configurableProduct)));
+                                                                }
+                                                            }
                                                         @endphp
 
                                                         @if(!empty($product))
@@ -79,13 +103,11 @@
                                                                 @endif
                                                             </td>
                                                             <td class="product-price" data-title="{{ __('Unit Price') }}">
-                                                                <div class="product__price @if ($product->front_sale_price != $product->price) sale @endif">
-                                                                    <span>{{ format_price($cartItem->price) }}</span>
-                                                                    @if ($product->front_sale_price != $product->price)
-                                                                        <small><del>{{ format_price($product->price_with_taxes) }}</del></small>
-                                                                    @endif
-                                                                </div>
-                                                                <input type="hidden" name="items[{{ $key }}][rowId]" value="{{ $cartItem->rowId }}">
+                                                                <span class="product-price-amount amount"><span class="currency-sign">
+                                                                    {{ format_price($cartItem->price) }}
+                                                                    </span>
+                                                                        <input type="hidden" name="items[{{ $key }}][rowId]" value="{{ $cartItem->rowId }}">
+                                                                </span>
                                                             </td>
                                                             <td class="product-quantity" data-title="{{ __('Qty') }}">
                                                                 <div class="product-quantity">
@@ -124,11 +146,14 @@
                                             <div class="col-md-6">
                                                 <div class="relate-product-block row">
                                                     <h3 style="text-align: center; width: 100%;">{{ __('Cross-selling products') }}</h3>
+                                                    @php
+                                                        $crossSellProducts = array_slice($crossSellProducts, 0, 4);
+                                                    @endphp
                                                     @if (!empty($crossSellProducts))
                                                         <div class="container product-carousel" style="margin-top: 10px;">
                                                             <div id="new-tranding" class="product-item-4 owl-carousel owl-theme nf-carousel-theme">
-                                                                @foreach ($crossSellProducts as $crossSellProduct)
-                                                                    {!! Theme::partial('product.product_simple', ['product' => $crossSellProduct]) !!}
+                                                                @foreach ($crossSellProducts as $crossId)
+                                                                    {!! Theme::partial('product.product_simple', ['product' => get_product_by_id($crossId)]) !!}
                                                                 @endforeach
                                                             </div>
                                                         </div>

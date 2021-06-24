@@ -1,3 +1,18 @@
+@php
+
+    $originalProduct = $product;
+    $selectedAttrs = [];
+    $productImages = $product->images;
+    if ($product->is_variation) {
+        $product = get_parent_product($product->id);
+        $selectedAttrs = app(\Botble\Ecommerce\Repositories\Interfaces\ProductVariationInterface::class)
+            ->getAttributeIdsOfChildrenProduct($originalProduct->id);
+        if (count($productImages) == 0) {
+            $productImages = $product->images;
+        }
+    }
+@endphp
+
 <!-- Page Content Wrapper -->
 <div class="page-content-wraper">
     <!-- Bread Crumb -->
@@ -19,7 +34,7 @@
                                 <div class="item">
                                     <img src="{{ RvMedia::getImageUrl($img, 'product_detail') }}"
                                          data-zoom-image="{{ RvMedia::getImageUrl($img, 'product_detail') }}"
-                                         alt="{{ $product->name }}"/>
+                                         alt="{{ $originalProduct->name }}"/>
                                 </div>
                             @endforeach
                         </div>
@@ -30,7 +45,7 @@
                         @foreach ($productImages as $thumb)
                             <div class="item">
                                 <img src="{{ RvMedia::getImageUrl($thumb,'product') }}"
-                                     alt="{{ $product->name }}"/>
+                                     alt="{{ $originalProduct->name }}"/>
                             </div>
                         @endforeach
                     </div>
@@ -41,7 +56,7 @@
                 <!-- Product Content -->
                 <div class="col-lg-6 col-md-6 col-sm-12 mb-30">
                     <div class="product-page-content">
-                        <h2 class="product-title">{{ $product->name }}</h2>
+                        <h2 class="product-title">{{ $originalProduct->name }}</h2>
                         @if (EcommerceHelper::isReviewEnabled())
                             <div class="product-rating">
                                 <div class="star-rating" itemprop="reviewRating" itemscope=""
@@ -50,20 +65,20 @@
                                     <span style="width: {{ get_average_star_of_product($product->id) * 20 }}%"></span>
                                 </div>
                                     <div class="product-rating-count"><a href="#list-reviews">( <span
-                                                    class="count">{{ get_count_reviewed_of_product($product->id) }}</span>
+                                                    class="count">{{ get_count_reviewed_of_product($originalProduct->id) }}</span>
                                             {{ __('Reviews') }} )</a>
                                     </div>
                             </div>
                         @endif
                         <div class="product-price">
-                            @if ($product->front_sale_price !== $product->price)
-                                <del>{{ format_price($product->front_sale_price) }}</del>
+                            @if ($originalProduct->front_sale_price !== $originalProduct->price)
+                                <del>{{ format_price($originalProduct->front_sale_price) }}</del>
                                 <span>
-                                    <span class="product-price-text">{{ format_price($product->front_sale_price) }}</span>
+                                    <span class="product-price-text">{{ format_price($originalProduct->front_sale_price) }}</span>
                                 </span>
                             @else
                                 <span>
-                                    <span class="product-price-text">{{ format_price($product->price) }}</span>
+                                    <span class="product-price-text">{{ format_price($originalProduct->price) }}</span>
                                 </span>
                             @endif
                         </div>
@@ -83,8 +98,8 @@
                             @csrf
                             {!! apply_filters(ECOMMERCE_PRODUCT_DETAIL_EXTRA_HTML, null) !!}
                             <input type="hidden" name="product_is_out_of_stock"
-                                   value="{{ $product->isOutOfStock() }}" id="hidden-product-is_out_of_stock"/>
-                            <input type="hidden" name="id" id="hidden-product-id" value="{{ $product->id }}"/>
+                                   value="{{ $originalProduct->isOutOfStock() }}" id="hidden-product-is_out_of_stock"/>
+                            <input type="hidden" name="id" id="hidden-product-id" value="{{ $originalProduct->id }}"/>
                             <div class="product-quantity">
                                 <span data-value="+" class="quantity-btn quantityPlus"></span>
                                 <input class="quantity input-lg" step="1" min="1" max="20" name="qty" value="1"
@@ -96,13 +111,12 @@
                             </button>
                         </form>
                         <div class="product-meta">
-                            @if ($product->sku)
+                            @if ($originalProduct->sku)
                                 <span>{{ __('SKU') }} : <span id="product-sku" class="sku"
-                                                  itemprop="sku">{{ $product->sku }}</span></span>
+                                                  itemprop="sku">{{ $originalProduct->sku }}</span></span>
                             @endif
-                            <span>
-                                <span id="is-out-of-stock">{{ ! $product->isOutOfStock() ? __('In stock') : __('Out of stock') }}</span>
-                            </span>
+                            <span><span
+                                        id="is-out-of-stock">{{ ! $originalProduct->isOutOfStock() ? __('In stock') : __('Out of stock') }}</span></span>
 
                             @if (!$product->categories->isEmpty())
                                 <span>{{ __('Categories') }} :
@@ -197,17 +211,20 @@
                     <div class="row">
                         <!-- Product Carousel -->
                         @php
-                            $crossSaleProducts = get_cross_sale_products($product);
+                            $up_sale_products = get_up_sale_products($product);
                         @endphp
 
-                        @if (!empty($crossSaleProducts))
+                        @if (! empty($up_sale_products))
 
                             <div class="container product-carousel">
                                 <div id="new-tranding" class="product-item-4 owl-carousel owl-theme nf-carousel-themé">
                                     <!-- item.1 -->
 
-                                    @foreach ($crossSaleProducts as $crossSaleProduct)
-                                        @include('plugins/ecommerce::themes.includes.default-product', ['product' => $crossSaleProduct])
+                                    @foreach ($up_sale_products as $up_id)
+                                        @php
+                                            $up_sale = get_product_by_id($up_id);
+                                        @endphp
+                                        @include('plugins/ecommerce::themes.includes.default-product', ['product' => $up_sale])
                                     @endforeach
                                 </div>
                             </div>
@@ -229,6 +246,7 @@
         @endphp
 
         @if (!empty($relatedProducts))
+
             <div class="container product-carousel">
                 <h2 class="page-title">{{ __('Related products') }}</h2>
                 <div id="new-tranding" class="product-item-4 owl-carousel owl-theme nf-carousel-theme1">

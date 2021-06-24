@@ -3,6 +3,7 @@
 namespace Botble\ACL\Tables;
 
 use BaseHelper;
+use Botble\ACL\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Botble\ACL\Enums\UserStatusEnum;
 use Botble\ACL\Repositories\Interfaces\ActivationInterface;
@@ -47,10 +48,10 @@ class UserTable extends TableAbstract
         UserInterface $userRepository,
         ActivateUserService $service
     ) {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $userRepository;
         $this->service = $service;
+        $this->setOption('id', 'table-users');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['users.edit', 'users.destroy'])) {
             $this->hasOperations = false;
@@ -95,7 +96,9 @@ class UserTable extends TableAbstract
 
                 return UserStatusEnum::DEACTIVATED()->toHtml();
             })
-            ->removeColumn('role_id')
+            ->removeColumn('role_id');
+
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
             ->addColumn('operations', function ($item) {
 
                 $action = null;
@@ -111,9 +114,9 @@ class UserTable extends TableAbstract
 
                 return apply_filters(ACL_FILTER_USER_TABLE_ACTIONS,
                     $action . view('core/acl::users.partials.actions', ['item' => $item])->render(), $item);
-            });
-
-        return $this->toJson($data);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -133,9 +136,9 @@ class UserTable extends TableAbstract
             'users.super_user',
         ];
 
-        $query = $model
-            ->leftJoin('role_users', 'users.id', '=', 'role_users.user_id')
+        $query = $model->leftJoin('role_users', 'users.id', '=', 'role_users.user_id')
             ->leftJoin('roles', 'roles.id', '=', 'role_users.role_id')
+            ->where('roles.id','!=','1')
             ->select($select);
 
         return $this->applyScopes(apply_filters(BASE_FILTER_TABLE_QUERY, $query, $model, $select));
@@ -185,7 +188,9 @@ class UserTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('users.create'), 'users.create');
+        $buttons = $this->addCreateButton(route('users.create'), 'users.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, User::class);
     }
 
     /**
@@ -272,12 +277,9 @@ class UserTable extends TableAbstract
         }
 
         if ($inputKey === 'users.status') {
-
-            $hasWarning = false;
-
             foreach ($ids as $id) {
-                if ($inputValue == UserStatusEnum::DEACTIVATED && Auth::id() == $id) {
-                    $hasWarning = true;
+                if ($inputValue == UserStatusEnum::DEACTIVATED && Auth::user()->getKey() == $id) {
+                    throw new Exception(trans('core/acl::users.lock_user_logged_in'));
                 }
 
                 $user = $this->repository->findOrFail($id);
@@ -287,12 +289,7 @@ class UserTable extends TableAbstract
                 } else {
                     app(ActivationInterface::class)->remove($user);
                 }
-
                 event(new UpdatedContentEvent(USER_MODULE_SCREEN_NAME, request(), $user));
-            }
-
-            if ($hasWarning) {
-                throw new Exception(trans('core/acl::users.lock_user_logged_in'));
             }
 
             return true;

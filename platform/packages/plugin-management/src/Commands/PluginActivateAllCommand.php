@@ -3,9 +3,7 @@
 namespace Botble\PluginManagement\Commands;
 
 use Botble\PluginManagement\Services\PluginService;
-use File;
 use Illuminate\Console\Command;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
 
 class PluginActivateAllCommand extends Command
 {
@@ -15,7 +13,6 @@ class PluginActivateAllCommand extends Command
      * @var string
      */
     protected $signature = 'cms:plugin:activate:all';
-
     /**
      * The console command description.
      *
@@ -41,16 +38,10 @@ class PluginActivateAllCommand extends Command
 
     /**
      * @return boolean
-     * @throws FileNotFoundException
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
     public function handle()
     {
-        $pluginPath = public_path('vendor/core/plugins');
-
-        if (!File::isDirectory($pluginPath)) {
-            File::makeDirectory($pluginPath, 0755, true);
-        }
-
         foreach (scan_folder(plugin_path()) as $plugin) {
             $this->pluginService->activate($plugin);
         }

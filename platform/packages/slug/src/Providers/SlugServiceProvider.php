@@ -12,7 +12,7 @@ use Botble\Slug\Repositories\Caches\SlugCacheDecorator;
 use Botble\Slug\Repositories\Eloquent\SlugRepository;
 use Botble\Slug\Repositories\Interfaces\SlugInterface;
 use Botble\Slug\SlugHelper;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\ServiceProvider;
 use MacroableModels;
@@ -70,9 +70,6 @@ class SlugServiceProvider extends ServiceProvider
 
         $this->app->booted(function () {
             foreach (array_keys($this->app->make(SlugHelper::class)->supportedModels()) as $item) {
-                /**
-                 * @var BaseModel $item
-                 */
                 $item::resolveRelationUsing('slugable', function ($model) {
                     return $model->morphOne(Slug::class, 'reference');
                 });

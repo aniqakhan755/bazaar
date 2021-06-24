@@ -32,11 +32,11 @@
         </ul>
         <ul class="admin-navbar-nav admin-navbar-nav-right">
             <li class="admin-bar-dropdown">
-                <a href="{{ route('users.profile.view', ['id' => Auth::id()]) }}" class="dropdown-toggle">
-                    {{ Auth::user()->name }}
+                <a href="{{ route('users.profile.view', ['id' => Auth::user()->getAuthIdentifier()]) }}" class="dropdown-toggle">
+                    {{ Auth::user()->getFullName() }}
                 </a>
                 <ul class="admin-bar-dropdown-menu">
-                    <li><a href="{{ route('users.profile.view', Auth::id()) }}">{{ trans('core/base::layouts.profile') }}</a></li>
+                    <li><a href="{{ route('users.profile.view', Auth::user()->getAuthIdentifier()) }}">{{ trans('core/base::layouts.profile') }}</a></li>
                     <li><a href="{{ route('access.logout') }}">{{ trans('core/base::layouts.logout') }}</a></li>
                 </ul>
             </li>

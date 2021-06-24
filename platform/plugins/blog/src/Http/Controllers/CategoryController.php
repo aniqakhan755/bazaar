@@ -73,7 +73,7 @@ class CategoryController extends BaseController
         }
 
         $category = $this->categoryRepository->createOrUpdate(array_merge($request->input(), [
-            'author_id'   => Auth::id(),
+            'author_id'   => Auth::user()->getKey(),
             'author_type' => User::class,
         ]));
 

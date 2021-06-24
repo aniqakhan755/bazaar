@@ -45,14 +45,6 @@
     }
 }
 
-body[dir="rtl"] {
-    .cookie-consent {
-        .cookie-consent__agree {
-            float: left;
-        }
-    }
-}
-
 @media screen and (max-width: 767px) {
     .cookie-consent {
         .cookie-consent-body {
@@ -60,21 +52,11 @@ body[dir="rtl"] {
 
             .cookie-consent__message {
                 line-height: 25px !important;
-                display: block;
-                height: auto !important;
             }
 
             .cookie-consent__agree {
                 float: none;
                 margin-top: 5px;
-            }
-        }
-    }
-
-    body[dir="rtl"] {
-        .cookie-consent {
-            .cookie-consent__agree {
-                float: none;
             }
         }
     }

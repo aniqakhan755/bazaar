@@ -105,12 +105,15 @@ class ProductVariationRepository extends RepositoriesAbstract implements Product
         $variation = $this->model
             ->where('product_id', $variationId);
 
+        if ($with) {
+            $variation = $variation->with($with);
+        }
+
         $variation = $variation->first();
 
         $this->resetModel();
 
-        return empty($variation) ? Product::with($with)->find($variationId) : Product::with($with)
-            ->find($variation->configurable_product_id);
+        return empty($variation) ? Product::find($variationId) : Product::find($variation->configurable_product_id);
     }
 
     /**

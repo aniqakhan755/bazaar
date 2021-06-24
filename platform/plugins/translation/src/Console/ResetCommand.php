@@ -33,7 +33,6 @@ class ResetCommand extends Command
     public function __construct(Manager $manager)
     {
         $this->manager = $manager;
-
         parent::__construct();
     }
 

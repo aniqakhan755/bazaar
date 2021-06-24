@@ -100,15 +100,11 @@ class ThemeService
             ];
         }
 
-        $published = $this->publishAssets($theme);
-
-        if ($published['error']) {
-            return $published;
-        }
-
         $this->settingStore
             ->set('theme', $theme)
             ->save();
+
+        $this->publishAssets($theme);
 
         Helper::clearCache();
 
@@ -172,18 +168,7 @@ class ThemeService
 
         foreach ($themes as $theme) {
             $resourcePath = $this->getPath($theme, 'public');
-
-            $themePath = public_path('themes');
-            if (!$this->files->isDirectory($themePath)) {
-                $this->files->makeDirectory($themePath, 0755, true);
-            } elseif (!$this->files->isWritable($themePath)) {
-                return [
-                    'error'   => true,
-                    'message' => trans('packages/theme::theme.folder_is_not_writeable', ['name' => $themePath]),
-                ];
-            }
-
-            $publishPath = $themePath . '/' . $theme;
+            $publishPath = public_path('themes/' . $theme);
 
             if (!$this->files->isDirectory($publishPath)) {
                 $this->files->makeDirectory($publishPath, 0755, true);

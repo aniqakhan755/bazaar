@@ -43,7 +43,7 @@ class CreateBlogTable extends Migration
             $table->id();
             $table->string('name', 255);
             $table->string('description', 400)->nullable();
-            $table->longText('content')->nullable();
+            $table->text('content')->nullable();
             $table->string('status', 60)->default('published');
             $table->integer('author_id');
             $table->string('author_type', 255)->default(addslashes(User::class));

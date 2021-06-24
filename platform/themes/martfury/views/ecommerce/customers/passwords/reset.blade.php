@@ -1,10 +1,9 @@
 <div class="ps-my-account">
     <div class="container">
-        <form class="ps-form--account ps-tab-root" method="POST" action="{{ route('customer.password.reset.post') }}">
+        <form class="ps-form--account ps-tab-root" method="POST" action="{{ route('customer.password.request') }}">
             @csrf
-            <input type="hidden" name="token" value="{{ $token }}" />
             <div class="ps-form__content">
-                <h4>{{ __('Reset Password') }}</h4>
+                <h4>{{ __('customer.password.email') }}</h4>
                 <div class="form-group">
                     <input class="form-control" name="email" type="email" value="{{ old('email') }}" placeholder="{{ __('Your Email') }}">
                     @if ($errors->has('email'))

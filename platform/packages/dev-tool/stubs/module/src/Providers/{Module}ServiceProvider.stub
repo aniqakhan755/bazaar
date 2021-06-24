@@ -8,7 +8,7 @@ use Botble\{Module}\Repositories\Caches\{Name}CacheDecorator;
 use Botble\{Module}\Repositories\Eloquent\{Name}Repository;
 use Botble\{Module}\Repositories\Interfaces\{Name}Interface;
 use Botble\Base\Supports\Helper;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Botble\Base\Traits\LoadAndPublishDataTrait;
 use Illuminate\Routing\Events\RouteMatched;
 

@@ -4,11 +4,12 @@ namespace Botble\Blog\Tables;
 
 use BaseHelper;
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Blog\Models\Tag;
+use Html;
+use Illuminate\Support\Facades\Auth;
 use Botble\Blog\Repositories\Interfaces\TagInterface;
 use Botble\Table\Abstracts\TableAbstract;
-use Html;
 use Illuminate\Contracts\Routing\UrlGenerator;
-use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
 
 class TagTable extends TableAbstract
@@ -32,9 +33,9 @@ class TagTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, TagInterface $tagRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $tagRepository;
+        $this->setOption('id', 'table-tags');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['tags.edit', 'tags.destroy'])) {
             $this->hasOperations = false;
@@ -67,12 +68,14 @@ class TagTable extends TableAbstract
                     return $item->status->getValue();
                 }
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('tags.edit', 'tags.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('tags.edit', 'tags.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -127,7 +130,9 @@ class TagTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('tags.create'), 'tags.create');
+        $buttons = $this->addCreateButton(route('tags.create'), 'tags.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, Tag::class);
     }
 
     /**

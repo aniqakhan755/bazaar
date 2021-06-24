@@ -7,7 +7,7 @@
             </div>
         </div>
         <div v-if="!isLoading" class="col-xl-2 col-lg-3 col-md-4 col-sm-4 col-6" v-for="item in data">
-            <div class="ps-block--category"><a class="ps-block__overlay" :href="item.url"></a><img :src="item.thumbnail" :alt="item.name"/>
+            <div class="ps-block--category"><a class="ps-block__overlay" :href="item.url"></a><img :src="item.image" :alt="item.name"/>
                 <p>{{ item.name }}</p>
             </div>
         </div>

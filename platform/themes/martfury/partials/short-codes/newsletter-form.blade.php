@@ -16,9 +16,7 @@
                             <button class="ps-btn" type="submit">{{ __('Subscribe') }}</button>
                         </div>
                         @if (setting('enable_captcha') && is_plugin_active('captcha'))
-                            <div style="margin-top: 10px;">
-                                {!! Captcha::display() !!}
-                            </div>
+                            {!! Captcha::display() !!}
                         @endif
                     </div>
                 </div>

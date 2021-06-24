@@ -51,12 +51,11 @@ class CreateProductVariationsService
      */
     public function execute(Product $product)
     {
-        $attributeSets = $product->productAttributeSets()->allRelatedIds()->toArray();
+        $attributeSets = $product->productAttributeSets()->allRelatedIds();
 
         $attributes = $this->productAttributeRepository
-            ->advancedGet([
-                'condition' => [['attribute_set_id', 'IN', $attributeSets]],
-            ]);
+            ->getAllWithSelected($product->id)
+            ->where('is_selected', '<>', null);
 
         $data = [];
 
@@ -67,35 +66,14 @@ class CreateProductVariationsService
                 ->toArray();
         }
 
-        $variationsInfo = $this->combinations($data);
+        $variationsInfo = combinations($data);
 
         $variations = [];
         foreach ($variationsInfo as $value) {
-            $result = $this->productVariationRepository->getVariationByAttributesOrCreate($product->id, $value);
+            $result = $this->productVariationRepository->getVariationByAttributesOrCreate($product->id, (array)$value);
             $variations[] = $result['variation'];
         }
 
         return $variations;
-    }
-
-    /**
-     * @param array $array
-     * @return array|array[]
-     */
-    protected function combinations(array $array): array
-    {
-        $result = [[]];
-
-        foreach ($array as $key => $value) {
-            $tmp = [];
-            foreach ($result as $item) {
-                foreach ($value as $valueItem) {
-                    $tmp[] = array_merge($item, [$key => $valueItem]);
-                }
-            }
-            $result = $tmp;
-        }
-
-        return $result;
     }
 }

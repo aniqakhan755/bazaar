@@ -2,13 +2,14 @@
 
 namespace Botble\Ecommerce\Tables;
 
+use Auth;
 use BaseHelper;
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Ecommerce\Models\ProductTag;
 use Botble\Ecommerce\Repositories\Interfaces\ProductTagInterface;
 use Botble\Table\Abstracts\TableAbstract;
 use Html;
 use Illuminate\Contracts\Routing\UrlGenerator;
-use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
 
 class ProductTagTable extends TableAbstract
@@ -35,9 +36,9 @@ class ProductTagTable extends TableAbstract
         UrlGenerator $urlGenerator,
         ProductTagInterface $productTagRepository
     ) {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $productTagRepository;
+        $this->setOption('id', 'table-plugins-product-tag');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['product-tag.edit', 'product-tag.destroy'])) {
             $this->hasOperations = false;
@@ -66,12 +67,14 @@ class ProductTagTable extends TableAbstract
             })
             ->editColumn('status', function ($item) {
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('product-tag.edit', 'product-tag.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('product-tag.edit', 'product-tag.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -128,7 +131,9 @@ class ProductTagTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('product-tag.create'), 'product-tag.create');
+        $buttons = $this->addCreateButton(route('product-tag.create'), 'product-tag.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, ProductTag::class);
     }
 
     /**

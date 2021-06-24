@@ -167,11 +167,11 @@ class PaymentController extends Controller
             case PaymentMethodEnum::STRIPE:
                 $result = $this->stripePaymentService->execute($request);
                 if ($this->stripePaymentService->getErrorMessage()) {
-                    $data['error'] = true;
-                    $data['message'] = $this->stripePaymentService->getErrorMessage();
+                    $paymentData['error'] = true;
+                    $paymentData['message'] = $this->stripePaymentService->getErrorMessage();
                 }
 
-                $data['charge_id'] = $result;
+                $paymentData['charge_id'] = $result;
 
                 break;
 
@@ -224,7 +224,7 @@ class PaymentController extends Controller
         $palPaymentService->afterMakePayment($request);
 
         return $response
-            ->setNextUrl(route('public.index'))
+            ->setNextUrl(url('/'))
             ->setMessage(__('Checkout successfully!'));
     }
 
@@ -237,6 +237,8 @@ class PaymentController extends Controller
     public function show($id)
     {
         $payment = $this->paymentRepository->findOrFail($id);
+        $order = $payment->order;
+        $customer_details = $payment->order->user;
 
         $detail = null;
         switch ($payment->payment_channel) {
@@ -262,7 +264,7 @@ class PaymentController extends Controller
             Arr::forget($paymentStatuses, PaymentStatusEnum::PENDING);
         }
 
-        return view('plugins/payment::show', compact('payment', 'detail', 'paymentStatuses'));
+        return view('plugins/payment::show', compact('payment', 'detail', 'paymentStatuses','customer_details','order'));
     }
 
     /**

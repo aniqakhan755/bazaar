@@ -9,7 +9,7 @@ use Botble\SimpleSlider\Models\SimpleSliderItem;
 use Botble\SimpleSlider\Repositories\Caches\SimpleSliderItemCacheDecorator;
 use Botble\SimpleSlider\Repositories\Eloquent\SimpleSliderItemRepository;
 use Botble\SimpleSlider\Repositories\Interfaces\SimpleSliderItemInterface;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Illuminate\Support\ServiceProvider;
 use Botble\SimpleSlider\Repositories\Caches\SimpleSliderCacheDecorator;
 use Botble\SimpleSlider\Repositories\Eloquent\SimpleSliderRepository;

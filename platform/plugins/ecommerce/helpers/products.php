@@ -2,12 +2,12 @@
 
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Ecommerce\Models\Product;
+use Botble\Ecommerce\Models\ProductCollection;
 use Botble\Ecommerce\Repositories\Interfaces\ProductCategoryInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductCollectionInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ReviewInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 if (!function_exists('get_product_by_id')) {
@@ -45,7 +45,7 @@ if (!function_exists('get_products')) {
             'select'    => [
                 'ec_products.*',
             ],
-            'with'      => ['slugable'],
+            'with' => ['slugable'],
         ], $params);
 
         return app(ProductInterface::class)->getProducts($params);
@@ -114,7 +114,6 @@ if (!function_exists('get_products_on_sale')) {
                 'ec_products.*',
             ],
             'with'      => [],
-            'withCount' => [],
         ], $params);
 
         return app(ProductInterface::class)->getOnSaleProducts($params);
@@ -150,10 +149,9 @@ if (!function_exists('get_top_rated_products')) {
     /**
      * @param int $limit
      * @param array $with
-     * @param array $withCount
      * @return mixed
      */
-    function get_top_rated_products($limit = 10, array $with = [], array $withCount = [])
+    function get_top_rated_products($limit = 10, array $with = [])
     {
         $topProductIds = get_top_rated_product_ids($limit);
 
@@ -176,10 +174,9 @@ if (!function_exists('get_top_rated_products')) {
                 'ec_products.*',
             ],
             'with'      => $with,
-            'withCount' => $withCount,
         ]);
 
-        $products = $products->sortBy(function ($product) use ($topProductIds) {
+        $products = $products->sortBy(function($product) use($topProductIds) {
             return array_search($product->id, $topProductIds);
         });
 
@@ -234,19 +231,18 @@ if (!function_exists('get_trending_products')) {
 if (!function_exists('get_featured_product_categories')) {
     /**
      * Get featured product categories
-     * @param array $args
+     * @param array $args ['limit' => int, 'order' => array, 'select' => array()]
      * @return mixed
      */
     function get_featured_product_categories($args = [])
     {
         $params = array_merge([
-            'limit'     => 0,
-            'order'     => [
+            'limit'  => 0,
+            'order'  => [
                 'ec_product_categories.order' => 'DESC',
             ],
-            'select'    => ['*'],
-            'with'      => ['slugable'],
-            'withCount' => [],
+            'select' => ['*'],
+            'with'   => ['slugable'],
         ], $args);
 
         return app(ProductCategoryInterface::class)->advancedGet([
@@ -257,7 +253,6 @@ if (!function_exists('get_featured_product_categories')) {
             'take'      => $params['limit'],
             'order_by'  => $params['order'],
             'select'    => $params['select'],
-            'withCount' => Arr::get($params, 'withCount', []),
         ]);
     }
 }
@@ -266,11 +261,8 @@ if (!function_exists('get_product_collections')) {
     /**
      * @return Collection
      */
-    function get_product_collections(
-        array $condition = ['status' => BaseStatusEnum::PUBLISHED],
-        array $with = [],
-        array $select = ['*']
-    ) {
+    function get_product_collections(array $condition, array $with = [], array $select = ['*'])
+    {
         return app(ProductCollectionInterface::class)->allBy($condition, $with, $select);
     }
 }
@@ -368,21 +360,8 @@ if (!function_exists('get_related_products')) {
                 'productCollections',
                 'variationAttributeSwatchesForProductList',
                 'promotions',
-                'latestFlashSales',
             ],
         ];
-
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
-        $params['withCount'] = $withCount;
 
         $relatedIds = app(ProductInterface::class)->getRelatedProductIds($product);
 
@@ -399,116 +378,22 @@ if (!function_exists('get_related_products')) {
 if (!function_exists('get_cross_sale_products')) {
     /**
      * @param Product $product
-     * @param array $with
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return array
      */
-    function get_cross_sale_products($product, int $limit = 4, array $with = [])
+    function get_cross_sale_products($product)
     {
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
-        $with = array_merge([
-            'slugable',
-            'variations',
-            'productCollections',
-            'variationAttributeSwatchesForProductList',
-            'promotions',
-            'latestFlashSales',
-        ], $with);
-
-        return $product->crossSales()->limit($limit)->with($with)->withCount($withCount)->get();
+        return app(ProductInterface::class)->getCrossSaleProductIds($product);
     }
 }
 
 if (!function_exists('get_up_sale_products')) {
     /**
      * @param Product $product
-     * @param int $limit
-     * @param array $with
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return array
      */
-    function get_up_sale_products($product, int $limit = 4, array $with = [])
+    function get_up_sale_products($product)
     {
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
-        $with = array_merge([
-            'slugable',
-            'variations',
-            'productCollections',
-            'variationAttributeSwatchesForProductList',
-            'promotions',
-            'latestFlashSales',
-        ], $with);
-
-        return $product->upSales()->limit($limit)->with($with)->withCount($withCount)->get();
-    }
-}
-
-if (!function_exists('get_cart_cross_sale_products')) {
-    /**
-     * @param Product $product
-     * @param array $with
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    function get_cart_cross_sale_products(array $productIds, int $limit = 4, array $with = [])
-    {
-        $crossSaleIds = DB::table('ec_product_cross_sale_relations')
-            ->whereIn('from_product_id', $productIds)
-            ->pluck('to_product_id')
-            ->all();
-
-        $params = [
-            'condition' => [
-                'ec_products.status'       => BaseStatusEnum::PUBLISHED,
-                'ec_products.is_variation' => 0,
-                ['ec_products.id', 'IN', $crossSaleIds],
-            ],
-            'order_by'  => [
-                'ec_products.order'      => 'ASC',
-                'ec_products.created_at' => 'DESC',
-            ],
-            'take'      => $limit,
-            'select'    => [
-                'ec_products.*',
-            ],
-            'with'      => array_merge([
-                'slugable',
-                'variations',
-                'productCollections',
-                'variationAttributeSwatchesForProductList',
-                'promotions',
-                'latestFlashSales',
-            ], $with),
-        ];
-
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
-        $params['withCount'] = $withCount;
-
-        return app(ProductInterface::class)->getProducts($params);
+        return app(ProductInterface::class)->getUpSaleProductIds($product);
     }
 }
 
@@ -531,41 +416,5 @@ if (!function_exists('get_product_attributes_with_set')) {
         }
 
         return $attributes;
-    }
-}
-
-if (!function_exists('handle_next_attributes_in_product')) {
-    /**
-     * @return array
-     */
-    function handle_next_attributes_in_product(
-        $productAttributes,
-        $productVariationsInfo,
-        $setId,
-        $selectedAttributes,
-        $key,
-        $variationNextIds,
-        $variationInfo = null,
-        $unavailableAttributeIds = []
-    ) {
-        foreach ($productAttributes as $attribute) {
-            if ($variationInfo != null && !$variationInfo->where('id', $attribute->id)->count()) {
-                $unavailableAttributeIds[] = $attribute->id;
-            }
-            if (in_array($attribute->id, $selectedAttributes)) {
-                $variationIds = $productVariationsInfo
-                    ->where('attribute_set_id', $setId)
-                    ->where('id', $attribute->id)
-                    ->pluck('variation_id')
-                    ->toArray();
-                if ($key == 0) {
-                    $variationNextIds = $variationIds;
-                } else {
-                    $variationNextIds = array_intersect($variationNextIds, $variationIds);
-                }
-            }
-        }
-
-        return [$variationNextIds, $unavailableAttributeIds];
     }
 }

@@ -20,7 +20,6 @@ class ValidatorHandler
      * @var RuleParser
      */
     protected $rules;
-
     /**
      * @var MessageParser
      */
@@ -92,8 +91,8 @@ class ValidatorHandler
     /**
      * Make Laravel Validations compatible with JQuery Validation Plugin.
      *
-     * @param string $attribute
-     * @param array $rules
+     * @param $attribute
+     * @param $rules
      * @param bool $includeRemote
      * @return array
      */
@@ -119,7 +118,7 @@ class ValidatorHandler
     /**
      * Check if rule should be validated with javascript.
      *
-     * @param string $jsRule
+     * @param $jsRule
      * @param bool $includeRemote
      * @return bool
      */
@@ -131,7 +130,7 @@ class ValidatorHandler
     /**
      * Check if JS Validation is disabled for attribute.
      *
-     * @param string $attribute
+     * @param $attribute
      * @return bool
      */
     public function jsValidationEnabled($attribute)
@@ -167,7 +166,6 @@ class ValidatorHandler
         $callback = function () {
             return true;
         };
-
         $this->validator->sometimes($attribute, $rules, $callback);
         $this->rules->addConditionalRules($attribute, (array)$rules);
     }

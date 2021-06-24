@@ -15,7 +15,6 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
 use OrderHelper;
 use Response;
-use SeoHelper;
 use Theme;
 
 class PublicCartController extends Controller
@@ -143,11 +142,13 @@ class PublicCartController extends Controller
         $promotionDiscountAmount = 0;
         $couponDiscountAmount = 0;
 
-        $products = [];
-        $crossSellProducts = [];
-
         if (Cart::instance('cart')->count() > 0) {
-            $products = Cart::instance('cart')->products();
+            foreach (Cart::instance('cart')->content() as $cartItem) {
+                $product = $this->productRepository->findById($cartItem->id);
+                if (!$product) {
+                    Cart::remove($cartItem->rowId);
+                }
+            }
 
             $promotionDiscountAmount = $applyPromotionsService->execute();
 
@@ -156,19 +157,13 @@ class PublicCartController extends Controller
             if (session()->has('applied_coupon_code')) {
                 $couponDiscountAmount = Arr::get($sessionData, 'coupon_discount_amount', 0);
             }
-
-            $parentIds = $products->pluck('original_product.id')->toArray();
-
-            $crossSellProducts = get_cart_cross_sale_products($parentIds, 7);
         }
 
-        SeoHelper::setTitle(__('Shopping Cart'));
-
-        Theme::breadcrumb()->add(__('Home'), route('public.index'))->add(__('Shopping Cart'), route('public.cart'));
+        Theme::breadcrumb()->add(__('Home'), url('/'))->add(__('Shopping Cart'), route('public.cart'));
 
         return Theme::scope(
             'ecommerce.cart',
-            compact('promotionDiscountAmount', 'couponDiscountAmount', 'products', 'crossSellProducts'),
+            compact('promotionDiscountAmount', 'couponDiscountAmount'),
             'plugins/ecommerce::themes.cart'
         )->render();
     }
@@ -195,25 +190,20 @@ class PublicCartController extends Controller
         foreach ($data as $item) {
             $cartItem = Cart::instance('cart')->get($item['rowId']);
             $product = null;
-
             if ($cartItem) {
                 $product = $this->productRepository->findById($cartItem->id);
             }
-
             if ($product) {
                 $originalQuantity = $product->quantity;
-                $product->quantity = (int)$product->quantity - Arr::get($item, 'values.qty', 0) + 1;
-
+                $product->quantity = (int)$product->quantity - Arr::get($item['values'], 'qty', 0) + 1;
                 if ($product->quantity < 0) {
                     $product->quantity = 0;
                 }
-
                 if ($product->isOutOfStock()) {
                     $outOfQuantity = true;
                 } else {
-                    Cart::instance('cart')->update($item['rowId'], Arr::get($item, 'values'));
+                    Cart::instance('cart')->update($item['rowId'], $item['values']);
                 }
-
                 $product->quantity = $originalQuantity;
             }
         }

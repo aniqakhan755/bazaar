@@ -3,15 +3,13 @@
 namespace Botble\PluginManagement\Services;
 
 use Botble\Base\Supports\Helper;
-use Botble\PluginManagement\Events\ActivatedPluginEvent;
 use Botble\Setting\Supports\SettingStore;
 use Composer\Autoload\ClassLoader;
+use DB;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Schema;
 
 class PluginService
@@ -65,14 +63,6 @@ class PluginService
             ];
         }
 
-        if (!Arr::get($content, 'ready', 1)) {
-            return [
-                'error'   => true,
-                'message' => trans('packages/plugin-management::plugin.plugin_is_not_ready',
-                    ['name' => Str::studly($plugin)]),
-            ];
-        }
-
         $activatedPlugins = get_active_plugins();
         if (!in_array($plugin, $activatedPlugins)) {
 
@@ -93,15 +83,11 @@ class PluginService
                 $loader->setPsr4($content['namespace'], plugin_path($plugin . '/src'));
                 $loader->register(true);
 
-                $published = $this->publishAssets($plugin);
-
-                if ($published['error']) {
-                    return $published;
-                }
-
                 if (class_exists($content['namespace'] . 'Plugin')) {
                     call_user_func([$content['namespace'] . 'Plugin', 'activate']);
                 }
+
+                $this->publishAssets($plugin);
 
                 if ($this->files->isDirectory(plugin_path($plugin . '/database/migrations'))) {
                     $this->app->make('migrator')->run(plugin_path($plugin . '/database/migrations'));
@@ -117,8 +103,6 @@ class PluginService
             }
 
             Helper::clearCache();
-
-            event(new ActivatedPluginEvent($plugin));
 
             return [
                 'error'   => false,
@@ -172,22 +156,9 @@ class PluginService
             return $validate;
         }
 
-        $pluginPath = public_path('vendor/core/plugins');
-
-        if (!$this->files->isDirectory($pluginPath)) {
-            $this->files->makeDirectory($pluginPath, 0755, true);
-        }
-
-        if (!$this->files->isWritable($pluginPath)) {
-            return [
-                'error'   => true,
-                'message' => trans('packages/plugin-management::plugin.folder_is_not_writeable',
-                    ['name' => $pluginPath]),
-            ];
-        }
-
         if ($this->files->isDirectory(plugin_path($plugin . '/public'))) {
-            $this->files->copyDirectory(plugin_path($plugin . '/public'), $pluginPath . '/' . $plugin);
+            $this->files->copyDirectory(plugin_path($plugin . '/public'),
+                public_path('vendor/core/plugins/' . $plugin));
         }
 
         return [

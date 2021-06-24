@@ -72,7 +72,7 @@ class SocialLoginController extends BaseController
             }
 
             $account = app(CustomerInterface::class)->createOrUpdate([
-                'name'        => $oAuth->getName() ?: $oAuth->getEmail(),
+                'name'        => $oAuth->getName(),
                 'email'       => $oAuth->getEmail(),
                 'verified_at' => now(),
                 'password'    => bcrypt(Str::random(36)),

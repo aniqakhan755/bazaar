@@ -7,8 +7,7 @@
             </div>
         </div>
         <a v-if="!isLoading" :href="item.website" v-for="item in data" :title="item.name">
-            <a v-if="item.website" :href="item.website"><img :src="item.logo" :alt="item.name"/></a>
-            <img v-if="!item.website" :src="item.logo" :alt="item.name"/>
+            <img :src="item.logo" alt=":item.name"/>
         </a>
     </div>
 </template>

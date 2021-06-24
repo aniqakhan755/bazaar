@@ -91,8 +91,6 @@ class CartItem implements Arrayable, Jsonable
         $this->price = floatval($price);
         $this->options = new CartItemOptions($options);
         $this->rowId = $this->generateRowId($id, $options);
-        $this->created_at = now();
-        $this->updated_at = now();
     }
 
     /**
@@ -348,15 +346,14 @@ class CartItem implements Arrayable, Jsonable
     public function toArray()
     {
         return [
-            'rowId'      => $this->rowId,
-            'id'         => $this->id,
-            'name'       => $this->name,
-            'qty'        => $this->qty,
-            'price'      => $this->price,
-            'options'    => $this->options->toArray(),
-            'tax'        => $this->tax,
-            'subtotal'   => $this->subtotal,
-            'updated_at' => $this->updated_at,
+            'rowId'    => $this->rowId,
+            'id'       => $this->id,
+            'name'     => $this->name,
+            'qty'      => $this->qty,
+            'price'    => $this->price,
+            'options'  => $this->options->toArray(),
+            'tax'      => $this->tax,
+            'subtotal' => $this->subtotal,
         ];
     }
 

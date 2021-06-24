@@ -4,6 +4,7 @@ namespace Botble\Ecommerce\Tables;
 
 use BaseHelper;
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Ecommerce\Models\ProductAttributeSet;
 use Botble\Ecommerce\Repositories\Interfaces\ProductAttributeSetInterface;
 use Botble\Table\Abstracts\TableAbstract;
 use Html;
@@ -35,9 +36,9 @@ class ProductAttributeSetsTable extends TableAbstract
         UrlGenerator $urlGenerator,
         ProductAttributeSetInterface $productAttributeSetRepository
     ) {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $productAttributeSetRepository;
+        $this->setOption('id', 'table-product-attribute-sets');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['product-attribute-sets.edit', 'product-attribute-sets.destroy'])) {
             $this->hasOperations = false;
@@ -67,12 +68,14 @@ class ProductAttributeSetsTable extends TableAbstract
             })
             ->editColumn('status', function ($item) {
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('product-attribute-sets.edit', 'product-attribute-sets.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('product-attribute-sets.edit', 'product-attribute-sets.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -136,7 +139,9 @@ class ProductAttributeSetsTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('product-attribute-sets.create'), 'product-attribute-sets.create');
+        $buttons = $this->addCreateButton(route('product-attribute-sets.create'), 'product-attribute-sets.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, ProductAttributeSet::class);
     }
 
     /**

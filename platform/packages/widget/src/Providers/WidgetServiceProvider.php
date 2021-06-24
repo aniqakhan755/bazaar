@@ -12,7 +12,7 @@ use Botble\Widget\Repositories\Eloquent\WidgetRepository;
 use Botble\Widget\Repositories\Interfaces\WidgetInterface;
 use Botble\Widget\WidgetGroupCollection;
 use Botble\Widget\Widgets\Text;
-use Illuminate\Support\Facades\Event;
+use Event;
 use File;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\ServiceProvider;

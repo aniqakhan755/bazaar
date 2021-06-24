@@ -2,13 +2,14 @@
 
 namespace Botble\Faq\Tables;
 
+use Auth;
 use BaseHelper;
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Faq\Models\FaqCategory;
 use Botble\Faq\Repositories\Interfaces\FaqCategoryInterface;
 use Botble\Table\Abstracts\TableAbstract;
 use Html;
 use Illuminate\Contracts\Routing\UrlGenerator;
-use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
 
 class FaqCategoryTable extends TableAbstract
@@ -32,9 +33,9 @@ class FaqCategoryTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, FaqCategoryInterface $faqCategoryRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $faqCategoryRepository;
+        $this->setOption('id', 'table-package-faq_category');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['faq_category.edit', 'faq_category.destroy'])) {
             $this->hasOperations = false;
@@ -63,12 +64,14 @@ class FaqCategoryTable extends TableAbstract
             })
             ->editColumn('status', function ($item) {
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('faq_category.edit', 'faq_category.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('faq_category.edit', 'faq_category.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -123,7 +126,9 @@ class FaqCategoryTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('faq_category.create'), 'faq_category.create');
+        $buttons = $this->addCreateButton(route('faq_category.create'), 'faq_category.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, FaqCategory::class);
     }
 
     /**

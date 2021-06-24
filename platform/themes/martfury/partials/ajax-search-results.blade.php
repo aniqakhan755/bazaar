@@ -10,12 +10,13 @@
                     <div class="ps-product__content">
                     <a class="ps-product__title" href="{{ $product->url }}">{{ $product->name }}</a>
                     @if (EcommerceHelper::isReviewEnabled())
-                        @if ($product->reviews_avg > 0)
+                        @php $countRating = get_count_reviewed_of_product($product->id); @endphp
+                        @if ($countRating > 0)
                             <div class="rating_wrap">
                                 <div class="rating">
-                                    <div class="product_rate" style="width: {{ $product->reviews_avg * 20 }}%"></div>
+                                    <div class="product_rate" style="width: {{ get_average_star_of_product($product->id) * 20 }}%"></div>
                                 </div>
-                                <span class="rating_num">({{ $product->reviews_count }})</span>
+                                <span class="rating_num">({{ $countRating }})</span>
                             </div>
                         @endif
                     @endif

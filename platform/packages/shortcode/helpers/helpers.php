@@ -34,7 +34,6 @@ if (!function_exists('do_shortcode')) {
         return shortcode()->compile($content);
     }
 }
-
 if (!function_exists('generate_shortcode')) {
     /**
      * @param string $name

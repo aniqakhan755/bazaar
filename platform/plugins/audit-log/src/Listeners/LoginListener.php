@@ -44,7 +44,7 @@ class LoginListener
             $this->auditHistory->user_id = $user->id;
             $this->auditHistory->reference_user = 0;
             $this->auditHistory->reference_id = $user->id;
-            $this->auditHistory->reference_name = $user->name;
+            $this->auditHistory->reference_name = $user->getFullName();
             $this->auditHistory->type = 'info';
 
             $this->auditHistory->save();

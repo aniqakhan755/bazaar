@@ -69,7 +69,7 @@ class SimpleSliderForm extends FormAbstract
                     'title'   => trans('plugins/simple-slider::simple-slider.slide_items'),
                     'content' => $this->tableBuilder->create(SimpleSliderItemTable::class)
                         ->setAjaxUrl(route('simple-slider-item.index',
-                            $this->getModel()->id ?: 0))
+                            $this->getModel()->id ? $this->getModel()->id : 0))
                         ->renderTable(),
                 ],
             ])

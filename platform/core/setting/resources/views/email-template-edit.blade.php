@@ -13,10 +13,10 @@
                     </p>
                     <div class="available-variable">
                         @foreach(EmailHandler::getVariables('core') as $coreKey => $coreVariable)
-                            <p><span class="text-danger">{{ $coreKey }}</span>: {{ $coreVariable }}</p>
+                            <p><code>{{ $coreKey }}</code>: {{ $coreVariable }}</p>
                         @endforeach
                         @foreach(EmailHandler::getVariables($pluginData['name']) as $moduleKey => $moduleVariable)
-                            <p><span class="text-danger">{{ $moduleKey }}</span>: {{ trans($moduleVariable) }}</p>
+                            <p><code>{{ $moduleKey }}</code>: {{ trans($moduleVariable) }}</p>
                         @endforeach
                     </div>
                 </div>

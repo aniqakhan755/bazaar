@@ -2,13 +2,9 @@
 
 namespace Botble\Contact\Models;
 
-use Botble\Base\Supports\Avatar;
 use Botble\Base\Traits\EnumCastable;
 use Botble\Contact\Enums\ContactStatusEnum;
 use Botble\Base\Models\BaseModel;
-use Exception;
-use Illuminate\Contracts\Routing\UrlGenerator;
-use RvMedia;
 
 class Contact extends BaseModel
 {
@@ -59,17 +55,5 @@ class Contact extends BaseModel
     public function replies()
     {
         return $this->hasMany(ContactReply::class);
-    }
-
-    /**
-     * @return UrlGenerator|string
-     */
-    public function getAvatarUrlAttribute()
-    {
-        try {
-            return (new Avatar)->create($this->name)->toBase64();
-        } catch (Exception $exception) {
-            return RvMedia::getDefaultImage();
-        }
     }
 }

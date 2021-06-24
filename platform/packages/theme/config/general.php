@@ -1,6 +1,19 @@
 <?php
 
 return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Asset url path
+    |--------------------------------------------------------------------------
+    |
+    | The path to asset, this config can be cdn host.
+    | eg. http://cdn.domain.com
+    |
+    */
+
+    'assetUrl' => env('CMS_THEME_ASSET_URL', '/'),
+
     /*
     |--------------------------------------------------------------------------
     | Theme Default
@@ -63,7 +76,58 @@ return [
     |
     */
 
-    'events' => [],
+    'events'        => [
+
+    ],
+    'theme-options' => [
+        'opt_name'              => 'theme-options',
+        'use_cdn'               => true,
+        'display_name'          => 'Theme Options',
+        'display_version'       => '1.0.0',
+        'page_title'            => 'Theme Options',
+        'update_notice'         => true,
+        'admin_bar'             => true,
+        'menu_type'             => 'menu',
+        'menu_title'            => 'Sample Options',
+        'allow_sub_menu'        => true,
+        'page_parent_post_type' => 'your_post_type',
+        'customizer'            => true,
+        'default_mark'          => '*',
+        'hints'                 => [
+            'icon_position' => 'right',
+            'icon_color'    => 'lightgray',
+            'icon_size'     => 'normal',
+            'tip_style'     => [
+                'color' => 'light',
+            ],
+            'tip_position'  => [
+                'my' => 'top left',
+                'at' => 'bottom right',
+            ],
+            'tip_effect'    => [
+                'show' => [
+                    'duration' => '500',
+                    'event'    => 'mouseover',
+                ],
+                'hide' => [
+                    'duration' => '500',
+                    'event'    => 'mouseleave unfocus',
+                ],
+            ],
+        ],
+        'output'                => true,
+        'output_tag'            => true,
+        'settings_api'          => true,
+        'cdn_check_time'        => '1440',
+        'compiler'              => true,
+        'page_permissions'      => 'manage_options',
+        'save_defaults'         => true,
+        'show_import_export'    => true,
+        'show_options_object'   => false,
+        'database'              => 'options',
+        'transient_time'        => '3600',
+        'network_sites'         => true,
+    ],
 
     'enable_custom_js' => env('CMS_THEME_ENABLE_CUSTOM_JS', true),
 ];

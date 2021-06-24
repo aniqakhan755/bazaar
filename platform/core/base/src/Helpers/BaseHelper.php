@@ -3,6 +3,7 @@
 namespace Botble\Base\Helpers;
 
 use Carbon\Carbon;
+use URL;
 
 class BaseHelper
 {
@@ -87,6 +88,10 @@ class BaseHelper
     {
         return config('core.base.general.admin_dir');
     }
+    public function getVendorPrefix(): string
+    {
+        return config('core.base.general.vendor_dir');
+    }
 
     /**
      * @return string
@@ -94,16 +99,6 @@ class BaseHelper
     public function siteLanguageDirection()
     {
         return apply_filters(BASE_FILTER_SITE_LANGUAGE_DIRECTION, setting('locale_direction', 'ltr'));
-    }
-
-    /**
-     * @return string
-     */
-    public function adminLanguageDirection()
-    {
-        $direction = session('admin_locale_direction', setting('admin_locale_direction', 'ltr'));
-
-        return apply_filters(BASE_FILTER_SITE_LANGUAGE_DIRECTION, $direction);
     }
 
     /**

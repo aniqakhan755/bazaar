@@ -2,7 +2,7 @@
 
 namespace Botble\AuditLog\Events;
 
-use Botble\Base\Events\Event;
+use Event;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Queue\SerializesModels;
 
@@ -52,7 +52,7 @@ class AuditHandlerEvent extends Event
     public function __construct($module, $action, $referenceId, $referenceName, $type, $referenceUser = 0)
     {
         if ($referenceUser === 0 && Auth::check()) {
-            $referenceUser = Auth::id();
+            $referenceUser = Auth::user()->getKey();
         }
         $this->module = $module;
         $this->action = $action;

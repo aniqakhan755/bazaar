@@ -50,5 +50,4 @@ return [
     'theme_option_seo_open_graph_image' => 'SEO default Open Graph image',
     'theme_option_logo'                 => 'Logo',
     'theme_option_favicon'              => 'Favicon',
-    'folder_is_not_writeable'           => 'Cannot write files! Folder :name is not writable. Please chmod to make it writable!',
 ];

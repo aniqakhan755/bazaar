@@ -16,7 +16,7 @@ class UpdatePasswordRequest extends Request
     public function rules()
     {
         $rules = [
-            'password'              => 'required|min:6|max:60',
+            'password'              =>   ['required', 'string', 'min:8', 'confirmed', 'regex:/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{6,}$/'],
             'password_confirmation' => 'same:password',
         ];
 

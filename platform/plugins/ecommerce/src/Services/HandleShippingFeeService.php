@@ -2,7 +2,6 @@
 
 namespace Botble\Ecommerce\Services;
 
-use Botble\Base\Models\BaseModel;
 use Botble\Ecommerce\Models\ShippingRule;
 use Botble\Ecommerce\Repositories\Interfaces\AddressInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductInterface;
@@ -41,22 +40,7 @@ class HandleShippingFeeService
     protected $storeLocatorRepository;
 
     /**
-     * @var array
-     */
-    protected $shippings;
-
-    /**
-     * @var BaseModel
-     */
-    protected $shippingDefault;
-
-    /**
-     * @var array
-     */
-    protected $shippingRules;
-
-    /**
-     * HandleShippingFeeService constructor.
+     * PublicController constructor.
      * @param ShippingInterface $shippingRepository
      * @param AddressInterface $addressRepository
      * @param ShippingRuleInterface $shippingRuleRepository
@@ -75,8 +59,6 @@ class HandleShippingFeeService
         $this->shippingRuleRepository = $shippingRuleRepository;
         $this->productRepository = $productRepository;
         $this->storeLocatorRepository = $storeLocatorRepository;
-        $this->shippings = [];
-        $this->shippingRules = [];
     }
 
     /**
@@ -111,24 +93,16 @@ class HandleShippingFeeService
     protected function getShippingFee(array $data, $method, $option = null)
     {
         $weight = Arr::get($data, 'weight', 0.1);
-        $weight = $weight ?: 0.1;
+        $weight = $weight ? $weight : 0.1;
         $orderTotal = Arr::get($data, 'order_total', 0);
-
-        $country = Arr::get($data, 'country');
 
         $result = [];
         switch ($method) {
             case 'default':
-                $methodKey = "$method-$country";
-                if (Arr::has($this->shippings, $methodKey)) {
-                    $shipping = Arr::get($this->shippings, $methodKey);
-                } else {
-                    $shipping = $this->shippingRepository
-                        ->getModel()
-                        ->where('country', $country)
-                        ->first();
-                    Arr::set($this->shippings, $methodKey, $shipping);
-                }
+                $shipping = $this->shippingRepository
+                    ->getModel()
+                    ->where('country', Arr::get($data, 'country'))
+                    ->first();
 
                 if (!empty($shipping)) {
                     $result = $this->calculateDefaultFeeByAddress(
@@ -141,15 +115,10 @@ class HandleShippingFeeService
                 }
 
                 if (empty($result)) {
-                    if ($this->shippingDefault) {
-                        $default = $this->shippingDefault;
-                    } else {
-                        $default = $this->shippingRepository
-                            ->getModel()
-                            ->whereNull('country')
-                            ->first();
-                        $this->shippingDefault = $default;
-                    }
+                    $default = $this->shippingRepository
+                        ->getModel()
+                        ->whereNull('country')
+                        ->first();
 
                     $result = $this->calculateDefaultFeeByAddress(
                         $default,
@@ -179,16 +148,10 @@ class HandleShippingFeeService
         $result = [];
 
         if ($address) {
-            $ruleKey = "rule-option-$option";
-            if (Arr::has($this->shippingRules, $ruleKey)) {
-                $rule = Arr::get($this->shippingRules, $ruleKey);
-            } else {
-                $rule = $this->shippingRuleRepository->findById($option, ['items']);
-                Arr::set($this->shippingRules, $ruleKey, $rule);
-            }
+            $rule = $this->shippingRuleRepository->findById($option);
             if ($rule) {
                 $ruleDetail = $rule
-                    ->items
+                    ->items()
                     ->where('city', $city)
                     ->where('is_enabled', 1)
                     ->first();
@@ -230,7 +193,6 @@ class HandleShippingFeeService
                                     ->orWhere('to', '>=', $weight);
                             });
                     })
-                    ->with(['items'])
                     ->get();
 
                 foreach ($rules as $rule) {
@@ -238,7 +200,7 @@ class HandleShippingFeeService
                      * @var ShippingRule $rule
                      */
                     $ruleDetail = $rule
-                        ->items
+                        ->items()
                         ->where('city', $city)
                         ->where('is_enabled', 1)
                         ->first();

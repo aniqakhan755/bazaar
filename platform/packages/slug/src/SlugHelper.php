@@ -19,10 +19,10 @@ class SlugHelper
         $supported = $this->supportedModels();
 
         if (!is_array($model)) {
-            $supported[$model] = $name ?: $model;
+            $supported[$model] = $name ? $name : $model;
         } else {
             foreach ($model as $item) {
-                $supported[$item] = $name ?: $item;
+                $supported[$item] = $name ? $name : $item;
             }
         }
 
@@ -150,13 +150,5 @@ class SlugHelper
     public function getPermalinkSettingKey(string $model): string
     {
         return 'permalink-' . Str::slug(str_replace('\\', '_', $model));
-    }
-
-    /**
-     * @return bool
-     */
-    public function turnOffAutomaticUrlTranslationIntoLatin(): bool
-    {
-        return setting('slug_turn_off_automatic_url_translation_into_latin', 0) == 1;
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Botble\Analytics;
 
-use DateTimeInterface;
+use DateTime;
 use Google_Service_Analytics;
 use Illuminate\Contracts\Cache\Repository;
 
@@ -39,7 +39,6 @@ class AnalyticsClient
      * Set the cache time.
      *
      * @param int $cacheLifeTimeInMinutes
-     *
      * @return self
      */
     public function setCacheLifeTimeInMinutes(int $cacheLifeTimeInMinutes)
@@ -53,8 +52,8 @@ class AnalyticsClient
      * Query the Google Analytics Service with given parameters.
      *
      * @param string $viewId
-     * @param \DateTimeInterface $startDate
-     * @param \DateTimeInterface $endDate
+     * @param \DateTime $startDate
+     * @param \DateTime $endDate
      * @param string $metrics
      * @param array $others
      *
@@ -62,8 +61,8 @@ class AnalyticsClient
      */
     public function performQuery(
         string $viewId,
-        DateTimeInterface $startDate,
-        DateTimeInterface $endDate,
+        DateTime $startDate,
+        DateTime $endDate,
         string $metrics,
         array $others = []
     ) {

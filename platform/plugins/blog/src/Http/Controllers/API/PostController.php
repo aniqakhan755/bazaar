@@ -4,14 +4,14 @@ namespace Botble\Blog\Http\Controllers\API;
 
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Http\Responses\BaseHttpResponse;
-use Botble\Blog\Http\Resources\ListPostResource;
 use Botble\Blog\Http\Resources\PostResource;
-use Botble\Blog\Models\Post;
+use Botble\Blog\Http\Resources\ListPostResource;
 use Botble\Blog\Repositories\Interfaces\PostInterface;
 use Botble\Blog\Supports\FilterPost;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Botble\Blog\Models\Post;
 use SlugHelper;
 
 class PostController extends Controller
@@ -44,14 +44,22 @@ class PostController extends Controller
     public function index(Request $request, BaseHttpResponse $response)
     {
         $data = $this->postRepository
-            ->advancedGet([
-                'with'      => ['tags', 'categories', 'author', 'slugable'],
-                'condition' => ['status' => BaseStatusEnum::PUBLISHED],
-                'paginate'  => [
-                    'per_page'      => (int)$request->input('per_page', 10),
-                    'current_paged' => (int)$request->input('page', 1),
-                ],
-            ]);
+            ->getModel()
+            ->where(['status' => BaseStatusEnum::PUBLISHED])
+            ->with(['tags', 'categories', 'author', 'slugable'])
+            ->select([
+                'posts.id',
+                'posts.name',
+                'posts.description',
+                'posts.content',
+                'posts.image',
+                'posts.created_at',
+                'posts.status',
+                'posts.updated_at',
+                'posts.author_id',
+                'posts.author_type',
+            ])
+            ->paginate((int)$request->input('per_page', 10));
 
         return $response
             ->setData(ListPostResource::collection($data))
@@ -117,9 +125,7 @@ class PostController extends Controller
     public function getFilters(Request $request, BaseHttpResponse $response)
     {
         $filters = FilterPost::setFilters($request->input());
-
         $data = $this->postRepository->getFilters($filters);
-
         return $response
             ->setData(ListPostResource::collection($data))
             ->toApiResponse();
@@ -142,11 +148,7 @@ class PostController extends Controller
             return $response->setError()->setCode(404)->setMessage('Not found');
         }
 
-        $post = $this->postRepository->getFirstBy([
-            'id'     => $slug->reference_id,
-            'status' => BaseStatusEnum::PUBLISHED,
-        ]);
-
+        $post = $this->postRepository->getFirstBy(['id' => $slug->reference_id, 'status' => BaseStatusEnum::PUBLISHED]);
         if (!$post) {
             return $response->setError()->setCode(404)->setMessage('Not found');
         }

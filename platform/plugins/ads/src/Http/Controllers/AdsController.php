@@ -2,22 +2,19 @@
 
 namespace Botble\Ads\Http\Controllers;
 
-use Botble\Ads\Forms\AdsForm;
+use Botble\Base\Events\BeforeEditContentEvent;
 use Botble\Ads\Http\Requests\AdsRequest;
 use Botble\Ads\Repositories\Interfaces\AdsInterface;
+use Botble\Base\Http\Controllers\BaseController;
+use Illuminate\Http\Request;
+use Exception;
 use Botble\Ads\Tables\AdsTable;
-use Botble\Base\Events\BeforeEditContentEvent;
 use Botble\Base\Events\CreatedContentEvent;
 use Botble\Base\Events\DeletedContentEvent;
 use Botble\Base\Events\UpdatedContentEvent;
-use Botble\Base\Forms\FormBuilder;
-use Botble\Base\Http\Controllers\BaseController;
 use Botble\Base\Http\Responses\BaseHttpResponse;
-use Exception;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Throwable;
+use Botble\Ads\Forms\AdsForm;
+use Botble\Base\Forms\FormBuilder;
 
 class AdsController extends BaseController
 {
@@ -36,8 +33,8 @@ class AdsController extends BaseController
 
     /**
      * @param AdsTable $table
-     * @return Factory|View
-     * @throws Throwable
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws \Throwable
      */
     public function index(AdsTable $table)
     {

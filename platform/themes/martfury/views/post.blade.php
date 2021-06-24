@@ -27,38 +27,34 @@
             <a class="twitter" href="https://twitter.com/intent/tweet?url={{ urlencode($post->url) }}&text={{ $post->description }}" target="_blank"><i class="fa fa-linkedin"></i></a>
         </div>
     </div>
-    @php $relatedPosts = get_related_posts($post->id, 2); @endphp
-
-    @if ($relatedPosts->count())
-        <div class="ps-related-posts">
-            <h3>{{ __('Related Posts') }}</h3>
-            <div class="row">
-                @foreach ($relatedPosts as $post)
-                    <div class="col-sm-6 col-12">
-                        <div class="ps-post">
-                            <div class="ps-post__thumbnail">
-                                <a class="ps-post__overlay" href="{{ $post->url }}"></a>
-                                <img src="{{ RvMedia::getImageUrl($post->image, 'small', false, RvMedia::getDefaultImage()) }}" alt="{{ $post->name }}" />
+    <div class="ps-related-posts">
+        <h3>{{ __('Related Posts') }}</h3>
+        <div class="row">
+            @foreach (get_related_posts($post->id, 2) as $post)
+                <div class="col-sm-6 col-12">
+                    <div class="ps-post">
+                        <div class="ps-post__thumbnail">
+                            <a class="ps-post__overlay" href="{{ $post->url }}"></a>
+                            <img src="{{ RvMedia::getImageUrl($post->image, 'small', false, RvMedia::getDefaultImage()) }}" alt="{{ $post->name }}" />
+                        </div>
+                        <div class="ps-post__content" style="padding: 20px 0;">
+                            <div class="ps-post__top">
+                                <div class="ps-post__meta">
+                                    @foreach($post->categories as $category)
+                                        <a href="{{ $category->url }}">{{ $category->name }}</a>
+                                    @endforeach
+                                </div>
+                                <a class="ps-post__title" href="{{ $post->url }}">{{ $post->name }}</a>
                             </div>
-                            <div class="ps-post__content" style="padding: 20px 0;">
-                                <div class="ps-post__top">
-                                    <div class="ps-post__meta">
-                                        @foreach($post->categories as $category)
-                                            <a href="{{ $category->url }}">{{ $category->name }}</a>
-                                        @endforeach
-                                    </div>
-                                    <a class="ps-post__title" href="{{ $post->url }}">{{ $post->name }}</a>
-                                </div>
-                                <div class="ps-post__bottom">
-                                    <p>{{ $post->created_at->format('M d, Y') }} @if ($post->author) {{ __('by') }} {{ $post->author->getFullName() }} @endif</p>
-                                </div>
+                            <div class="ps-post__bottom">
+                                <p>{{ $post->created_at->format('M d, Y') }} @if ($post->author) {{ __('by') }} {{ $post->author->getFullName() }} @endif</p>
                             </div>
                         </div>
                     </div>
-                @endforeach
-            </div>
+                </div>
+            @endforeach
         </div>
-    @endif
+    </div>
 </div>
 
 

@@ -60,42 +60,16 @@ class AdsManager
                 continue;
             }
 
-            $image = Html::image(RvMedia::getImageUrl($item->image), $item->name, ['style' => 'max-width: 100%'])
-                ->toHtml();
+            $image = Html::image(RvMedia::getImageUrl($item->image), $item->name, ['style' => 'max-width: 100%'])->toHtml();
 
             if ($item->url) {
-                $image = Html::link(route('public.ads-click', $item->key), $image, ['target' => '_blank'], null, false)
-                    ->toHtml();
+                $image = Html::link(route('public.ads-click', $item->key), $image, ['target' => '_blank'], null, false)->toHtml();
             }
 
             $html .= Html::tag('div', $image, $attributes)->toHtml();
         }
 
         return $html;
-    }
-
-    /**
-     * Make sure data is loaded.
-     *
-     * @param boolean $force Force a reload of data. Default false.
-     */
-    public function load($force = false)
-    {
-        if (!$this->loaded || $force) {
-            $this->data = $this->read();
-            $this->loaded = true;
-        }
-    }
-
-    /**
-     * @return Collection
-     */
-    protected function read()
-    {
-        return app(AdsInterface::class)->getModel()
-            ->where('status', BaseStatusEnum::PUBLISHED)
-            ->notExpired()
-            ->get();
     }
 
     /**
@@ -132,11 +106,34 @@ class AdsManager
         $image = Html::image(RvMedia::getImageUrl($ads->image), $ads->name, ['style' => 'max-width: 100%'])->toHtml();
 
         if ($ads->url) {
-            $image = Html::link(route('public.ads-click', $ads->key), $image, ['target' => '_blank'], null, false)
-                ->toHtml();
+            $image = Html::link(route('public.ads-click', $ads->key), $image, ['target' => '_blank'], null, false)->toHtml();
         }
 
         return Html::tag('div', $image, $attributes)->toHtml();
+    }
+
+    /**
+     * Make sure data is loaded.
+     *
+     * @param boolean $force Force a reload of data. Default false.
+     */
+    public function load($force = false)
+    {
+        if (!$this->loaded || $force) {
+            $this->data = $this->read();
+            $this->loaded = true;
+        }
+    }
+
+    /**
+     * @return Collection
+     */
+    protected function read()
+    {
+        return app(AdsInterface::class)->getModel()
+            ->where('status', BaseStatusEnum::PUBLISHED)
+            ->notExpired()
+            ->get();
     }
 
     /**

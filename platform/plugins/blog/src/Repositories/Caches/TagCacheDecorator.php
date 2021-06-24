@@ -2,8 +2,8 @@
 
 namespace Botble\Blog\Repositories\Caches;
 
-use Botble\Blog\Repositories\Interfaces\TagInterface;
 use Botble\Support\Repositories\Caches\CacheAbstractDecorator;
+use Botble\Blog\Repositories\Interfaces\TagInterface;
 
 class TagCacheDecorator extends CacheAbstractDecorator implements TagInterface
 {
@@ -18,7 +18,7 @@ class TagCacheDecorator extends CacheAbstractDecorator implements TagInterface
     /**
      * {@inheritDoc}
      */
-    public function getPopularTags($limit, array $with = ['slugable'], array $withCount = ['posts'])
+    public function getPopularTags($limit)
     {
         return $this->getDataIfExistCache(__FUNCTION__, func_get_args());
     }

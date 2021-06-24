@@ -80,9 +80,9 @@
                     <div class="dd nestable-menu" id="nestable" data-depth="0">
                         {!!
                              Menu::generateMenu([
-                                'slug'   => $menu->slug,
-                                'view'   => 'packages/menu::partials.menu',
-                                'theme'  => false,
+                                'slug' => $menu->slug,
+                                'view' => 'packages/menu::partials.menu',
+                                'theme' => false,
                                 'active' => false,
                              ])
                         !!}

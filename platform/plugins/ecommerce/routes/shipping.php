@@ -12,8 +12,13 @@ Route::group(['namespace' => 'Botble\Ecommerce\Http\Controllers', 'middleware' =
                 'uses' => 'ShippingMethodController@index',
             ]);
 
-            Route::post('region/create', [
+            Route::get('region/create', [
                 'as'   => 'region.create',
+                'uses' => 'ShippingMethodController@getCreateRegion',
+            ]);
+
+            Route::post('region/create', [
+                'as'   => 'region.create.post',
                 'uses' => 'ShippingMethodController@postCreateRegion',
             ]);
 

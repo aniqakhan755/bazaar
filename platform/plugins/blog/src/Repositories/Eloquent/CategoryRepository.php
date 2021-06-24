@@ -3,8 +3,8 @@
 namespace Botble\Blog\Repositories\Eloquent;
 
 use Botble\Base\Enums\BaseStatusEnum;
-use Botble\Blog\Repositories\Interfaces\CategoryInterface;
 use Botble\Support\Repositories\Eloquent\RepositoriesAbstract;
+use Botble\Blog\Repositories\Interfaces\CategoryInterface;
 use Eloquent;
 
 class CategoryRepository extends RepositoriesAbstract implements CategoryInterface
@@ -144,7 +144,7 @@ class CategoryRepository extends RepositoriesAbstract implements CategoryInterfa
 
         $orderBy = isset($filters['order_by']) ? $filters['order_by'] : 'created_at';
         $order = isset($filters['order']) ? $filters['order'] : 'desc';
-        $this->model = $this->model->where('status', BaseStatusEnum::PUBLISHED)->orderBy($orderBy, $order);
+        $this->model->where('status', BaseStatusEnum::PUBLISHED)->orderBy($orderBy, $order);
 
         return $this->applyBeforeExecuteQuery($this->model)->paginate((int)$filters['per_page']);
     }
@@ -152,11 +152,11 @@ class CategoryRepository extends RepositoriesAbstract implements CategoryInterfa
     /**
      * {@inheritDoc}
      */
-    public function getPopularCategories(int $limit, array $with = ['slugable'], array $withCount = ['posts'])
+    public function getPopularCategories(int $limit)
     {
         $data = $this->model
-            ->with($with)
-            ->withCount($withCount)
+            ->with('slugable')
+            ->withCount('posts')
             ->orderBy('posts_count', 'desc')
             ->where('categories.status', BaseStatusEnum::PUBLISHED)
             ->limit($limit);

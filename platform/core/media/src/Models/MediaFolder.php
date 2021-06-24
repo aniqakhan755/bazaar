@@ -67,6 +67,9 @@ class MediaFolder extends BaseModel
                 $files = MediaFile::where('folder_id', $folder->id)->withTrashed()->get();
 
                 foreach ($files as $file) {
+                    /**
+                     * @var MediaFile $file
+                     */
                     $file->delete();
                 }
             }

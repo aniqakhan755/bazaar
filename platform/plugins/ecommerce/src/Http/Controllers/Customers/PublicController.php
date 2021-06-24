@@ -27,9 +27,9 @@ use OrderHelper;
 use Response;
 use RvMedia;
 use SeoHelper;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Theme;
 use Throwable;
+use Botble\Ecommerce\Models\OrderAddress;
 
 class PublicController extends Controller
 {
@@ -98,7 +98,7 @@ class PublicController extends Controller
         SeoHelper::setTitle(__('Account information'));
 
         Theme::breadcrumb()
-            ->add(__('Home'), route('public.index'))
+            ->add(__('Home'), url('/'))
             ->add(__('Account information'), route('customer.overview'));
 
         return Theme::scope('ecommerce.customers.overview', [], 'plugins/ecommerce::themes.customers.overview')
@@ -123,7 +123,7 @@ class PublicController extends Controller
                 ['jquery']);
 
         Theme::breadcrumb()
-            ->add(__('Home'), route('public.index'))
+            ->add(__('Home'), url('/'))
             ->add(__('Profile'), route('customer.edit-account'));
 
         return Theme::scope('ecommerce.customers.edit-account', [], 'plugins/ecommerce::themes.customers.edit-account')
@@ -137,13 +137,11 @@ class PublicController extends Controller
      */
     public function postEditAccount(EditAccountRequest $request, BaseHttpResponse $response)
     {
-        $customer = $this->customerRepository->createOrUpdate(
+        $this->customerRepository->createOrUpdate(
             $request->input(),
             [
                 'id' => auth('customer')->id(),
             ]);
-
-        do_action(HANDLE_CUSTOMER_UPDATED_ECOMMERCE, $customer, $request);
 
         return $response
             ->setNextUrl(route('customer.edit-account'))
@@ -157,7 +155,7 @@ class PublicController extends Controller
     {
         SeoHelper::setTitle(__('Change Password'));
 
-        Theme::breadcrumb()->add(__('Home'), route('public.index'))
+        Theme::breadcrumb()->add(__('Home'), url('/'))
             ->add(__('Change Password'), route('customer.change-password'));
 
         return Theme::scope('ecommerce.customers.change-password', [],
@@ -196,8 +194,7 @@ class PublicController extends Controller
 
         $orders = $this->orderRepository->advancedGet([
             'condition' => [
-                'user_id'               => auth('customer')->id(),
-                'ec_orders.is_finished' => 1,
+                'user_id' => auth('customer')->id(),
             ],
             'paginate'  => [
                 'per_page'      => 10,
@@ -206,7 +203,7 @@ class PublicController extends Controller
         ]);
 
         Theme::breadcrumb()
-            ->add(__('Home'), route('public.index'))
+            ->add(__('Home'), url('/'))
             ->add(__('Orders'), route('customer.orders'));
 
         return Theme::scope('ecommerce.customers.orders.list', compact('orders'),
@@ -237,9 +234,9 @@ class PublicController extends Controller
             abort(404);
         }
 
-        Theme::breadcrumb()->add(__('Home'), route('public.index'))
+        Theme::breadcrumb()->add(__('Home'), url('/'))
             ->add(__('Order detail :id', ['id' => get_order_code($id)]),
-                route('customer.orders.view', $id));
+            route('customer.orders.view', $id));
 
         return Theme::scope('ecommerce.customers.orders.view', compact('order'),
             'plugins/ecommerce::themes.customers.orders.view')->render();
@@ -269,19 +266,6 @@ class PublicController extends Controller
         }
 
         $this->orderRepository->createOrUpdate(['status' => OrderStatusEnum::CANCELED], compact('id'));
-
-        foreach ($order->products as $orderProduct) {
-            $product = $orderProduct->product;
-            $product->quantity += $orderProduct->qty;
-
-            if ($product->is_variation) {
-                $originalProduct = $product->original_product;
-                $originalProduct->quantity += $orderProduct->qty;
-                $originalProduct->save();
-            }
-
-            $product->save();
-        }
 
         $mailer = EmailHandler::setModule(ECOMMERCE_MODULE_SCREEN_NAME);
         if ($mailer->templateEnabled('customer_cancel_order')) {
@@ -324,7 +308,7 @@ class PublicController extends Controller
         ]);
 
         Theme::breadcrumb()
-            ->add(__('Home'), route('public.index'))
+            ->add(__('Home'), url('/'))
             ->add(__('Address books'), route('customer.address'));
 
         return Theme::scope('ecommerce.customers.address.list', compact('addresses'),
@@ -339,7 +323,7 @@ class PublicController extends Controller
         SeoHelper::setTitle(__('Create Address'));
 
         Theme::breadcrumb()
-            ->add(__('Home'), route('public.index'))
+            ->add(__('Home'), url('/'))
             ->add(__('Create Address'), route('customer.address.create'));
 
         return Theme::scope('ecommerce.customers.address.create', [],
@@ -395,7 +379,7 @@ class PublicController extends Controller
             abort(404);
         }
 
-        Theme::breadcrumb()->add(__('Home'), route('public.index'))
+        Theme::breadcrumb()->add(__('Home'), url('/'))
             ->add(__('Edit Address #:id', ['id' => $id]), route('customer.address.edit', $id));
 
         return Theme::scope('ecommerce.customers.address.edit', compact('address'),
@@ -438,6 +422,19 @@ class PublicController extends Controller
             'customer_id' => auth('customer')->id(),
         ]);
 
+        if ($request->input('is_default')) {
+            OrderAddress::join('ec_orders', 'ec_orders.id', '=', 'ec_order_addresses.order_id')
+            ->where('ec_orders.user_id','=', auth('customer')->id())
+            ->where('ec_orders.status','=','pending')
+            ->update(["name" => $request->input()['name'],
+            "email" => $request->input()['email'],
+            "phone" => $request->input()['phone'],
+            "country" =>$request->input()['country'],
+            "state" => $request->input()['state'],
+            "city" => $request->input()['city'],
+            "address" => $request->input()['address']]);
+        }
+
         return $response
             ->setData([
                 'id'   => $address->id,
@@ -449,10 +446,11 @@ class PublicController extends Controller
 
     /**
      * @param int $id
-     * @return BaseHttpResponse|BinaryFileResponse
+     * @param BaseHttpResponse $response
+     * @return BaseHttpResponse|\Symfony\Component\HttpFoundation\BinaryFileResponse
      * @throws BindingResolutionException
      */
-    public function getPrintOrder($id)
+    public function getPrintOrder($id, BaseHttpResponse $response)
     {
         $order = $this->orderRepository->getFirstBy([
             'id'      => $id,

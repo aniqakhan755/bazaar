@@ -237,7 +237,7 @@
                                 <div>
                                     <input type="text" class="next-input textbox-advancesearch customer"
                                            @click="loadListCustomersForSearch()"
-                                           @keyup="handleSearchCustomer($event.target.value)"
+                                           @keyup="loadListCustomersForSearch($event.target.value)"
                                            placeholder="Search or create a new customer">
                                 </div>
                                 <div class="panel panel-default"
@@ -931,15 +931,6 @@
                         .catch(res => {
                             Botble.handleError(res.response.data);
                         });
-                }
-            },
-            handleSearchCustomer: function (value) {
-                if (value !== this.customer_keyword) {
-                    let context = this;
-                    this.customer_keyword = value;
-                    setTimeout(() => {
-                        context.loadListCustomersForSearch(1, true);
-                    }, 500);
                 }
             },
             loadListProductsAndVariations: function (page = 1, force = false) {

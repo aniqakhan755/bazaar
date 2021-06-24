@@ -11,17 +11,35 @@
     @endif
 
     {!! Html::style('vendor/core/core/base/libraries/font-awesome/css/fontawesome.min.css') !!}
-    {!! Html::style('vendor/core/plugins/ecommerce/css/front-theme.css?v=1.0.5') !!}
+    {!! Html::style('vendor/core/plugins/ecommerce/css/front-theme.css?v=1.0.2') !!}
 
-    @if (BaseHelper::siteLanguageDirection() == 'rtl')
-        {!! Html::style('vendor/core/plugins/ecommerce/css/front-theme-rtl.css?v=1.0.5') !!}
+    @if (setting('locale_direction', 'ltr') == 'rtl')
+        {!! Html::style('vendor/core/plugins/ecommerce/css/front-theme-rtl.css?v=1.0.3') !!}
     @endif
 
     {!! Html::style('vendor/core/core/base/libraries/toastr/toastr.min.css') !!}
 
-    {!! Html::script('vendor/core/plugins/ecommerce/js/checkout.js?v=1.0.5') !!}
+    {!! Html::script('vendor/core/plugins/ecommerce/js/checkout.js?v=1.0.3') !!}
+    <style>
+        .order-strip{
+            background-color: #1fa4d1;
+            color: white;
+            text-align: center;
+            padding-top: .5rem;
+            padding-bottom: .5rem;
+            margin-bottom: 1rem;
+
+        }
+        .total-text {
+            font-size: 1.2em;
+        }
+        .total-price{
+            margin-bottom: -15px;
+        }
+
+    </style>
 </head>
-<body class="checkout-page" @if (BaseHelper::siteLanguageDirection() == 'rtl') dir="rtl" @endif>
+<body class="checkout-page" @if (setting('locale_direction', 'ltr') == 'rtl') dir="rtl" @endif>
     <div class="checkout-content-wrap">
         <div class="container">
             <div class="row">

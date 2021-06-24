@@ -6,17 +6,18 @@ use Assets;
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Blog\Models\Category;
 use Botble\Blog\Models\Tag;
+use Botble\Blog\Repositories\Interfaces\PostInterface;
 use Botble\Blog\Services\BlogService;
 use Botble\Dashboard\Supports\DashboardWidgetInstance;
 use Botble\Page\Models\Page;
 use Botble\Page\Repositories\Interfaces\PageInterface;
 use Eloquent;
+use Event;
 use Html;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Menu;
@@ -50,8 +51,7 @@ class HookServiceProvider extends ServiceProvider
         }
 
         if (function_exists('add_shortcode')) {
-            add_shortcode('blog-posts', trans('plugins/blog::base.short_code_name'),
-                trans('plugins/blog::base.short_code_description'), [$this, 'renderBlogPosts']);
+            add_shortcode('blog-posts', trans('plugins/blog::base.short_code_name'), trans('plugins/blog::base.short_code_description'), [$this, 'renderBlogPosts']);
             shortcode()->setAdminConfig('blog-posts',
                 view('plugins/blog::partials.posts-short-code-admin-config')->render());
         }
@@ -173,7 +173,7 @@ class HookServiceProvider extends ServiceProvider
      */
     public function renderBlogPosts($shortcode)
     {
-        $posts = get_all_posts(true, $shortcode->paginate, ['slugable', 'categories', 'categories.slugable', 'author']);
+        $posts = $this->app->make(PostInterface::class)->getAllPosts($shortcode->paginate, true, ['slugable', 'categories', 'categories.slugable']);
 
         $view = 'plugins/blog::themes.templates.posts';
         $themeView = Theme::getThemeNamespace() . '::views.templates.posts';
@@ -198,15 +198,7 @@ class HookServiceProvider extends ServiceProvider
             if (view()->exists(Theme::getThemeNamespace() . '::views.loop')) {
                 $view = Theme::getThemeNamespace() . '::views.loop';
             }
-
-            return view($view, [
-                'posts' => get_all_posts(
-                    true,
-                    theme_option('number_of_posts_in_a_category', 12),
-                    ['slugable', 'categories', 'categories.slugable', 'author']
-                ),
-            ])
-                ->render();
+            return view($view, ['posts' => get_all_posts()])->render();
         }
 
         return $content;

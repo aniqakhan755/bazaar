@@ -14,7 +14,7 @@ class HandleRemoveCouponService
     protected $discountRepository;
 
     /**
-     * HandleRemoveCouponService constructor.
+     * PublicController constructor.
      * @param DiscountInterface $discountRepository
      */
     public function __construct(DiscountInterface $discountRepository)
@@ -23,11 +23,9 @@ class HandleRemoveCouponService
     }
 
     /**
-     * @param string $prefix
-     * @param bool $isForget
      * @return array
      */
-    public function execute($prefix = '', $isForget = true)
+    public function execute()
     {
         if (!session()->has('applied_coupon_code')) {
             return [
@@ -49,15 +47,13 @@ class HandleRemoveCouponService
         $sessionData = OrderHelper::getOrderSessionData($token);
 
         if ($discount && $discount->type_option === 'shipping') {
-            Arr::set($sessionData, $prefix . 'is_free_ship', false);
+            Arr::set($sessionData, 'is_free_ship', false);
         }
 
-        Arr::set($sessionData, $prefix . 'coupon_discount_amount', 0);
+        Arr::set($sessionData, 'coupon_discount_amount', 0);
         OrderHelper::setOrderSessionData($token, $sessionData);
 
-        if ($isForget) {
-            session()->forget('applied_coupon_code');
-        }
+        session()->forget('applied_coupon_code');
 
         return [
             'error' => false,

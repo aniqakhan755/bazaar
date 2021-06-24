@@ -85,15 +85,11 @@ if (!function_exists('get_all_posts')) {
     /**
      * @param boolean $active
      * @param int $perPage
-     * @param array $with
      * @return \Illuminate\Support\Collection
      */
-    function get_all_posts(
-        $active = true,
-        $perPage = 12,
-        array $with = ['slugable', 'categories', 'categories.slugable', 'author']
-    ) {
-        return app(PostInterface::class)->getAllPosts($perPage, $active, $with);
+    function get_all_posts($active = true, $perPage = 12)
+    {
+        return app(PostInterface::class)->getAllPosts($perPage, $active);
     }
 }
 
@@ -145,14 +141,12 @@ if (!function_exists('get_all_tags')) {
 
 if (!function_exists('get_popular_tags')) {
     /**
-     * @param int $limit
-     * @param array|string[] $with
-     * @param array $withCount
+     * @param integer $limit
      * @return \Illuminate\Support\Collection
      */
-    function get_popular_tags($limit = 10, array $with = ['slugable'], array $withCount = ['posts'])
+    function get_popular_tags($limit = 10)
     {
-        return app(TagInterface::class)->getPopularTags($limit, $with, $withCount);
+        return app(TagInterface::class)->getPopularTags($limit);
     }
 }
 
@@ -171,13 +165,11 @@ if (!function_exists('get_popular_posts')) {
 if (!function_exists('get_popular_categories')) {
     /**
      * @param integer $limit
-     * @param array $with
-     * @param array $withCount
      * @return \Illuminate\Support\Collection
      */
-    function get_popular_categories($limit = 10, array $with = ['slugable'], array $withCount = ['posts'])
+    function get_popular_categories($limit = 10)
     {
-        return app(CategoryInterface::class)->getPopularCategories($limit, $with, $withCount);
+        return app(CategoryInterface::class)->getPopularCategories($limit);
     }
 }
 
@@ -233,11 +225,12 @@ if (!function_exists('get_categories_with_children')) {
     {
         $categories = app(CategoryInterface::class)
             ->getAllCategoriesWithChildren(['status' => BaseStatusEnum::PUBLISHED], [], ['id', 'name', 'parent_id']);
-
-        return app(SortItemsWithChildrenHelper::class)
+        $sortHelper = app(SortItemsWithChildrenHelper::class);
+        $sortHelper
             ->setChildrenProperty('child_cats')
-            ->setItems($categories)
-            ->sort();
+            ->setItems($categories);
+
+        return $sortHelper->sort();
     }
 }
 

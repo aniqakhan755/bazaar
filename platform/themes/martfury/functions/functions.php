@@ -22,7 +22,12 @@ register_sidebar([
     'description' => __('Widgets in bottom footer'),
 ]);
 
-RvMedia::setUploadPathAndURLToPublic();
+add_action('init', function () {
+    config([
+        'filesystems.disks.public.root' => public_path('storage'),
+        'filesystems.disks.public.url'  => str_replace('/index.php', '', url('storage')),
+    ]);
+}, 124);
 
 RvMedia::addSize('medium', 790, 510)->addSize('small', 300, 300);
 

@@ -27,7 +27,7 @@ class Shortcode
     /**
      * Register a new shortcode
      *
-     * @param string $key
+     * @param $key
      * @param string $name
      * @param null $description
      * @param callable|string $callback
@@ -103,7 +103,7 @@ class Shortcode
 
     /**
      * @param string $key
-     * @param string|callable $html
+     * @param string $html
      */
     public function setAdminConfig(string $key, $html)
     {

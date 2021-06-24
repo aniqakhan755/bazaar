@@ -5,14 +5,15 @@ namespace Botble\Blog\Tables;
 use BaseHelper;
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Blog\Exports\PostExport;
+use Botble\Blog\Models\Post;
 use Botble\Blog\Repositories\Interfaces\CategoryInterface;
 use Botble\Blog\Repositories\Interfaces\PostInterface;
 use Botble\Table\Abstracts\TableAbstract;
 use Carbon\Carbon;
 use Html;
 use Illuminate\Contracts\Routing\UrlGenerator;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Auth;
+use RvMedia;
 use Yajra\DataTables\DataTables;
 
 class PostTable extends TableAbstract
@@ -55,10 +56,10 @@ class PostTable extends TableAbstract
         PostInterface $postRepository,
         CategoryInterface $categoryRepository
     ) {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $postRepository;
+        $this->setOption('id', 'table-posts');
         $this->categoryRepository = $categoryRepository;
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['posts.edit', 'posts.destroy'])) {
             $this->hasOperations = false;
@@ -81,7 +82,16 @@ class PostTable extends TableAbstract
                 return Html::link(route('posts.edit', $item->id), $item->name);
             })
             ->editColumn('image', function ($item) {
-                return $this->displayThumbnail($item->image);
+                if ($this->request()->input('action') == 'csv') {
+                    return RvMedia::getImageUrl($item->image, null, false, RvMedia::getDefaultImage());
+                }
+
+                if ($this->request()->input('action') == 'excel') {
+                    return RvMedia::getImageUrl($item->image, 'thumb', false, RvMedia::getDefaultImage());
+                }
+
+                return Html::image(RvMedia::getImageUrl($item->image, 'thumb', false, RvMedia::getDefaultImage()),
+                    $item->name, ['width' => 50]);
             })
             ->editColumn('checkbox', function ($item) {
                 return $this->getCheckbox($item->id);
@@ -94,24 +104,24 @@ class PostTable extends TableAbstract
                 foreach ($item->categories as $category) {
                     $categories .= Html::link(route('categories.edit', $category->id), $category->name) . ', ';
                 }
-
                 return rtrim($categories, ', ');
             })
             ->editColumn('author_id', function ($item) {
-                return $item->author ? $item->author->name : null;
+                return $item->author ? $item->author->getFullName() : null;
             })
             ->editColumn('status', function ($item) {
                 if ($this->request()->input('action') === 'excel') {
                     return $item->status->getValue();
                 }
-
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return $this->getOperations('posts.edit', 'posts.destroy', $item);
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return $this->getOperations('posts.edit', 'posts.destroy', $item);
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -137,7 +147,9 @@ class PostTable extends TableAbstract
                 'categories' => function ($query) {
                     $query->select(['categories.id', 'categories.name']);
                 },
-                'author',
+                'author'     => function ($query) {
+                    $query->select(['id', 'first_name', 'last_name']);
+                },
             ])
             ->select($select);
 
@@ -199,7 +211,9 @@ class PostTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('posts.create'), 'posts.create');
+        $buttons = $this->addCreateButton(route('posts.create'), 'posts.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, Post::class);
     }
 
     /**
@@ -268,38 +282,12 @@ class PostTable extends TableAbstract
                     break;
                 }
 
-                if (!$this->isJoined($query, 'post_categories')) {
-                    $query = $query
-                        ->join('post_categories', 'post_categories.post_id', '=', 'posts.id')
-                        ->join('categories', 'post_categories.category_id', '=', 'categories.id');
-                }
-
-                return $query->where('post_categories.category_id', $value);
+                return $query->join('post_categories', 'post_categories.post_id', '=', 'posts.id')
+                    ->join('categories', 'post_categories.category_id', '=', 'categories.id')
+                    ->where('post_categories.category_id', $value);
         }
 
         return parent::applyFilterCondition($query, $key, $operator, $value);
-    }
-
-    /**
-     * @param Builder $query
-     * @param string $table
-     * @return bool
-     */
-    protected function isJoined($query, $table)
-    {
-        $joins = $query->getQuery()->joins;
-
-        if ($joins == null) {
-            return false;
-        }
-
-        foreach ($joins as $join) {
-            if ($join->table == $table) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -309,7 +297,6 @@ class PostTable extends TableAbstract
     {
         if ($inputKey === 'category') {
             $item->categories()->sync([$inputValue]);
-
             return $item;
         }
 

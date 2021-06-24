@@ -4,7 +4,7 @@ namespace Botble\Backup\Providers;
 
 use Botble\Base\Supports\Helper;
 use Botble\Base\Traits\LoadAndPublishDataTrait;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\ServiceProvider;
 

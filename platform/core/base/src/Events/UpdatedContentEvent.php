@@ -6,7 +6,6 @@ use Eloquent;
 use Illuminate\Http\Request;
 use Illuminate\Queue\SerializesModels;
 use stdClass;
-use Illuminate\Database\Eloquent\Model;
 
 class UpdatedContentEvent extends Event
 {
@@ -36,9 +35,6 @@ class UpdatedContentEvent extends Event
      */
     public function __construct($screen, $request, $data)
     {
-        if ($screen instanceof Model) {
-            $screen = $screen->getTable();
-        }
         $this->screen = $screen;
         $this->request = $request;
         $this->data = $data;

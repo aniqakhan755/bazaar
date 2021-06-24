@@ -38,14 +38,10 @@ class TagController extends Controller
     public function index(Request $request, BaseHttpResponse $response)
     {
         $data = $this->tagRepository
-            ->advancedGet([
-                'with'      => ['slugable'],
-                'condition' => ['status' => BaseStatusEnum::PUBLISHED],
-                'paginate'  => [
-                    'per_page'      => (int)$request->input('per_page', 10),
-                    'current_paged' => (int)$request->input('page', 1),
-                ],
-            ]);
+            ->getModel()
+            ->where(['status' => BaseStatusEnum::PUBLISHED])
+            ->select(['id', 'name', 'description'])
+            ->paginate($request->input('per_page', 10));
 
         return $response
             ->setData(TagResource::collection($data))

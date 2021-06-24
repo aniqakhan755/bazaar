@@ -1,4 +1,4 @@
-@if (in_array(strtoupper($currency), ['NGN', 'GHS', 'USD', 'ZAR']) && get_payment_setting('status', PAYSTACK_PAYMENT_METHOD_NAME) == 1)
+@if (strtoupper($currency) == 'NGN' && get_payment_setting('status', PAYSTACK_PAYMENT_METHOD_NAME) == 1)
     <li class="list-group-item">
         <input class="magic-radio js_payment_method" type="radio" name="payment_method" id="payment_{{ PAYSTACK_PAYMENT_METHOD_NAME }}"
                value="{{ PAYSTACK_PAYMENT_METHOD_NAME }}" data-toggle="collapse" data-target=".payment_{{ PAYSTACK_PAYMENT_METHOD_NAME }}_wrap"

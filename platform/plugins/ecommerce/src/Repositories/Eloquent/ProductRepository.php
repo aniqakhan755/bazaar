@@ -188,6 +188,30 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
     /**
      * {@inheritDoc}
      */
+    public function getCrossSaleProducts($model)
+    {
+        try {
+            return $model->crossSales()->get();
+        } catch (Exception $exception) {
+            return collect([]);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getCrossSaleProductIds($model)
+    {
+        try {
+            return $model->crossSales()->allRelatedIds()->toArray();
+        } catch (Exception $exception) {
+            return [];
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function syncUpSaleProducts($model, $products = null)
     {
         if ($products === null) {
@@ -204,6 +228,30 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
         }
 
         return [$result, $message];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getUpSaleProducts($model)
+    {
+        try {
+            return $model->upSales()->get();
+        } catch (Exception $exception) {
+            return collect([]);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getUpSaleProductIds($model)
+    {
+        try {
+            return $model->upSales()->allRelatedIds()->toArray();
+        } catch (Exception $exception) {
+            return [];
+        }
     }
 
     /**
@@ -286,7 +334,6 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
                 'ec_products.*',
             ],
             'with'      => [],
-            'withCount' => [],
         ], $params);
 
         return $this->advancedGet($params);
@@ -483,8 +530,9 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
             'select'      => [
                 'ec_products.*',
             ],
-            'with'        => [],
-            'withCount'   => [],
+            'with'        => [
+
+            ],
         ], $params);
 
         $this->model = $this->model
@@ -561,24 +609,25 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
                 'by'       => 'id',
                 'value_in' => [],
             ],
-            'condition'  => [
+            'condition'   => [
                 'ec_products.status'       => BaseStatusEnum::PUBLISHED,
                 'ec_products.is_variation' => 0,
             ],
-            'order_by'   => [
+            'order_by'    => [
                 'ec_products.order'      => 'ASC',
                 'ec_products.created_at' => 'DESC',
             ],
-            'take'       => null,
-            'paginate'   => [
+            'take'        => null,
+            'paginate'    => [
                 'per_page'      => null,
                 'current_paged' => 1,
             ],
-            'select'     => [
+            'select'      => [
                 'ec_products.*',
             ],
-            'with'       => [],
-            'withCount'  => [],
+            'with'        => [
+
+            ],
         ], $params);
 
         $this->model = $this->model
@@ -635,8 +684,9 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
             'select'      => [
                 'ec_products.*',
             ],
-            'with'        => [],
-            'withCount'   => [],
+            'with'        => [
+
+            ],
         ], $params);
 
         $this->model = $this->model
@@ -668,7 +718,7 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
             'min_price'              => null,
             'max_price'              => null,
             'categories'             => [],
-            'tags'                   => [],
+            'tags'             => [],
             'brands'                 => [],
             'attributes'             => [],
             'count_attribute_groups' => null,
@@ -742,23 +792,15 @@ class ProductRepository extends RepositoriesAbstract implements ProductInterface
                 return $join->on('products_with_final_price.id', '=', 'ec_products.id');
             });
 
-        $keyword = $filters['keyword'];
-        if ($keyword) {
+        if ($filters['keyword']) {
             $this->model = $this->model
-                ->where(function ($query) use ($keyword) {
+                ->where(function ($query) use ($filters) {
                     /**
                      * @var Builder $query
                      */
                     return $query
-                        ->where('ec_products.name', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('ec_products.sku', 'LIKE', '%' . $keyword . '%')
-                        ->orWhere('ec_products.description', 'LIKE', '%' . $keyword . '%')
-                        ->orWhereHas('tags', function ($query) use ($keyword) {
-                            /**
-                             * @var Builder $query
-                             */
-                            $query->where('ec_product_tags.name', 'LIKE', '%' . $keyword . '%');
-                        });
+                        ->where('ec_products.name', 'LIKE', '%' . $filters['keyword'] . '%')
+                        ->orWhere('ec_products.sku', 'LIKE', '%' . $filters['keyword'] . '%');
                 });
         }
 

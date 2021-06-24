@@ -2,6 +2,7 @@
 
 namespace Botble\Ecommerce\Http\Controllers\Fronts;
 
+use Botble\ACL\Models\User;
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Base\Supports\Helper;
@@ -17,14 +18,11 @@ use Botble\Ecommerce\Repositories\Interfaces\ProductCategoryInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductTagInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductVariationInterface;
-use Botble\Ecommerce\Repositories\Interfaces\ProductVariationItemInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ReviewInterface;
 use Botble\Ecommerce\Services\Products\GetProductService;
 use Botble\SeoHelper\SeoOpenGraph;
 use Botble\Slug\Repositories\Interfaces\SlugInterface;
-use EcommerceHelper;
 use Exception;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
@@ -34,7 +32,7 @@ use RvMedia;
 use SeoHelper;
 use SlugHelper;
 use Theme;
-use Botble\Ecommerce\Http\Resources\ProductVariationResource;
+use Botble\ACL\Models\VendorCompany;
 
 class PublicProductController
 {
@@ -104,71 +102,26 @@ class PublicProductController
     /**
      * @param Request $request
      * @param GetProductService $productService
-     * @param BaseHttpResponse $response
-     * @return BaseHttpResponse|Response
+     * @return Response
      */
-    public function getProducts(Request $request, GetProductService $productService, BaseHttpResponse $response)
+    public function getProducts(Request $request, GetProductService $productService)
     {
-        $query = $request->input('q');
-
+        $query = $request->get('q');
         if ($query) {
             $products = $productService->getProduct($request);
 
-            SeoHelper::setTitle(__('Search result for ":query"', compact('query')));
-
-            Theme::breadcrumb()
-                ->add(__('Home'), route('public.index'))
-                ->add(__('Search'), route('public.products'));
+            SeoHelper::setTitle(__('Search result "' . $query . '" '))
+                ->setDescription(__('Products: ') . '"' . $request->get('q') . '"');
+            Theme::breadcrumb()->add(__('Home'), url('/'))->add(__('Search'), route('public.products'));
 
             return Theme::scope('ecommerce.search', compact('products', 'query'),
                 'plugins/ecommerce::themes.search')->render();
         }
 
-        $with = [
-            'slugable',
-            'variations',
-            'productLabels',
-            'variationAttributeSwatchesForProductList',
-            'promotions',
-            'latestFlashSales',
-        ];
+        $products = $productService->getProduct($request, null, null,
+            ['slugable', 'variations', 'productCollections', 'variationAttributeSwatchesForProductList', 'promotions']);
 
-        if (is_plugin_active('marketplace')) {
-            $with = array_merge($with, ['store', 'store.slugable']);
-        }
-
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
-        $products = $productService->getProduct($request, null, null, $with, $withCount);
-
-        if ($request->ajax()) {
-            $total = $products->total();
-            $message = $total > 1 ? __(':total Products found', compact('total')) : __(':total Product found',
-                compact('total'));
-
-            $view = Theme::getThemeNamespace('views.ecommerce.includes.product-items');
-
-            if (!view()->exists($view)) {
-                $view = 'plugins/ecommerce::themes.includes.product-items';
-            }
-
-            return $response
-                ->setData(view($view, compact('products'))->render())
-                ->setMessage($message);
-        }
-
-        Theme::breadcrumb()
-            ->add(__('Home'), route('public.index'))
-            ->add(__('Products'), route('public.products'));
-
+        Theme::breadcrumb()->add(__('Home'), url('/'))->add(__('Products'), route('public.products'));
         SeoHelper::setTitle(__('Products'))->setDescription(__('Products'));
 
         do_action(PRODUCT_MODULE_SCREEN_NAME);
@@ -177,13 +130,92 @@ class PublicProductController
             'plugins/ecommerce::themes.products')->render();
     }
 
-    /**
-     * @param string $slug
-     * @param Request $request
-     * @return Response|RedirectResponse|Response
-     */
-    public function getProduct($slug, Request $request)
+    public function getSellerProducts(Request $request,$slug)
     {
+
+        $slug = $this->slugRepository->getFirstBy([
+            'key'            => $slug,
+            'reference_type' => VendorCompany::class,
+            'prefix'         => SlugHelper::getPrefix(VendorCompany::class),
+        ]);
+        $company = VendorCompany::where('id',$slug->reference_id)->first();
+        $user= User::where('id',$company->user_id)->first();
+
+
+        $queryVar = [
+            'keyword'     => $request->input('q'),
+            'brands'      => (array)$request->input('brands', []),
+            'categories'  => (array)$request->input('categories', []),
+            'tags'        => (array)$request->input('tags', []),
+            'collections' => (array)$request->input('collections', []),
+            'attributes'  => (array)$request->input('attributes', []),
+            'max_price'   => $request->input('max_price'),
+            'min_price'   => $request->input('min_price'),
+            'sort_by'     => $request->input('sort-by'),
+            'num'         => (int)theme_option('number_of_products_per_page',
+                12),
+        ];
+
+        $orderBy = [
+            'ec_products.order'      => 'ASC',
+            'ec_products.created_at' => 'DESC',
+        ];
+
+        $countAttributeGroups = 1;
+        if (count($queryVar['attributes'])) {
+            $countAttributeGroups = DB::table('ec_product_attributes')
+                ->whereIn('id', $queryVar['attributes'])
+                ->distinct('attribute_set_id')
+                ->count('attribute_set_id');
+        }
+
+        /*$products = $this->productRepository->getProducts(
+            [
+                'user_id' => (int)$company->user_id
+            ]
+        );*/
+      //dd($company->user_id);
+        $products = $this->productRepository->filterProducts(
+            [
+                'keyword'                => $queryVar['keyword'],
+                'min_price'              => $queryVar['min_price'],
+                'max_price'              => $queryVar['max_price'],
+                'categories'             => $queryVar['categories'],
+                'tags'                   => $queryVar['tags'],
+                'collections'            => $queryVar['collections'],
+                'brands'                 => $queryVar['brands'],
+                'attributes'             => $queryVar['attributes'],
+                'count_attribute_groups' => $countAttributeGroups,
+                'order_by'               => $orderBy,
+            ],
+            [
+                'condition' => ['ec_products.user_id' => $company->user_id,
+                                'ec_products.status'       => BaseStatusEnum::PUBLISHED,
+                                'ec_products.is_variation' => 0],
+                'paginate' => [
+                    'per_page'      => $queryVar['num'],
+                    'current_paged' => $request->query('page', 1),
+                ],
+                'with'     => ['slugable', 'variations', 'productCollections', 'variationAttributeSwatchesForProductList', 'promotions'],
+            ]
+        );
+
+        Theme::breadcrumb()->add(__('Home'), url('/'))->add(__('Seller'), route('public.seller',$slug->key));
+        Theme::breadcrumb()->add($company->company_name);
+        SeoHelper::setTitle(__('Seller'))->setDescription(__('Seller'));
+
+        do_action(PRODUCT_MODULE_SCREEN_NAME);
+
+        return Theme::scope('ecommerce.seller', compact('products','company','user'),
+            'plugins/ecommerce::themes.seller')->render();
+    }
+
+    /**
+     * @return \Illuminate\Http\RedirectResponse|Response
+     */
+    public function getProduct($slug)
+    {
+
         $slug = $this->slugRepository->getFirstBy([
             'key'            => $slug,
             'reference_type' => Product::class,
@@ -199,8 +231,8 @@ class PublicProductController
             'ec_products.status' => BaseStatusEnum::PUBLISHED,
         ];
 
-        if (Auth::check() && $request->input('preview')) {
-            Arr::forget($condition, 'ec_products.status');
+        if (Auth::check() && request()->input('preview')) {
+            Arr::forget($condition, 'status');
         }
 
         $product = get_products([
@@ -211,8 +243,6 @@ class PublicProductController
                 'slugable',
                 'tags',
                 'tags.slugable',
-                'categories',
-                'categories.slugable',
             ],
         ]);
 
@@ -238,8 +268,7 @@ class PublicProductController
 
         Helper::handleViewCount($product, 'viewed_product');
 
-        Theme::breadcrumb()
-            ->add(__('Home'), route('public.index'))
+        Theme::breadcrumb()->add(__('Home'), url('/'))
             ->add(__('Products'), route('public.products'));
 
         $category = $product->categories->first();
@@ -255,62 +284,17 @@ class PublicProductController
 
         do_action(BASE_ACTION_PUBLIC_RENDER_SINGLE, PRODUCT_CATEGORY_MODULE_SCREEN_NAME, $product);
 
-        $productImages = $product->images;
-        if ($product->is_variation) {
-            $product = $product->original_product;
-            $selectedAttrs = $this->productVariationRepository->getAttributeIdsOfChildrenProduct($product->id);
-            if (count($productImages) == 0) {
-                $productImages = $product->images;
-            }
-        } else {
-            $selectedAttrs = $product->defaultVariation->productAttributes;
-        }
-
-        $variationDefault = $this->productVariationRepository->getVariationByAttributes($product->id, $selectedAttrs->pluck('id')->toArray());
-
-        $productVariation = null;
-
-        if ($variationDefault) {
-            $productVariation = $this->productRepository->getProductVariations($product->id, [
-                'condition' => [
-                    'ec_product_variations.id' => $variationDefault->id,
-                    'ec_products.status'       => BaseStatusEnum::PUBLISHED,
-                ],
-                'select'    => [
-                    'ec_products.id',
-                    'ec_products.name',
-                    'ec_products.quantity',
-                    'ec_products.price',
-                    'ec_products.sale_price',
-                    'ec_products.allow_checkout_when_out_of_stock',
-                    'ec_products.with_storehouse_management',
-                    'ec_products.stock_status',
-                    'ec_products.images',
-                    'ec_products.sku',
-                    'ec_products.description',
-                    'ec_products.is_variation',
-                ],
-                'take'      => 1,
-            ]);
-        }
-
-        return Theme::scope('ecommerce.product', compact('product', 'selectedAttrs', 'productImages', 'variationDefault', 'productVariation'),
-            'plugins/ecommerce::themes.product')
-            ->render();
+        return Theme::scope('ecommerce.product', compact('product'), 'plugins/ecommerce::themes.product')->render();
     }
 
     /**
      * @param string $slug
      * @param Request $request
      * @param ProductTagInterface $tagRepository
-     * @return BaseHttpResponse|RedirectResponse|Response
+     * @return \Illuminate\Http\RedirectResponse|Response
      */
-    public function getProductTag(
-        $slug,
-        Request $request,
-        ProductTagInterface $tagRepository,
-        BaseHttpResponse $response
-    ) {
+    public function getProductTag($slug, Request $request, ProductTagInterface $tagRepository)
+    {
         $slug = $this->slugRepository->getFirstBy([
             'key'            => $slug,
             'reference_type' => ProductTag::class,
@@ -326,8 +310,8 @@ class PublicProductController
             'ec_product_categories.status' => BaseStatusEnum::PUBLISHED,
         ];
 
-        if (Auth::check() && $request->input('preview')) {
-            Arr::forget($condition, 'ec_product_categories.status');
+        if (Auth::check() && request()->input('preview')) {
+            Arr::forget($condition, 'status');
         }
 
         $tag = $tagRepository->getFirstBy(['id' => $slug->reference_id], ['*'], ['slugable', 'products']);
@@ -338,16 +322,6 @@ class PublicProductController
 
         if ($tag->slugable->key !== $slug->key) {
             return redirect()->to($tag->url);
-        }
-
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
         }
 
         $products = $this->productRepository->getProductByTags([
@@ -362,28 +336,11 @@ class PublicProductController
             'with'        => [
                 'slugable',
                 'variations',
-                'productLabels',
+                'productCollections',
                 'variationAttributeSwatchesForProductList',
                 'promotions',
-                'latestFlashSales',
             ],
-            'withCount'   => $withCount,
         ]);
-
-        if ($request->ajax()) {
-            $total = $products->total();
-            $message = $total > 1 ? __(':total Products found', compact('total')) : __(':total Product found',
-                compact('total'));
-            $view = Theme::getThemeNamespace('views.ecommerce.includes.product-items');
-
-            if (!view()->exists($view)) {
-                $view = 'plugins/ecommerce::themes.includes.product-items';
-            }
-
-            return $response
-                ->setData(view($view, compact('products'))->render())
-                ->setMessage($message);
-        }
 
         SeoHelper::setTitle($tag->name)->setDescription($tag->description);
 
@@ -394,8 +351,7 @@ class PublicProductController
 
         SeoHelper::setSeoOpenGraph($meta);
 
-        Theme::breadcrumb()
-            ->add(__('Home'), route('public.index'))
+        Theme::breadcrumb()->add(__('Home'), url('/'))
             ->add(__('Products'), route('public.products'))
             ->add($tag->name, $tag->url);
 
@@ -410,15 +366,13 @@ class PublicProductController
      * @param Request $request
      * @param ProductCategoryInterface $categoryRepository
      * @param GetProductService $getProductService
-     * @param BaseHttpResponse $response
-     * @return BaseHttpResponse|RedirectResponse|Response
+     * @return \Illuminate\Http\RedirectResponse|Response
      */
     public function getProductCategory(
         $slug,
         Request $request,
         ProductCategoryInterface $categoryRepository,
-        GetProductService $getProductService,
-        BaseHttpResponse $response
+        GetProductService $getProductService
     ) {
         $slug = $this->slugRepository->getFirstBy([
             'key'            => $slug,
@@ -435,8 +389,8 @@ class PublicProductController
             'ec_product_categories.status' => BaseStatusEnum::PUBLISHED,
         ];
 
-        if (Auth::check() && $request->input('preview')) {
-            Arr::forget($condition, 'ec_product_categories.status');
+        if (Auth::check() && request()->input('preview')) {
+            Arr::forget($condition, 'status');
         }
 
         $category = $categoryRepository->getFirstBy($condition, ['*'], ['slugable']);
@@ -449,45 +403,8 @@ class PublicProductController
             return redirect()->to($category->url);
         }
 
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-        $with = [
-            'slugable',
-            'variations',
-            'productLabels',
-            'variationAttributeSwatchesForProductList',
-            'promotions',
-            'latestFlashSales',
-        ];
-        if (is_plugin_active('marketplace')) {
-            $with = array_merge($with, ['store', 'store.slugable']);
-        }
-
         $products = $getProductService->getProduct($request, $category->id, null,
-            $with, $withCount);
-
-        if ($request->ajax()) {
-            $total = $products->total();
-            $message = $total > 1 ? __(':total Products found', compact('total')) : __(':total Product found',
-                compact('total'));
-
-            $view = Theme::getThemeNamespace('views.ecommerce.includes.product-items');
-
-            if (!view()->exists($view)) {
-                $view = 'plugins/ecommerce::themes.includes.product-items';
-            }
-
-            return $response
-                ->setData(view($view, compact('products'))->render())
-                ->setMessage($message);
-        }
+            ['slugable', 'variations', 'productCollections', 'variationAttributeSwatchesForProductList', 'promotions']);
 
         SeoHelper::setTitle($category->name)->setDescription($category->description);
 
@@ -502,7 +419,7 @@ class PublicProductController
         SeoHelper::setSeoOpenGraph($meta);
 
         Theme::breadcrumb()
-            ->add(__('Home'), route('public.index'))
+            ->add(__('Home'), url('/'))
             ->add(__('Products'), route('public.products'))
             ->add($category->name, $category->url);
 
@@ -522,12 +439,6 @@ class PublicProductController
     {
         $attributes = $request->input('attributes', []);
 
-        if (empty($attributes)) {
-            return $response
-                ->setError()
-                ->setMessage(__('Not available'));
-        }
-
         $variation = $this->productVariationRepository->getVariationByAttributes($id, $attributes);
 
         $product = null;
@@ -546,11 +457,9 @@ class PublicProductController
                     'ec_products.sale_price',
                     'ec_products.allow_checkout_when_out_of_stock',
                     'ec_products.with_storehouse_management',
-                    'ec_products.stock_status',
                     'ec_products.images',
                     'ec_products.sku',
                     'ec_products.description',
-                    'ec_products.is_variation',
                     'original_products.images as original_images',
                 ],
                 'take'      => 1,
@@ -572,97 +481,29 @@ class PublicProductController
             }
         }
 
-        if ($product) {
-            if ($product->isOutOfStock()) {
-                $product->errorMessage = __('Out of stock');
-            }
-
-            if (!$product->with_storehouse_management || $product->quantity < 1) {
-                $product->successMessage = __('Available');
-            } elseif ($product->quantity) {
-                if ($product->quantity != 1) {
-                    $product->successMessage = __(':number products available', ['number' => $product->quantity]);
-                } else {
-                    $product->successMessage = __(':number product available', ['number' => $product->quantity]);
-                }
-            }
-            $originalProduct = $product->original_product;
-            $variationProductAttributes = $product->variationProductAttributes;
-        } else {
-            $originalProduct = $this->productRepository->advancedGet([
-                'condition' => [
-                    'ec_products.id'     => $id,
-                    'ec_products.status' => BaseStatusEnum::PUBLISHED,
-                ],
-                'select'    => [
-                    'ec_products.id',
-                    'ec_products.name',
-                    'ec_products.quantity',
-                    'ec_products.price',
-                    'ec_products.sale_price',
-                    'ec_products.allow_checkout_when_out_of_stock',
-                    'ec_products.with_storehouse_management',
-                    'ec_products.stock_status',
-                    'ec_products.images',
-                    'ec_products.sku',
-                    'ec_products.description',
-                    'ec_products.is_variation',
-                ],
-                'take'      => 1,
-            ]);
-
-            if ($originalProduct) {
-                if ($originalProduct->images) {
-                    $originalProduct->image_with_sizes = rv_get_image_list($originalProduct->images, [
-                        'origin',
-                        'thumb',
-                    ]);
-                }
-            }
-
-            $originalProduct->errorMessage = __('Please select attributes');
-        }
-
-        if (!$originalProduct) {
-            return $response->setError()->setMessage(__('Not available'));
-        }
-
-        $productAttributes = $this->productRepository->getRelatedProductAttributes($originalProduct)->sortBy('order');
-
-        $variationProductAttributes = $productAttributes;
-
-        $attributeSets = $this->productRepository->getRelatedProductAttributeSets($originalProduct);
-
-        $productVariations = app(ProductVariationInterface::class)->allBy([
-            'configurable_product_id' => $originalProduct->id,
-        ]);
-
-        $productVariationsInfo = app(ProductVariationItemInterface::class)->getVariationsInfo($productVariations->pluck('id')->toArray());
-        $variationInfo = $productVariationsInfo;
-
-        $unavailableAttributeIds = [];
-        $variationNextIds = [];
-        foreach($attributeSets as $key => $set) {
-            if ($key != 0) {
-                $variationInfo = $productVariationsInfo->where('attribute_set_id', $set->id)->whereIn('variation_id', $variationNextIds);
-            }
-            [$variationNextIds, $unavailableAttributeIds] = handle_next_attributes_in_product(
-                $productAttributes->where('attribute_set_id', $set->id),
-                $productVariationsInfo,
-                $set->id,
-                $attributes,
-                $key,
-                $variationNextIds,
-                $variationInfo,
-                $unavailableAttributeIds);
-        }
-
         if (!$product) {
-            $product = $originalProduct;
+            return $response->setError()->setMessage(__(':number product(s) available', ['number' => 0]));
         }
-        $product->unavailableAttributeIds = $unavailableAttributeIds;
+
         return $response
-            ->setData(new ProductVariationResource($product));
+            ->setData([
+                'id'                         => $product->id,
+                'name'                       => $product->name,
+                'sku'                        => $product->sku,
+                'description'                => $product->description,
+                'slug'                       => $product->slug,
+                'with_storehouse_management' => $product->with_storehouse_management,
+                'quantity'                   => $product->quantity,
+                'is_out_of_stock'            => $product->isOutOfStock(),
+                'price'                      => $product->price,
+                'sale_price'                 => $product->front_sale_price,
+                'original_price'             => $product->original_price,
+                'image_with_sizes'           => $product->image_with_sizes,
+                'display_price'              => format_price($product->price),
+                'display_sale_price'         => format_price($product->front_sale_price),
+                'sale_percentage'            => get_sale_percentage($product->price, $product->front_sale_price),
+            ])
+            ->setMessage(__(':number product(s) available', ['number' => ($product->with_storehouse_management && $product->quantity) ? $product->quantity : '> 10']));
     }
 
     /**
@@ -673,7 +514,7 @@ class PublicProductController
     public function postCreateReview(ReviewRequest $request, BaseHttpResponse $response)
     {
         $exists = $this->reviewRepository->count([
-            'customer_id' => auth('customer')->id(),
+            'customer_id' => auth('customer')->user()->getAuthIdentifier(),
             'product_id'  => $request->input('product_id'),
         ]);
 
@@ -683,8 +524,7 @@ class PublicProductController
                 ->setMessage(__('You have reviewed this product already!'));
         }
 
-        $request->merge(['customer_id' => auth('customer')->id()]);
-
+        $request->merge(['customer_id' => auth('customer')->user()->getAuthIdentifier()]);
         $this->reviewRepository->createOrUpdate($request->input());
 
         return $response->setMessage(__('Added review successfully!'));
@@ -698,25 +538,18 @@ class PublicProductController
      */
     public function getDeleteReview($id, BaseHttpResponse $response)
     {
-        $review = $this->reviewRepository->findOrFail($id);
+        $this->reviewRepository->deleteBy(['id' => $id]);
 
-        if (auth()->check() || (auth('customer')->check() && auth('customer')->id() == $review->customer_id)) {
-            $this->reviewRepository->delete($review);
-
-            return $response->setMessage(__('Deleted review successfully!'));
-        }
-
-        abort(401);
+        return $response->setMessage(__('Deleted review successfully!'));
     }
 
     /**
      * @param string $slug
      * @param Request $request
      * @param GetProductService $getProductService
-     * @param BaseHttpResponse $response
-     * @return BaseHttpResponse|RedirectResponse|\Illuminate\Http\Response|Response
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\Response|Response
      */
-    public function getBrand($slug, Request $request, GetProductService $getProductService, BaseHttpResponse $response)
+    public function getBrand($slug, Request $request, GetProductService $getProductService)
     {
         $slug = $this->slugRepository->getFirstBy([
             'key'            => $slug,
@@ -738,50 +571,9 @@ class PublicProductController
             return redirect()->to($brand->url);
         }
 
-        $withCount = [];
-        if (EcommerceHelper::isReviewEnabled()) {
-            $withCount = [
-                'reviews',
-                'reviews as reviews_avg' => function ($query) {
-                    $query->select(DB::raw('avg(star)'));
-                },
-            ];
-        }
-
-        $products = $getProductService->getProduct(
-            $request,
-            null,
-            $brand->id,
-            [
-                'slugable',
-                'variations',
-                'productLabels',
-                'variationAttributeSwatchesForProductList',
-                'promotions',
-                'latestFlashSales',
-            ],
-            $withCount
-        );
-
-        if ($request->ajax()) {
-            $total = $products->total();
-            $message = $total > 1 ? __(':total Products found', compact('total')) : __(':total Product found',
-                compact('total'));
-
-            $view = Theme::getThemeNamespace('views.ecommerce.includes.product-items');
-
-            if (!view()->exists($view)) {
-                $view = 'plugins/ecommerce::themes.includes.product-items';
-            }
-
-            return $response
-                ->setData(view($view, compact('products'))->render())
-                ->setMessage($message);
-        }
-
         SeoHelper::setTitle($brand->name)->setDescription($brand->description);
 
-        Theme::breadcrumb()->add(__('Home'), route('public.index'))->add($brand->name, $brand->url);
+        Theme::breadcrumb()->add(__('Home'), url('/'))->add($brand->name, $brand->url);
 
         $meta = new SeoOpenGraph;
         if ($brand->logo) {
@@ -795,8 +587,15 @@ class PublicProductController
 
         do_action(BASE_ACTION_PUBLIC_RENDER_SINGLE, BRAND_MODULE_SCREEN_NAME, $brand);
 
-        return Theme::scope('ecommerce.brand', compact('brand', 'products'), 'plugins/ecommerce::themes.brand')
-            ->render();
+        $products = $getProductService->getProduct(
+            $request,
+            null,
+            $brand->id,
+            ['slugable', 'variations', 'productCollections', 'variationAttributeSwatchesForProductList', 'promotions']
+        );
+
+        return Theme::scope('ecommerce.brand', compact('brand', 'products'),
+            'plugins/ecommerce::themes.brand')->render();
     }
 
     /**
@@ -810,9 +609,8 @@ class PublicProductController
 
         SeoHelper::setTitle(__('Order tracking :code', ['code' => $code ? ' #' . $code : '']));
 
-        Theme::breadcrumb()->add(__('Home'), route('public.index'))
-            ->add(__('Order tracking :code', ['code' => $code ? ' #' . $code : '']),
-                route('public.orders.tracking', $code));
+        Theme::breadcrumb()->add(__('Home'), url('/'))
+            ->add(__('Order tracking :code', ['code' => $code ? ' #' . $code : '']), route('public.orders.tracking', $code));
 
         $orderId = get_order_id_from_order_code('#' . $code);
 
@@ -828,7 +626,7 @@ class PublicProductController
                 ->first();
         }
 
-        return Theme::scope('ecommerce.order-tracking', compact('order'), 'plugins/ecommerce::themes.order-tracking')
-            ->render();
+        return Theme::scope('ecommerce.order-tracking', compact('order'),
+            'plugins/ecommerce::themes.order-tracking')->render();
     }
 }

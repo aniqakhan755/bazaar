@@ -9,7 +9,7 @@ use Botble\Newsletter\Repositories\Caches\NewsletterCacheDecorator;
 use Botble\Newsletter\Repositories\Eloquent\NewsletterRepository;
 use Botble\Newsletter\Repositories\Interfaces\NewsletterInterface;
 use EmailHandler;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\ServiceProvider;
 
@@ -53,28 +53,5 @@ class NewsletterServiceProvider extends ServiceProvider
             EmailHandler::addTemplateSettings(NEWSLETTER_MODULE_SCREEN_NAME, config('plugins.newsletter.email', []));
         });
 
-        add_filter(BASE_FILTER_AFTER_SETTING_CONTENT, [$this, 'addSettings'], 249);
-
-        $this->app->booted(function () {
-            $mailchimpApiKey = setting('newsletter_mailchimp_api_key',
-                config('plugins.newsletter.general.mailchimp.api_key'));
-            $mailchimpListId = setting('newsletter_mailchimp_list_id',
-                config('plugins.newsletter.general.mailchimp.list_id'));
-
-            config([
-                'newsletter.apiKey'               => $mailchimpApiKey,
-                'newsletter.lists.subscribers.id' => $mailchimpListId,
-            ]);
-        });
-    }
-
-    /**
-     * @param null $data
-     * @return string
-     * @throws \Throwable
-     */
-    public function addSettings($data = null)
-    {
-        return $data . view('plugins/newsletter::setting')->render();
     }
 }

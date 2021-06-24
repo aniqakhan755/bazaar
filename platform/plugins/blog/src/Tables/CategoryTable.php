@@ -4,11 +4,12 @@ namespace Botble\Blog\Tables;
 
 use BaseHelper;
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Blog\Models\Category;
+use Html;
+use Illuminate\Support\Facades\Auth;
 use Botble\Blog\Repositories\Interfaces\CategoryInterface;
 use Botble\Table\Abstracts\TableAbstract;
-use Html;
 use Illuminate\Contracts\Routing\UrlGenerator;
-use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
 
 class CategoryTable extends TableAbstract
@@ -37,9 +38,9 @@ class CategoryTable extends TableAbstract
      */
     public function __construct(DataTables $table, UrlGenerator $urlGenerator, CategoryInterface $categoryRepository)
     {
-        parent::__construct($table, $urlGenerator);
-
         $this->repository = $categoryRepository;
+        $this->setOption('id', 'table-categories');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['categories.edit', 'categories.destroy'])) {
             $this->hasOperations = false;
@@ -75,12 +76,14 @@ class CategoryTable extends TableAbstract
                     return $item->status->getValue();
                 }
                 return $item->status->toHtml();
-            })
-            ->addColumn('operations', function ($item) {
-                return view('plugins/blog::categories.actions', compact('item'))->render();
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return view('plugins/blog::categories.actions', compact('item'))->render();
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -88,7 +91,7 @@ class CategoryTable extends TableAbstract
      */
     public function query()
     {
-        return collect(get_categories(['indent' => '↳']));
+        return collect(get_categories([]));
     }
 
     /**
@@ -130,7 +133,9 @@ class CategoryTable extends TableAbstract
      */
     public function buttons()
     {
-        return $this->addCreateButton(route('categories.create'), 'categories.create');
+        $buttons = $this->addCreateButton(route('categories.create'), 'categories.create');
+
+        return apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, Category::class);
     }
 
     /**

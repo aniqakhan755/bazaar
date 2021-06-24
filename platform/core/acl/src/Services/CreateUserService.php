@@ -62,7 +62,7 @@ class CreateUserService implements ProduceServiceInterface
                 'password' => Hash::make($request->input('password')),
             ]);
 
-            if ($this->activateUserService->activate($user) && $request->input('role_id')) {
+            if ($this->activateUserService->activateVendorUser($user) && $request->input('role_id')) {
                 $role = $this->roleRepository->findById($request->input('role_id'));
 
                 if (!empty($role)) {

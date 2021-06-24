@@ -2,6 +2,7 @@
 
 namespace Botble\Ecommerce\Providers;
 
+use Botble\ACL\Models\VendorCompany;
 use Botble\Base\Supports\Helper;
 use Botble\Base\Traits\LoadAndPublishDataTrait;
 use Botble\Ecommerce\Facades\CartFacade;
@@ -25,7 +26,6 @@ use Botble\Ecommerce\Models\ProductAttribute;
 use Botble\Ecommerce\Models\ProductAttributeSet;
 use Botble\Ecommerce\Models\ProductCategory;
 use Botble\Ecommerce\Models\ProductCollection;
-use Botble\Ecommerce\Models\ProductLabel;
 use Botble\Ecommerce\Models\ProductTag;
 use Botble\Ecommerce\Models\ProductVariation;
 use Botble\Ecommerce\Models\ProductVariationItem;
@@ -54,7 +54,6 @@ use Botble\Ecommerce\Repositories\Caches\ProductAttributeSetCacheDecorator;
 use Botble\Ecommerce\Repositories\Caches\ProductCacheDecorator;
 use Botble\Ecommerce\Repositories\Caches\ProductCategoryCacheDecorator;
 use Botble\Ecommerce\Repositories\Caches\ProductCollectionCacheDecorator;
-use Botble\Ecommerce\Repositories\Caches\ProductLabelCacheDecorator;
 use Botble\Ecommerce\Repositories\Caches\ProductTagCacheDecorator;
 use Botble\Ecommerce\Repositories\Caches\ProductVariationCacheDecorator;
 use Botble\Ecommerce\Repositories\Caches\ProductVariationItemCacheDecorator;
@@ -82,7 +81,6 @@ use Botble\Ecommerce\Repositories\Eloquent\ProductAttributeRepository;
 use Botble\Ecommerce\Repositories\Eloquent\ProductAttributeSetRepository;
 use Botble\Ecommerce\Repositories\Eloquent\ProductCategoryRepository;
 use Botble\Ecommerce\Repositories\Eloquent\ProductCollectionRepository;
-use Botble\Ecommerce\Repositories\Eloquent\ProductLabelRepository;
 use Botble\Ecommerce\Repositories\Eloquent\ProductRepository;
 use Botble\Ecommerce\Repositories\Eloquent\ProductTagRepository;
 use Botble\Ecommerce\Repositories\Eloquent\ProductVariationItemRepository;
@@ -112,7 +110,6 @@ use Botble\Ecommerce\Repositories\Interfaces\ProductAttributeSetInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductCategoryInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductCollectionInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductInterface;
-use Botble\Ecommerce\Repositories\Interfaces\ProductLabelInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductTagInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductVariationInterface;
 use Botble\Ecommerce\Repositories\Interfaces\ProductVariationItemInterface;
@@ -130,12 +127,12 @@ use Botble\Ecommerce\Services\HandleRemoveCouponService;
 use Cart;
 use EcommerceHelper;
 use EmailHandler;
+use Event;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Routing\Router;
 use Illuminate\Session\SessionManager;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use SeoHelper;
 use SlugHelper;
@@ -343,12 +340,6 @@ class EcommerceServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->bind(ProductLabelInterface::class, function () {
-            return new ProductLabelCacheDecorator(
-                new ProductLabelRepository(new ProductLabel)
-            );
-        });
-
         Helper::autoload(__DIR__ . '/../../helpers');
 
         $loader = AliasLoader::getInstance();
@@ -373,13 +364,13 @@ class EcommerceServiceProvider extends ServiceProvider
         SlugHelper::setPrefix(Brand::class, 'brands');
         SlugHelper::setPrefix(ProductTag::class, 'product-tags');
         SlugHelper::setPrefix(ProductCategory::class, 'product-categories');
+        SlugHelper::setPrefix(VendorCompany::class, 'seller');
 
         $this->setNamespace('plugins/ecommerce')
             ->loadAndPublishConfigurations(['permissions'])
             ->loadAndPublishTranslations()
             ->loadRoutes([
                 'base',
-                'product',
                 'tax',
                 'review',
                 'shipping',
@@ -417,12 +408,12 @@ class EcommerceServiceProvider extends ServiceProvider
                     'permissions' => ['plugins.ecommerce'],
                 ])
                 ->registerItem([
-                    'id'          => 'cms-plugins-ecommerce-report',
-                    'priority'    => 0,
-                    'parent_id'   => 'cms-plugins-ecommerce',
-                    'name'        => 'plugins/ecommerce::reports.name',
-                    'icon'        => 'far fa-chart-bar',
-                    'url'         => route('ecommerce.report.index'),
+                    'id'        => 'cms-plugins-ecommerce-report',
+                    'priority'  => 0,
+                    'parent_id' => 'cms-plugins-ecommerce',
+                    'name'      => 'plugins/ecommerce::reports.name',
+                    'icon'      => 'far fa-chart-bar',
+                    'url'       => route('ecommerce.report.index'),
                     'permissions' => ['ecommerce.report.index'],
                 ])
                 ->registerItem([
@@ -505,15 +496,6 @@ class EcommerceServiceProvider extends ServiceProvider
                     'icon'        => 'fa fa-file-excel',
                     'url'         => route('product-collections.index'),
                     'permissions' => ['product-collections.index'],
-                ])
-                ->registerItem([
-                    'id'          => 'cms-plugins-product-label',
-                    'priority'    => 8,
-                    'parent_id'   => 'cms-plugins-ecommerce',
-                    'name'        => 'plugins/ecommerce::product-label.name',
-                    'icon'        => 'fas fa-tags',
-                    'url'         => route('product-label.index'),
-                    'permissions' => ['product-label.index'],
                 ])
                 ->registerItem([
                     'id'          => 'cms-ecommerce-review',

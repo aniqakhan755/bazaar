@@ -1,11 +1,11 @@
 @extends('core/base::layouts.master')
 @section('content')
     <div id="main-settings">
-        <license-component
+        {{-- <license-component
             verify-url="{{ route('settings.license.verify') }}"
             activate-license-url="{{ route('settings.license.activate') }}"
             deactivate-license-url="{{ route('settings.license.deactivate') }}"
-        ></license-component>
+        ></license-component> --}}
     </div>
     {!! Form::open(['route' => ['settings.edit']]) !!}
         <div class="max-width-1200">
@@ -139,21 +139,6 @@
                                    for="admin_title">{{ trans('core/setting::setting.general.admin_title') }}</label>
                             <input data-counter="120" type="text" class="next-input" name="admin_title" id="admin_title"
                                    value="{{ setting('admin_title', config('app.name')) }}">
-                        </div>
-
-                        <div class="form-group">
-
-                            <label class="text-title-field"
-                                   for="admin_locale_direction">{{ trans('core/setting::setting.general.admin_locale_direction') }}
-                            </label>
-                            <label class="hrv-label">
-                                <input type="radio" name="admin_locale_direction" class="hrv-radio" value="ltr"
-                                       @if (setting('admin_locale_direction', 'ltr') == 'ltr') checked @endif>{{ trans('core/setting::setting.locale_direction_ltr') }}
-                            </label>
-                            <label class="hrv-label">
-                                <input type="radio" name="admin_locale_direction" class="hrv-radio" value="rtl"
-                                       @if (setting('admin_locale_direction', 'ltr') == 'rtl') checked @endif>{{ trans('core/setting::setting.locale_direction_rtl') }}
-                            </label>
                         </div>
 
                         <div class="form-group">

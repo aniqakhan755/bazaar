@@ -15,7 +15,7 @@
         <tbody>
             @if (count($backups) > 0)
                 @foreach($backups as $key => $backup)
-                    @include('plugins/backup::partials.backup-item', ['data' => $backup, 'backupManager' => $backupManager, 'key' => $key, 'odd' => $loop->index % 2 == 0 ? true : false])
+                    @include('plugins/backup::partials.backup-item', ['data' => $backup, 'key' => $key, 'odd' => $loop->index % 2 == 0 ? true : false])
                 @endforeach
             @else
                 <tr class="text-center no-backup-row">

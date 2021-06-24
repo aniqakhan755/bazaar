@@ -38,6 +38,7 @@ return [
     'update'                     => 'Update',
     'read_image_failed'          => 'Failed to read the image file',
     'users'                      => 'Users',
+    'vendor_users'               => 'Vendors',
     'update_avatar_success'      => 'Update profile image successfully!',
     'info'                       => [
         'title'                => 'User profile',
@@ -53,6 +54,17 @@ return [
         'second_mobile_number' => 'Secondary Phone',
         'interes'              => 'Interests',
         'about'                => 'About',
+        'company_name'         => 'Company Name',
+        'company_address'      => 'Company Address',
+        'country'              => 'Country',
+        'city'                 => 'City',
+        'bank_name'            => 'Bank Name',
+        'account_title'        => 'Account Title',
+        'swift_code'           => 'Swift Code',
+        'account_iban'         => 'Account IBAN',
+        'about_company'        => 'About Seller'
+
+
 
     ],
     'gender'                     => [
@@ -76,4 +88,9 @@ return [
     'assigned_role'              => 'Assigned Role',
     'no_role_assigned'           => 'No role assigned',
     'view_user_profile'          => 'View user\'s profile',
+    'view_vendor_profile'          => 'View vendor\'s profile',
+    'cnic_statuses'                   => [
+        'verified'   => 'Verified',
+        'not_verified' => 'Not Verified',
+    ],
 ];

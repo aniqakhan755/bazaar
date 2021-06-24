@@ -22,6 +22,16 @@ jQuery(document).ready(($) => {
         }
     });
 
+    $('a.delete-key').click(event => {
+        event.preventDefault();
+        let row = $(event.currentTarget).closest('tr');
+        let url = $(event.currentTarget).attr('href');
+        let id = row.attr('id');
+        $.post(url, {id: id}, () => {
+            row.remove();
+        });
+    });
+
     $('.box-translation').on('click', '.button-import-groups', event => {
         event.preventDefault();
         let _self = $(event.currentTarget);

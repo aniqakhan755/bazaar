@@ -342,7 +342,7 @@ class Menu
                     ->with('children')
                     ->orderBy('name', 'asc');
             } else {
-                $items = $model->orderBy('name');
+                $items = $model->orderBy('name', 'asc');
             }
 
             if (Arr::get($args, 'active', true)) {

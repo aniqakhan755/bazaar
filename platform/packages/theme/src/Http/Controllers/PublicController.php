@@ -39,7 +39,7 @@ class PublicController extends Controller
 
         SeoHelper::setTitle(theme_option('site_title'));
 
-        Theme::breadcrumb()->add(__('Home'), route('public.index'));
+        Theme::breadcrumb()->add(__('Home'), url('/'));
 
         event(RenderingHomePageEvent::class);
 
@@ -65,7 +65,7 @@ class PublicController extends Controller
 
         if (defined('PAGE_MODULE_SCREEN_NAME')) {
             if ($slug->reference_type == Page::class && BaseHelper::isHomepage($slug->reference_id)) {
-                return redirect()->route('public.index');
+                return redirect()->to('/');
             }
         }
 
@@ -92,6 +92,6 @@ class PublicController extends Controller
         event(RenderingSiteMapEvent::class);
 
         // show your site map (options: 'xml' (default), 'html', 'txt', 'ror-rss', 'ror-rdf')
-        return SiteMapManager::render();
+        return SiteMapManager::render('xml');
     }
 }

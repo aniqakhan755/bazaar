@@ -1,9 +1,11 @@
 <?php
 
+use Botble\ACL\Models\VendorCompany;
 use Botble\Ecommerce\Models\Brand;
 use Botble\Ecommerce\Models\Product;
 use Botble\Ecommerce\Models\ProductCategory;
 use Botble\Ecommerce\Models\ProductTag;
+use Botble\ACL\Models\User;
 
 Route::group(['namespace' => 'Botble\Ecommerce\Http\Controllers', 'middleware' => ['web', 'core']], function () {
     Route::group(['prefix' => BaseHelper::getAdminPrefix() . '/ecommerce', 'middleware' => 'auth'], function () {
@@ -53,6 +55,101 @@ Route::group(['namespace' => 'Botble\Ecommerce\Http\Controllers', 'middleware' =
             'uses'       => 'EcommerceController@postUpdatePrimaryStore',
             'permission' => 'ecommerce.settings',
         ]);
+
+        Route::group(['prefix' => 'products', 'as' => 'products.'], function () {
+            Route::resource('', 'ProductController')
+                ->parameters(['' => 'product']);
+
+            Route::delete('items/destroy', [
+                'as'         => 'deletes',
+                'uses'       => 'ProductController@deletes',
+                'permission' => 'posts.destroy',
+            ]);
+
+            Route::post('add-attribute-to-product/{id}', [
+                'as'         => 'add-attribute-to-product',
+                'uses'       => 'ProductController@postAddAttributeToProduct',
+                'permission' => 'products.edit',
+            ]);
+
+            Route::post('delete-version/{id}', [
+                'as'         => 'delete-version',
+                'uses'       => 'ProductController@postDeleteVersion',
+                'permission' => 'products.edit',
+            ]);
+
+            Route::post('add-version/{id}', [
+                'as'         => 'add-version',
+                'uses'       => 'ProductController@postAddVersion',
+                'permission' => 'products.edit',
+            ]);
+
+            Route::get('get-version-form/{id}', [
+                'as'         => 'get-version-form',
+                'uses'       => 'ProductController@getVersionForm',
+                'permission' => 'products.edit',
+            ]);
+
+            Route::post('update-version/{id}', [
+                'as'         => 'update-version',
+                'uses'       => 'ProductController@postUpdateVersion',
+                'permission' => 'products.edit',
+            ]);
+
+            Route::post('generate-all-version/{id}', [
+                'as'         => 'generate-all-versions',
+                'uses'       => 'ProductController@postGenerateAllVersions',
+                'permission' => 'products.edit',
+            ]);
+
+            Route::post('store-related-attributes/{id}', [
+                'as'         => 'store-related-attributes',
+                'uses'       => 'ProductController@postStoreRelatedAttributes',
+                'permission' => 'products.edit',
+            ]);
+
+            Route::post('save-all-version/{id}', [
+                'as'         => 'save-all-versions',
+                'uses'       => 'ProductController@postSaveAllVersions',
+                'permission' => 'products.edit',
+            ]);
+
+            Route::get('get-list-product-for-search/{id?}', [
+                'as'         => 'get-list-product-for-search',
+                'uses'       => 'ProductController@getListProductForSearch',
+                'permission' => 'products.edit',
+            ]);
+
+            Route::get('get-relations-box/{id?}', [
+                'as'         => 'get-relations-boxes',
+                'uses'       => 'ProductController@getRelationBoxes',
+                'permission' => 'products.edit',
+            ]);
+
+            Route::get('get-list-products-for-select', [
+                'as'         => 'get-list-products-for-select',
+                'uses'       => 'ProductController@getListProductForSelect',
+                'permission' => 'products.index',
+            ]);
+
+            Route::post('create-product-when-creating-order', [
+                'as'         => 'create-product-when-creating-order',
+                'uses'       => 'ProductController@postCreateProductWhenCreatingOrder',
+                'permission' => 'products.create',
+            ]);
+
+            Route::get('get-all-products-and-variations', [
+                'as'         => 'get-all-products-and-variations',
+                'uses'       => 'ProductController@getAllProductAndVariations',
+                'permission' => 'products.index',
+            ]);
+
+            Route::post('update-order-by', [
+                'as'         => 'update-order-by',
+                'uses'       => 'ProductController@postUpdateOrderby',
+                'permission' => 'products.edit',
+            ]);
+        });
 
         Route::group(['prefix' => 'product-categories', 'as' => 'product-categories.'], function () {
             Route::resource('', 'ProductCategoryController')
@@ -133,7 +230,7 @@ Route::group(['namespace' => 'Botble\Ecommerce\Http\Controllers', 'middleware' =
                 'permission' => 'ecommerce.report.index',
             ]);
 
-            Route::post('top-selling-products', [
+            Route::get('top-selling-products', [
                 'as'         => 'ecommerce.report.top-selling-products',
                 'uses'       => 'ReportController@getTopSellingProducts',
                 'permission' => 'ecommerce.report.index',
@@ -155,45 +252,37 @@ Route::group(['namespace' => 'Botble\Ecommerce\Http\Controllers', 'middleware' =
             ]);
         });
 
-        Route::group(['prefix' => 'product-labels', 'as' => 'product-label.'], function () {
-            Route::resource('', 'ProductLabelController')->parameters(['' => 'product-label']);
-            Route::delete('items/destroy', [
-                'as'         => 'deletes',
-                'uses'       => 'ProductLabelController@deletes',
-                'permission' => 'product-label.destroy',
-            ]);
-        });
-
-
     });
 });
+
 
 Route::group(['namespace' => 'Botble\Ecommerce\Http\Controllers\Fronts', 'middleware' => ['web', 'core']], function () {
     Route::group(apply_filters(BASE_FILTER_GROUP_PUBLIC_ROUTE, []), function () {
 
+            Route::get(SlugHelper::getPrefix(VendorCompany::class, 'seller') . '/{slug}', [
+                'as' => 'public.seller',
+                'uses' => 'PublicProductController@getSellerProducts',
+            ]);
+
         Route::get(SlugHelper::getPrefix(Product::class, 'products'), [
-            'uses' => 'PublicProductController@getProducts',
             'as'   => 'public.products',
+            'uses' => 'PublicProductController@getProducts',
         ]);
 
         Route::get(SlugHelper::getPrefix(Brand::class, 'brands') . '/{slug}', [
             'uses' => 'PublicProductController@getBrand',
-            'as'   => 'public.brand',
         ]);
 
         Route::get(SlugHelper::getPrefix(Product::class, 'products') . '/{slug}', [
             'uses' => 'PublicProductController@getProduct',
-            'as'   => 'public.product',
         ]);
 
         Route::get(SlugHelper::getPrefix(ProductCategory::class, 'product-categories') . '/{slug}', [
             'uses' => 'PublicProductController@getProductCategory',
-            'as'   => 'public.product-category',
         ]);
 
         Route::get(SlugHelper::getPrefix(ProductTag::class, 'product-tags') . '/{slug}', [
             'uses' => 'PublicProductController@getProductTag',
-            'as'   => 'public.product-tag',
         ]);
 
         Route::get('currency/switch/{code?}', [

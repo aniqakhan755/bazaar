@@ -41,8 +41,6 @@ class StoreCurrenciesService
             }
 
             $item['title'] = substr(strtoupper($item['title']), 0, 3);
-            $item['decimals'] = (int)$item['decimals'];
-            $item['decimals'] = $item['decimals'] < 10 ? $item['decimals'] : 2;
 
             $currency = $this->currencyRepository->findById($item['id']);
             if (!$currency) {

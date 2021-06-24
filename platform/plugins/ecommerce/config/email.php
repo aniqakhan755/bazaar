@@ -4,29 +4,10 @@ return [
     'name'        => 'Ecommerce',
     'description' => 'Config email templates for Ecommerce',
     'templates'   => [
-        'welcome'                 => [
-            'title'       => 'Welcome',
-            'description' => 'Send email to user when they registered an account on our site',
-            'subject'     => 'Welcome to {{ site_title }}!',
-            'can_off'     => true,
-            'enabled'     => false,
-        ],
-        'confirm-email'           => [
-            'title'       => 'Confirm email',
-            'description' => 'Send email to user when they register an account to verify their email',
-            'subject'     => 'Confirm Email Notification',
-            'can_off'     => false,
-        ],
-        'password-reminder'       => [
-            'title'       => 'Reset password',
-            'description' => 'Send email to user when requesting reset password',
-            'subject'     => 'Reset Password',
-            'can_off'     => false,
-        ],
         'customer_new_order'      => [
             'title'       => 'plugins/ecommerce::email.customer_new_order_title',
             'description' => 'plugins/ecommerce::email.customer_new_order_description',
-            'subject'     => 'New order(s) at {{ site_title }}',
+            'subject'     => 'New order {{ order_id }}',
             'can_off'     => true,
             'enabled'     => false,
         ],
@@ -45,7 +26,7 @@ return [
         'admin_new_order'         => [
             'title'       => 'plugins/ecommerce::email.admin_new_order_title',
             'description' => 'plugins/ecommerce::email.admin_new_order_description',
-            'subject'     => 'New order(s) at {{ site_title }}',
+            'subject'     => 'New order {{ order_id }}',
             'can_off'     => true,
             'enabled'     => false,
         ],
@@ -81,7 +62,5 @@ return [
         'payment_detail'   => 'plugins/ecommerce::ecommerce.payment_detail',
         'shipping_method'  => 'plugins/ecommerce::ecommerce.shipping_method',
         'payment_method'   => 'plugins/ecommerce::ecommerce.payment_method',
-        'verify_link'      => 'Verify email link',
-        'reset_link'       => 'Reset password link',
     ],
 ];

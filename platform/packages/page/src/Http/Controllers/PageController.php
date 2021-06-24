@@ -2,22 +2,22 @@
 
 namespace Botble\Page\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Botble\Base\Events\BeforeEditContentEvent;
 use Botble\Base\Events\CreatedContentEvent;
 use Botble\Base\Events\DeletedContentEvent;
 use Botble\Base\Events\UpdatedContentEvent;
-use Botble\Base\Forms\FormBuilder;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Base\Traits\HasDeleteManyItemsTrait;
 use Botble\Page\Forms\PageForm;
+use Botble\Page\Tables\PageTable;
 use Botble\Page\Http\Requests\PageRequest;
 use Botble\Page\Repositories\Interfaces\PageInterface;
-use Botble\Page\Tables\PageTable;
 use Exception;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Botble\Base\Forms\FormBuilder;
 use Illuminate\View\View;
 use Throwable;
 
@@ -71,7 +71,7 @@ class PageController extends BaseController
     public function store(PageRequest $request, BaseHttpResponse $response)
     {
         $page = $this->pageRepository->createOrUpdate(array_merge($request->input(), [
-            'user_id' => Auth::id(),
+            'user_id' => Auth::user()->getKey(),
         ]));
 
         event(new CreatedContentEvent(PAGE_MODULE_SCREEN_NAME, $request, $page));
@@ -83,7 +83,7 @@ class PageController extends BaseController
 
     /**
      * @param Request $request
-     * @param int $id
+     * @param $id
      * @param FormBuilder $formBuilder
      * @return string
      */
@@ -120,7 +120,7 @@ class PageController extends BaseController
 
     /**
      * @param Request $request
-     * @param int $id
+     * @param $id
      * @param BaseHttpResponse $response
      * @return BaseHttpResponse
      */

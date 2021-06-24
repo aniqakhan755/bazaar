@@ -3,11 +3,11 @@
 namespace Botble\SimpleSlider\Tables;
 
 use BaseHelper;
+use Html;
+use Illuminate\Support\Facades\Auth;
 use Botble\SimpleSlider\Repositories\Interfaces\SimpleSliderItemInterface;
 use Botble\Table\Abstracts\TableAbstract;
-use Html;
 use Illuminate\Contracts\Routing\UrlGenerator;
-use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\DataTables;
 
 class SimpleSliderItemTable extends TableAbstract
@@ -37,11 +37,11 @@ class SimpleSliderItemTable extends TableAbstract
         DataTables $table,
         UrlGenerator $urlGenerator,
         SimpleSliderItemInterface $simpleSliderItemRepository
-    ) {
-        parent::__construct($table, $urlGenerator);
-        $this->setOption('id', 'simple-slider-items-table');
-
+    )
+    {
         $this->repository = $simpleSliderItemRepository;
+        $this->setOption('id', 'simple-slider-items-table');
+        parent::__construct($table, $urlGenerator);
 
         if (!Auth::user()->hasAnyPermission(['simple-slider-item.edit', 'simple-slider-item.destroy'])) {
             $this->hasOperations = false;
@@ -75,12 +75,14 @@ class SimpleSliderItemTable extends TableAbstract
             })
             ->editColumn('created_at', function ($item) {
                 return BaseHelper::formatDate($item->created_at);
-            })
-            ->addColumn('operations', function ($item) {
-                return view('plugins/simple-slider::partials.actions', compact('item'))->render();
             });
 
-        return $this->toJson($data);
+        return apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->repository->getModel())
+            ->addColumn('operations', function ($item) {
+                return view('plugins/simple-slider::partials.actions', compact('item'))->render();
+            })
+            ->escapeColumns([])
+            ->make(true);
     }
 
     /**
@@ -99,7 +101,6 @@ class SimpleSliderItemTable extends TableAbstract
 
         $query = $model
             ->select($select)
-            ->orderBy('simple_slider_items.order')
             ->where('simple_slider_id', request()->route()->parameter('id'));
 
         return $this->applyScopes(apply_filters(BASE_FILTER_TABLE_QUERY, $query, $model, $select));
@@ -110,6 +111,9 @@ class SimpleSliderItemTable extends TableAbstract
      */
     public function columns()
     {
+        $operation = $this->getOperationsHeading();
+        $operation['operations']['width'] = '170px;';
+
         return [
                 'id'         => [
                     'title' => trans('core/base::tables.id'),
@@ -131,14 +135,22 @@ class SimpleSliderItemTable extends TableAbstract
                     'title' => trans('core/base::tables.created_at'),
                     'width' => '100px',
                 ],
-            ] + $this->getOperationsHeading();
+            ] + $operation;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getOperationsHeading()
+    public function buttons()
     {
-        return array_merge(parent::getOperationsHeading(), ['operations' => ['width' => '170px']]);
+        return [];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function actions()
+    {
+        return [];
     }
 }

@@ -7,11 +7,11 @@ use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Blog\Http\Resources\CategoryResource;
 use Botble\Blog\Http\Resources\ListCategoryResource;
-use Botble\Blog\Models\Category;
 use Botble\Blog\Repositories\Interfaces\CategoryInterface;
 use Botble\Blog\Supports\FilterCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Botble\Blog\Models\Category;
 use SlugHelper;
 
 class CategoryController extends Controller
@@ -42,14 +42,10 @@ class CategoryController extends Controller
     public function index(Request $request, BaseHttpResponse $response)
     {
         $data = $this->categoryRepository
-            ->advancedGet([
-                'with'      => ['slugable'],
-                'condition' => ['status' => BaseStatusEnum::PUBLISHED],
-                'paginate'  => [
-                    'per_page'      => (int)$request->input('per_page', 10),
-                    'current_paged' => (int)$request->input('page', 1),
-                ],
-            ]);
+            ->getModel()
+            ->where(['status' => BaseStatusEnum::PUBLISHED])
+            ->select(['id', 'name', 'description'])
+            ->paginate($request->input('per_page', 10));
 
         return $response
             ->setData(ListCategoryResource::collection($data))
@@ -69,7 +65,6 @@ class CategoryController extends Controller
     {
         $filters = FilterCategory::setFilters($request->input());
         $data = $this->categoryRepository->getFilters($filters);
-
         return $response
             ->setData(CategoryResource::collection($data))
             ->toApiResponse();
@@ -87,7 +82,6 @@ class CategoryController extends Controller
     public function findBySlug(string $slug, BaseHttpResponse $response)
     {
         $slug = SlugHelper::getSlug($slug, SlugHelper::getPrefix(Category::class), Category::class);
-
         if (!$slug) {
             return $response->setError()->setCode(404)->setMessage('Not found');
         }

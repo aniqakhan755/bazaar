@@ -2,8 +2,8 @@
 
 namespace Botble\Blog\Repositories\Caches;
 
-use Botble\Blog\Repositories\Interfaces\CategoryInterface;
 use Botble\Support\Repositories\Caches\CacheAbstractDecorator;
+use Botble\Blog\Repositories\Interfaces\CategoryInterface;
 
 class CategoryCacheDecorator extends CacheAbstractDecorator implements CategoryInterface
 {
@@ -74,7 +74,7 @@ class CategoryCacheDecorator extends CacheAbstractDecorator implements CategoryI
     /**
      * {@inheritDoc}
      */
-    public function getPopularCategories(int $limit, array $with = ['slugable'], array $withCount = ['posts'])
+    public function getPopularCategories(int $limit)
     {
         return $this->getDataIfExistCache(__FUNCTION__, func_get_args());
     }

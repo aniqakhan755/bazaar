@@ -14,7 +14,7 @@ use Botble\Contact\Models\Contact;
 use Botble\Contact\Repositories\Caches\ContactCacheDecorator;
 use Botble\Contact\Repositories\Eloquent\ContactRepository;
 use Botble\Contact\Repositories\Interfaces\ContactReplyInterface;
-use Illuminate\Support\Facades\Event;
+use Event;
 use Illuminate\Support\ServiceProvider;
 
 class ContactServiceProvider extends ServiceProvider

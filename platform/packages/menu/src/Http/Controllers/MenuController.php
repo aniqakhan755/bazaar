@@ -199,7 +199,7 @@ class MenuController extends BaseController
 
         return $response
             ->setPreviousUrl(route('menus.index'))
-            ->setMessage(trans('core/base::notices.update_success_message'));
+            ->setMessage(trans('core/base::notices.create_success_message'));
     }
 
     /**
@@ -234,7 +234,6 @@ class MenuController extends BaseController
     public function deletes(Request $request, BaseHttpResponse $response)
     {
         $ids = $request->input('ids');
-
         if (empty($ids)) {
             return $response
                 ->setError()

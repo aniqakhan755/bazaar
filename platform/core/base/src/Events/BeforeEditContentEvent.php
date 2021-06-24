@@ -5,7 +5,6 @@ namespace Botble\Base\Events;
 use Eloquent;
 use Illuminate\Http\Request;
 use Illuminate\Queue\SerializesModels;
-use stdClass;
 
 class BeforeEditContentEvent extends Event
 {
@@ -22,9 +21,9 @@ class BeforeEditContentEvent extends Event
     public $data;
 
     /**
-     * BeforeEditContentEvent constructor.
+     * CreatedContentEvent constructor.
      * @param Request $request
-     * @param Eloquent|false|stdClass $data
+     * @param Eloquent|false $data
      */
     public function __construct($request, $data)
     {
