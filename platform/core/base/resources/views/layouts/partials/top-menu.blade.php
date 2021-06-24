@@ -37,7 +37,7 @@
                     <i class="fa fa-angle-down"></i>
                 </a>
                 <ul class="dropdown-menu">
-                    @if(Auth::user()->roles[0]->slug != 'vendor')
+                    @if( Auth::user()->roles[0]->slug != 'vendor')
                         <li><a href="{{ route('users.profile.view', Auth::user()->getKey()) }}"><i class="icon-user"></i> {{ trans('core/base::layouts.profile') }}</a></li>
                     @else
                         <li><a href="{{ route('vendors.profile.view', Auth::user()->getKey()) }}"><i class="icon-user"></i> {{ trans('core/base::layouts.profile') }}</a></li>
