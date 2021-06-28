@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0221eec7fce332dbecfa348a34aa8889",
+    "content-hash": "159850c173037f2a3fb3dd07d89104de",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -64,16 +64,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.185.2",
+            "version": "3.185.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "0e6ece3f9c4ab26bb20183c697fd36e1d55c1053"
+                "reference": "6c919bc226f7ff3fbcbce948f31e618066d02ad0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/0e6ece3f9c4ab26bb20183c697fd36e1d55c1053",
-                "reference": "0e6ece3f9c4ab26bb20183c697fd36e1d55c1053",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/6c919bc226f7ff3fbcbce948f31e618066d02ad0",
+                "reference": "6c919bc226f7ff3fbcbce948f31e618066d02ad0",
                 "shasum": ""
             },
             "require": {
@@ -148,9 +148,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.185.2"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.185.0"
             },
-            "time": "2021-06-25T18:19:14+00:00"
+            "time": "2021-06-23T18:21:07+00:00"
         },
         {
             "name": "barryvdh/laravel-dompdf",
@@ -282,7 +282,7 @@
         },
         {
             "name": "botble/menu",
-            "version": "dev-master",
+            "version": "dev-MyCode",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/menu",
@@ -315,7 +315,7 @@
         },
         {
             "name": "botble/page",
-            "version": "dev-master",
+            "version": "dev-MyCode",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/page",
@@ -345,7 +345,7 @@
         },
         {
             "name": "botble/platform",
-            "version": "dev-master",
+            "version": "dev-MyCode",
             "dist": {
                 "type": "path",
                 "url": "./platform/core",
@@ -431,7 +431,7 @@
         },
         {
             "name": "botble/plugin-management",
-            "version": "dev-master",
+            "version": "dev-MyCode",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/plugin-management",
@@ -460,7 +460,7 @@
         },
         {
             "name": "botble/revision",
-            "version": "dev-master",
+            "version": "dev-MyCode",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/revision",
@@ -489,7 +489,7 @@
         },
         {
             "name": "botble/seo-helper",
-            "version": "dev-master",
+            "version": "dev-MyCode",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/seo-helper",
@@ -522,7 +522,7 @@
         },
         {
             "name": "botble/shortcode",
-            "version": "dev-master",
+            "version": "dev-MyCode",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/shortcode",
@@ -551,7 +551,7 @@
         },
         {
             "name": "botble/sitemap",
-            "version": "dev-master",
+            "version": "dev-MyCode",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/sitemap",
@@ -580,7 +580,7 @@
         },
         {
             "name": "botble/slug",
-            "version": "dev-master",
+            "version": "dev-MyCode",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/slug",
@@ -612,7 +612,7 @@
         },
         {
             "name": "botble/theme",
-            "version": "dev-master",
+            "version": "dev-MyCode",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/theme",
@@ -653,7 +653,7 @@
         },
         {
             "name": "botble/widget",
-            "version": "dev-master",
+            "version": "dev-MyCode",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/widget",
@@ -1976,16 +1976,16 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.201.1",
+            "version": "v0.201.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
-                "reference": "ee1072221acf7c32e3de9b18e11fec3ab23ec38f"
+                "reference": "0375af405757b36f3bcc82e19d7daf61e0b4cfd8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/ee1072221acf7c32e3de9b18e11fec3ab23ec38f",
-                "reference": "ee1072221acf7c32e3de9b18e11fec3ab23ec38f",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/0375af405757b36f3bcc82e19d7daf61e0b4cfd8",
+                "reference": "0375af405757b36f3bcc82e19d7daf61e0b4cfd8",
                 "shasum": ""
             },
             "require": {
@@ -2014,9 +2014,9 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.201.1"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.201.0"
             },
-            "time": "2021-06-27T11:20:22+00:00"
+            "time": "2021-06-18T15:00:35+00:00"
         },
         {
             "name": "google/auth",
@@ -2653,16 +2653,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v8.48.2",
+            "version": "v8.48.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "4c50ebbb7d1a66c5f3511261413cd499d30ba4cd"
+                "reference": "edc138060a13c9e5f15c005fad5f6a39b4ccf5fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/4c50ebbb7d1a66c5f3511261413cd499d30ba4cd",
-                "reference": "4c50ebbb7d1a66c5f3511261413cd499d30ba4cd",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/edc138060a13c9e5f15c005fad5f6a39b4ccf5fa",
+                "reference": "edc138060a13c9e5f15c005fad5f6a39b4ccf5fa",
                 "shasum": ""
             },
             "require": {
@@ -2817,7 +2817,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2021-06-25T23:57:38+00:00"
+            "time": "2021-06-23T13:41:59+00:00"
         },
         {
             "name": "laravel/socialite",
@@ -2962,16 +2962,16 @@
         },
         {
             "name": "league/commonmark",
-            "version": "1.6.5",
+            "version": "1.6.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/commonmark.git",
-                "reference": "44ffd8d3c4a9133e4bd0548622b09c55af39db5f"
+                "reference": "c3c8b7217c52572fb42aaf84211abccf75a151b2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/commonmark/zipball/44ffd8d3c4a9133e4bd0548622b09c55af39db5f",
-                "reference": "44ffd8d3c4a9133e4bd0548622b09c55af39db5f",
+                "url": "https://api.github.com/repos/thephpleague/commonmark/zipball/c3c8b7217c52572fb42aaf84211abccf75a151b2",
+                "reference": "c3c8b7217c52572fb42aaf84211abccf75a151b2",
                 "shasum": ""
             },
             "require": {
@@ -3059,7 +3059,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-06-26T11:57:13+00:00"
+            "time": "2021-06-19T20:08:14+00:00"
         },
         {
             "name": "league/flysystem",
@@ -4928,20 +4928,20 @@
         },
         {
             "name": "psr/cache",
-            "version": "2.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/cache.git",
-                "reference": "213f9dbc5b9bfbc4f8db86d2838dc968752ce13b"
+                "reference": "d11b50ad223250cf17b86e38383413f5a6764bf8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/cache/zipball/213f9dbc5b9bfbc4f8db86d2838dc968752ce13b",
-                "reference": "213f9dbc5b9bfbc4f8db86d2838dc968752ce13b",
+                "url": "https://api.github.com/repos/php-fig/cache/zipball/d11b50ad223250cf17b86e38383413f5a6764bf8",
+                "reference": "d11b50ad223250cf17b86e38383413f5a6764bf8",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.0.0"
+                "php": ">=5.3.0"
             },
             "type": "library",
             "extra": {
@@ -4961,7 +4961,7 @@
             "authors": [
                 {
                     "name": "PHP-FIG",
-                    "homepage": "https://www.php-fig.org/"
+                    "homepage": "http://www.php-fig.org/"
                 }
             ],
             "description": "Common interface for caching libraries",
@@ -4971,9 +4971,9 @@
                 "psr-6"
             ],
             "support": {
-                "source": "https://github.com/php-fig/cache/tree/2.0.0"
+                "source": "https://github.com/php-fig/cache/tree/master"
             },
-            "time": "2021-02-03T23:23:37+00:00"
+            "time": "2016-08-06T20:24:11+00:00"
         },
         {
             "name": "psr/container",
@@ -9269,16 +9269,16 @@
         },
         {
             "name": "yajra/laravel-datatables-oracle",
-            "version": "v9.18.1",
+            "version": "v9.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/yajra/laravel-datatables.git",
-                "reference": "7148225d52bcdfdd77c24e8d456058f1150b84e7"
+                "reference": "b00f25b1941879b34e05f270835235a32b46567c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yajra/laravel-datatables/zipball/7148225d52bcdfdd77c24e8d456058f1150b84e7",
-                "reference": "7148225d52bcdfdd77c24e8d456058f1150b84e7",
+                "url": "https://api.github.com/repos/yajra/laravel-datatables/zipball/b00f25b1941879b34e05f270835235a32b46567c",
+                "reference": "b00f25b1941879b34e05f270835235a32b46567c",
                 "shasum": ""
             },
             "require": {
@@ -9338,7 +9338,7 @@
             ],
             "support": {
                 "issues": "https://github.com/yajra/laravel-datatables/issues",
-                "source": "https://github.com/yajra/laravel-datatables/tree/v9.18.1"
+                "source": "https://github.com/yajra/laravel-datatables/tree/v9.18.0"
             },
             "funding": [
                 {
@@ -9350,7 +9350,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2021-06-28T01:24:17+00:00"
+            "time": "2021-04-16T12:08:33+00:00"
         }
     ],
     "packages-dev": [
