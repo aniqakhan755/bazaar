@@ -1,0 +1,22 @@
+.page-registration-success .container {
+  min-height: 60vh;
+ 
+}
+.registration-image{
+  margin-bottom: 30px !important;
+}
+.header .header__right {
+  max-width:500px;
+}
+.seller-register-action{
+  display: block;
+    font-weight: 700;
+    line-height: 18px;
+      margin: 0 0px;
+}
+.seller-register-action:hover {
+    color: var(--header-text-hover-color);
+}
+.header .header__left {
+    max-width: 210px;
+}

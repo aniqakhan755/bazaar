@@ -128,7 +128,7 @@ class HandleApplyPromotionsService
      * @param string $token
      * @return float
      */
-    public function executeMulti($token = null,$cartInstances)
+    public function executeMulti($token = null,$cartInstances=null)
     {
         $promotions = $this->discountRepository->getAvailablePromotions();
 

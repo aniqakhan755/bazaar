@@ -183,8 +183,7 @@
     {!! Form::close() !!}
 @stop
 @push('footer')
-    <script src="/vendor/core/core/js-validation/js/js-validation.js"></script>
-    <script src="/vendor/core/core/base/libraries/select2/js/select2.min.js"></script>
+    <script src="{{asset('js/js-validation.js')}}"></script>
     <script src="{{asset('js/phone.js')}}"></script>
 
     <script>

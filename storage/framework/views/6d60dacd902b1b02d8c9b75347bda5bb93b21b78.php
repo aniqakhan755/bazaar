@@ -1,0 +1,85 @@
+
+
+<?php $__env->startSection('body-class'); ?> login <?php $__env->stopSection(); ?>
+<?php $__env->startSection('body-style'); ?> background-image: url(<?php echo e(get_login_background()); ?>); <?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('header'); ?>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css">
+    <style>
+        .register-container{
+            top: 25% !important;
+        }
+        .fieldset-heading {
+            text-align: left;
+            font-weight: 700;
+            margin-bottom: 5px;
+            margin-top: 3px;
+            color: #757c85;
+            border-radius: 2px;
+            font-size: 12px;
+            text-transform: uppercase;
+            width: auto;
+            padding-left: 2px;
+        }
+        .required:after {
+            content: " *";
+            color: red;
+        }
+        .register-title{
+            font-size: 1.6rem;
+        }
+        .btn-style{
+            display: block;
+            text-align: center;
+            color: #eee!important;
+            padding: 12px 20px;
+            outline: 0!important;
+            opacity: .8;
+            border: 0;
+            width: auto;
+            border-radius: 2px;
+            float: left;
+            font-size: 11px;
+            font-weight: 400;
+            text-transform: uppercase;
+            transition: width .3s ease;
+
+        }
+        .select--arrow{position:relative}.select--arrow i{position:absolute;top:50%;transform:translateY(-50%);right:10px;color:#ccc}.select--arrow .form-control{padding:0 30px 0 15px;height:40px;-webkit-appearance:none;-moz-appearance:none;-o-appearance:none;appearance:none}@media  only screen and (max-width:320px){.checkout-content-wrap{margin-bottom:20px}
+
+
+    </style>
+<?php $__env->stopPush(); ?>
+<?php $__env->startSection('page'); ?>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="faded-bg animated"></div>
+            <div class="hidden-xs col-sm-7 col-md-7">
+                <div class="clearfix">
+                    <div class="col-sm-12 col-md-10 col-md-offset-2">
+                        <div class="logo-title-container">
+                            <div class="copy animated fadeIn">
+                                <h1><?php echo e(setting('admin_title', config('core.base.general.base_name'))); ?></h1>
+                                <p><?php echo clean(trans('core/base::layouts.copyright', ['year' => now()->format('Y'), 'company' => setting('admin_title', config('core.base.general.base_name'))])); ?></p>
+                            </div>
+                        </div> <!-- .logo-title-container -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xs-12 col-sm-5 col-md-5 login-sidebar">
+
+                <div class="login-container register-container">
+
+                    <?php echo $__env->yieldContent('content'); ?>
+
+                    <div style="clear:both"></div>
+
+                </div> <!-- .login-container -->
+
+            </div> <!-- .login-sidebar -->
+        </div> <!-- .row -->
+    </div>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('core/base::layouts.base', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Apache24\htdocs\bazaar\platform/core/acl/resources/views//auth/master-register.blade.php ENDPATH**/ ?>

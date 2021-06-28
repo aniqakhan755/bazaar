@@ -5,8 +5,6 @@
 
 @push('header')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css">
-    <link media="all" type="text/css" rel="stylesheet" href="/vendor/core/core/base/libraries/select2/css/select2.min.css">
-    <link media="all" type="text/css" rel="stylesheet" href="/vendor/core/core/base/libraries/select2/css/select2-bootstrap.min.css">
     <style>
         .register-container{
             top: 25% !important;
