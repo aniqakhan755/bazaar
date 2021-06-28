@@ -135,7 +135,7 @@ class MarketplaceServiceProvider extends ServiceProvider
             SeoHelper::registerModule([Store::class]);
 
             $this->app->register(HookServiceProvider::class);
-            $this->app->register(OrderSupportServiceProvider::class);
+//            $this->app->register(OrderSupportServiceProvider::class);
 
             $this->app->booted(function () {
                 Customer::resolveRelationUsing('store', function ($model) {

@@ -1129,7 +1129,7 @@ class OrderSupportServiceProvider extends ServiceProvider
                     DB::rollBack();
                 }
             }
-            
+
         }
 
         return $order;
